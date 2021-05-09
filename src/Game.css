@@ -1,0 +1,64 @@
+@font-face {
+    font-family: "Newsreader";
+    src: url("fonts/Newsreader-VariableFont_opsz,wght.ttf")
+}
+
+.game {
+    color: white;
+    font: 24px "Swiss 911", Helvetica, sans-serif;
+    height: 550px;
+    min-height: 550px;
+    min-width: 1200px;
+}
+
+.category-heading {
+    background-color: #060CE9;
+    color: white;
+    text-shadow: 3px 3px 1px black;
+    vertical-align: center;
+}
+
+.clue {
+    background-color: #060CE9;
+    color: #CC8E3C;
+    font-size: 36px;
+    min-width: 200px;
+    text-shadow: 5px 5px black;
+}
+
+.active-clue:hover {
+    background-color: #CC8E3C;
+    color: white;
+    cursor: pointer;
+}
+
+.current-clue-container {
+    background-color: #060CE9;
+    min-height: 555px;
+    min-width: 1200px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    vertical-align: center;
+    width: 102%;
+    z-index: 1000;
+}
+
+.current-clue {
+    font: 70px "ITC Korinna", "Newsreader", "Times", serif;
+    font-weight: 500;
+    text-shadow: 5px 5px 2px black;
+    word-spacing: 0.2em;
+}
+
+.progress-no-transition {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
+
+.countdown-timer {
+    height: 25px;
+}
