@@ -1,7 +1,6 @@
 import React from 'react';
+import { CLUES_PER_CATEGORY } from '../constants';
 import './Game.css';
-
-const QUESTIONS_PER_CATEGORY = 5;
 
 function playSound(url) {
   new Audio(url).play().catch(console.log);
@@ -162,11 +161,11 @@ function StatusText(props) {
 
 function Board(props) {
   const headings = Object.keys(props.categories).map(name => <div key={name} className="border border-2 category-heading col fw-bold p-3 text-center text-uppercase">{name}</div>);
-  const rows = [...Array(QUESTIONS_PER_CATEGORY).keys()].map(i => {
+  const rows = [...Array(CLUES_PER_CATEGORY).keys()].map(i => {
     const cells = Object.entries(props.categories).map(([_, category]) => {
       const clue = {...category.clues[i], category: category.name};
-      const played = props.playedClues.indexOf(clue.id) !== -1;
-      return <Clue key={clue.id} clue={clue} played={played} onClick={() => props.handleClueClick(clue)} />;
+      const played = props.playedClues.indexOf(clue.clueID) !== -1;
+      return <Clue key={clue.clueID} clue={clue} played={played} onClick={() => props.handleClueClick(clue)} />;
     });
     return <div key={i} className="row row-cols-6">{cells}</div>;
   });
@@ -209,7 +208,7 @@ class Game extends React.Component {
   }
 
   dismissCurrentClue() {
-    const playedClues = this.state.playedClues.concat(this.state.currentClue.id);
+    const playedClues = this.state.playedClues.concat(this.state.currentClue.clueID);
     this.setState({
       currentClue: null,
       playedClues: playedClues,
@@ -236,7 +235,7 @@ class Game extends React.Component {
 
   render() {
     if (!this.props.board) {
-      return 'Loading...';
+      return (<div className="alert alert-primary fs-3 m-5 text-center" role="alert">Creating a new game, please wait...</div>);
     }
     return (
       <div className="game m-4">

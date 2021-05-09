@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { fetchBoard } from './data/action_creators';
+import { fetchBoard } from '../data/action_creators';
 import Game from './Game';
 
 function mapStateToProps(state) {

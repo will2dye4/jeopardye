@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.css';
-import { GameConnector } from './GameConnector';
+import { GameConnector } from './game/GameConnector';
 import { GameDataStore } from './data/data_store';
 import reportWebVitals from './reportWebVitals';
 

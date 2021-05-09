@@ -1,6 +1,6 @@
 @font-face {
     font-family: "Newsreader";
-    src: url("fonts/Newsreader-VariableFont_opsz,wght.ttf")
+    src: url("../fonts/Newsreader-VariableFont_opsz,wght.ttf")
 }
 
 .game {
@@ -14,6 +14,7 @@
 .category-heading {
     background-color: #060CE9;
     color: white;
+    min-height: 90px;
     text-shadow: 3px 3px 1px black;
     vertical-align: center;
 }
