@@ -1,5 +1,5 @@
 import React from 'react';
-import { CLUES_PER_CATEGORY } from '../constants';
+import { CLUES_PER_CATEGORY } from '../constants.mjs';
 import './Game.css';
 
 function playSound(url) {
@@ -7,51 +7,22 @@ function playSound(url) {
 }
 
 class Clue extends React.Component {
-  static defaultBorderColor = '#1D08A3';
-  static hoverBorderColor = '#FFCC00';
-
-  constructor(props) {
-    super(props);
-    this.state = {
-      borderColor: Clue.defaultBorderColor,
-    };
-  }
-
   handleClick() {
     if (!this.props.played) {
       this.props.onClick(this);
     }
   }
 
-  handleMouseEnter() {
-    if (!this.props.played) {
-      this.setState({borderColor: Clue.hoverBorderColor});
-    }
-  }
-
-  handleMouseLeave() {
-    if (!this.props.played) {
-      this.setState({borderColor: Clue.defaultBorderColor});
-    }
-  }
-
   render() {
-    let classes = 'border border-2 clue col fw-bold text-center user-select-none';
+    let classes = 'clue-border p-2';
     let text = <br />;
     if (!this.props.played) {
       classes += ' active-clue';
       text = `$${this.props.clue.value}`;
     }
     return (
-      <div className={classes}
-           onClick={() => this.handleClick()}
-           onMouseEnter={() => this.handleMouseEnter()}
-           onMouseLeave={() => this.handleMouseLeave()}
-           onMouseOver={() => this.handleMouseEnter()}
-           onMouseOut={() => this.handleMouseLeave()}>
-        <div className="p-2" style={{border: `10px solid ${this.state.borderColor}`}}>
-          {text}
-        </div>
+      <div className="border border-2 clue col fw-bold text-center user-select-none" onClick={() => this.handleClick()}>
+        <div className={classes}>{text}</div>
       </div>
     );
   }
@@ -221,9 +192,10 @@ function Podium(props) {
 }
 
 function Board(props) {
-  const headings = Object.keys(props.categories).map(name => {
+  const headings = Object.values(props.categories).map(category => {
     let classes = 'align-items-center border border-2 category-heading col d-flex fw-bold justify-content-center p-3 ' +
                   'text-center text-uppercase user-select-none';
+    let name = category.name;
     let words = name.split(' ');
     let meanLength = words.reduce((sum, word) => sum + word.length, 0) / words.length;
     if (name.length > 30 || meanLength > 7 || (words.length > 3 && meanLength > 4)) {
@@ -232,8 +204,8 @@ function Board(props) {
     return <div key={name} className={classes}>{name}</div>;
   });
   const rows = [...Array(CLUES_PER_CATEGORY).keys()].map(i => {
-    const cells = Object.entries(props.categories).map(([_, category]) => {
-      const clue = {...category.clues[i], category: category.name};
+    const cells = Object.entries(props.categories).map(([id, category]) => {
+      const clue = {...category.clues[i], category: category.name, categoryID: id};
       const played = props.playedClues.indexOf(clue.clueID) !== -1;
       return <Clue key={clue.clueID} clue={clue} played={played} onClick={() => props.handleClueClick(clue)} />;
     });
