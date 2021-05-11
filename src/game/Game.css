@@ -1,6 +1,6 @@
 @font-face {
     font-family: "Newsreader";
-    src: url("../fonts/Newsreader-VariableFont_opsz,wght.ttf")
+    src: url("../fonts/Newsreader-VariableFont_opsz,wght.ttf");
 }
 
 .game {
@@ -12,36 +12,38 @@
 }
 
 .category-heading {
-    background-color: #060CE9;
+    background-color: #1D08A3;
     color: white;
     min-height: 90px;
+    min-width: 200px;
     text-shadow: 3px 3px 1px black;
-    vertical-align: center;
+}
+
+.small-heading {
+    font-size: 20px;
 }
 
 .clue {
-    background-color: #060CE9;
-    color: #CC8E3C;
+    background-color: #1D08A3;
+    color: #FFCC00;
     font-size: 36px;
     min-width: 200px;
     text-shadow: 5px 5px black;
 }
 
 .active-clue:hover {
-    background-color: #CC8E3C;
-    color: white;
+    background-image: radial-gradient(#FFFF00, #FFCC00);
+    color: #1D08A3;
     cursor: pointer;
+    text-shadow: none;
 }
 
 .current-clue-container {
-    background-color: #060CE9;
-    min-height: 555px;
-    min-width: 1200px;
+    background-color: #1D08A3;
     position: absolute;
     top: 0;
     left: 0;
     vertical-align: center;
-    width: 102%;
     z-index: 1000;
 }
 

@@ -1278,6 +1278,11 @@
   "resolved" "https://artifactory00.cc.pdrop.net:443/artifactory/api/npm/npm-pindrop-ivr-virtual/@fortawesome/fontawesome-free/-/fontawesome-free-5.15.3.tgz"
   "version" "5.15.3"
 
+"@gouch/to-title-case@^2.2.1":
+  "integrity" "sha512-i/Hj91LfiE2pxYdIT0Ttdc/fIzdBwojDNQe6S6/N/Uf3xMmn0lWO+iLkAd84zs/NUGfTLsMUacDZzSy6N4jkcw=="
+  "resolved" "https://registry.npmjs.org/@gouch/to-title-case/-/to-title-case-2.2.1.tgz"
+  "version" "2.2.1"
+
 "@hapi/address@2.x.x":
   "integrity" "sha1-XWftQ/P9QaadS5/3tW58DR0KgeU="
   "resolved" "https://artifactory00.cc.pdrop.net:443/artifactory/api/npm/npm-pindrop-ivr-virtual/@hapi/address/-/address-2.1.4.tgz"
@@ -10961,11 +10966,6 @@
   "integrity" "sha1-QFQRqOfmM5/mTbmiNN4R3DHgK9Q="
   "resolved" "https://artifactory00.cc.pdrop.net:443/artifactory/api/npm/npm-pindrop-ivr-virtual/timsort/-/timsort-0.3.0.tgz"
   "version" "0.3.0"
-
-"titleizejs@^1.0.3":
-  "integrity" "sha512-yuy7Kedc0trOctPWZmJoqUWPpop5OyrNy6cZmFpQfZ30+CtW99sun3Tou3YIFfR+jhl4LnoNf735cbmd9lMMHw=="
-  "resolved" "https://registry.npmjs.org/titleizejs/-/titleizejs-1.0.3.tgz"
-  "version" "1.0.3"
 
 "tmpl@1.0.x":
   "integrity" "sha1-I2QN17QtAEM5ERQIIOXPRA5SHdE="

@@ -1,13 +1,14 @@
 const express = require('express');
 const fetch = require('node-fetch');
-const titleize = require('titleizejs');
 const uuid = require('uuid');
+
+require('@gouch/to-title-case');
 
 const API_BASE = 'http://jservice.io/api';
 const CATEGORY_URL = `${API_BASE}/category`;
 const RANDOM_CLUES_URL = `${API_BASE}/random`;
 
-const CLUES_TO_FETCH = 40;
+const CLUES_TO_FETCH = 80;
 
 const CATEGORIES_PER_ROUND = 6;
 const CLUES_PER_CATEGORY = 5;
@@ -42,11 +43,11 @@ async function fetchRandomCategories(count) {
       }
     }
   }
-  return fetchRandomCategories();  // just try again
+  return await fetchRandomCategories();  // just try again
 }
 
 function titleizeCategoryName(categoryName) {
-  return titleize(categoryName, {ignoreSymbols: '"&?!'});
+  return categoryName.toTitleCase();
 }
 
 function transformCategory(category, valueIncrement) {
@@ -100,7 +101,7 @@ async function createGame(req, res) {
     doubleRoundCategories[name] = transformCategory(category, DOUBLE_ROUND_VALUE_INCREMENT);
   }
 
-  res.json({
+  const game = {
     gameID: uuid.v4(),
     singleRound: {
       categories: singleRoundCategories,
@@ -110,7 +111,12 @@ async function createGame(req, res) {
       categories: doubleRoundCategories,
       dailyDoubles: chooseDailyDoubles(doubleRoundCategories, 2),
     }
-  });
+  };
+
+  console.log(`Created game ${game.gameID} (single round: ${Object.keys(game.singleRound.categories).length} ` +
+              `categories, double round: ${Object.keys(game.doubleRound.categories).length} categories)`);
+
+  res.json(game);
 }
 
 router.post('/', createGame);

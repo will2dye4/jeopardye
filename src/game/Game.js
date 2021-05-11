@@ -58,8 +58,9 @@ class CurrentClue extends React.Component {
   render() {
     const containerClasses = 'align-items-center current-clue-container row animate__animated animate__zoomIn';
     const clueClasses = 'col-12 current-clue p-5 text-center text-uppercase';
+    const board = document.getElementById('board');
     return (
-      <div className={containerClasses}>
+      <div className={containerClasses} style={{width: board.offsetWidth * 1.02, height: board.offsetHeight}}>
         <div className={clueClasses} onClick={() => this.handleClick()}>{this.state.text}</div>
       </div>
     );
@@ -160,7 +161,15 @@ function StatusText(props) {
 }
 
 function Board(props) {
-  const headings = Object.keys(props.categories).map(name => <div key={name} className="border border-2 category-heading col fw-bold p-3 text-center text-uppercase">{name}</div>);
+  const headings = Object.keys(props.categories).map(name => {
+    let classes = 'align-items-center border border-2 category-heading col d-flex fw-bold justify-content-center p-3 text-center text-uppercase';
+    let words = name.split(' ');
+    let meanLength = words.reduce((sum, word) => sum + word.length, 0) / words.length;
+    if (name.length > 30 || meanLength > 7 || (words.length > 3 && meanLength > 4)) {
+      classes += ' small-heading';
+    }
+    return <div key={name} className={classes}>{name}</div>;
+  });
   const rows = [...Array(CLUES_PER_CATEGORY).keys()].map(i => {
     const cells = Object.entries(props.categories).map(([_, category]) => {
       const clue = {...category.clues[i], category: category.name};
@@ -181,7 +190,7 @@ function Board(props) {
                               timerRef={props.timerRef}
                               dismiss={() => props.dismissCurrentClue()} />);
   }
-  return <div className="position-relative">{content}</div>;
+  return <div id="board" className="position-relative">{content}</div>;
 }
 
 class Game extends React.Component {
@@ -199,12 +208,12 @@ class Game extends React.Component {
   }
 
   revealAnswer() {
+    playSound(' https://www.soundboard.com/mediafiles/mt/MTMxOTQ5Nzc4MTMxOTcx_FJGXeSZhwls.mp3');
     this.setState({
       allowAnswers: false,
       revealAnswer: true,
       status: 'Time\'s up! No one buzzed in quickly enough.',
     });
-    playSound(' https://www.soundboard.com/mediafiles/mt/MTMxOTQ5Nzc4MTMxOTcx_FJGXeSZhwls.mp3');
   }
 
   dismissCurrentClue() {
@@ -238,7 +247,7 @@ class Game extends React.Component {
       return (<div className="alert alert-primary fs-3 m-5 text-center" role="alert">Creating a new game, please wait...</div>);
     }
     return (
-      <div className="game m-4">
+      <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}
                         seconds="10"
                         onTimeStarted={() => this.setState({allowAnswers: true})}
