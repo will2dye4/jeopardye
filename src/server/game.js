@@ -8,7 +8,8 @@ const API_BASE = 'http://jservice.io/api';
 const CATEGORY_URL = `${API_BASE}/category`;
 const RANDOM_CLUES_URL = `${API_BASE}/random`;
 
-const CLUES_TO_FETCH = 80;
+const MIN_CLUES_TO_FETCH = 50;
+const MAX_CLUES_TO_FETCH = 100;
 
 const CATEGORIES_PER_ROUND = 6;
 const CLUES_PER_CATEGORY = 5;
@@ -27,7 +28,8 @@ async function fetchCategory(categoryID) {
 }
 
 async function fetchRandomCategories(count) {
-  let response = await fetch(`${RANDOM_CLUES_URL}?count=${CLUES_TO_FETCH}`);
+  let cluesToFetch = Math.min(Math.max(MIN_CLUES_TO_FETCH, count), MAX_CLUES_TO_FETCH);
+  let response = await fetch(`${RANDOM_CLUES_URL}?count=${cluesToFetch}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch random clues: ${response.status} ${response.statusText}`);
   }
@@ -86,19 +88,32 @@ function chooseDailyDoubles(categories, count = 1) {
 }
 
 async function createGame(req, res) {
-  const numCategories = CATEGORIES_PER_ROUND * 2;
+  const numCategories = CATEGORIES_PER_ROUND * 3;
   const categories = await fetchRandomCategories(numCategories);
 
   let singleRoundCategories = {};
-  for (let category of categories.slice(0, CATEGORIES_PER_ROUND)) {
+  let i = 0;
+  let count = 0;
+  while (count < CATEGORIES_PER_ROUND) {
+    let category = categories[i];
     let name = titleizeCategoryName(category.title);
-    singleRoundCategories[name] = transformCategory(category, SINGLE_ROUND_VALUE_INCREMENT);
+    if (!singleRoundCategories.hasOwnProperty(name)) {
+      singleRoundCategories[name] = transformCategory(category, SINGLE_ROUND_VALUE_INCREMENT);
+      count += 1;
+    }
+    i += 1;
   }
 
   let doubleRoundCategories = {};
-  for (let category of categories.slice(CATEGORIES_PER_ROUND, numCategories)) {
+  count = 0;
+  while (count < CATEGORIES_PER_ROUND) {
+    let category = categories[i];
     let name = titleizeCategoryName(category.title);
-    doubleRoundCategories[name] = transformCategory(category, DOUBLE_ROUND_VALUE_INCREMENT);
+    if (!doubleRoundCategories.hasOwnProperty(name)) {
+      doubleRoundCategories[name] = transformCategory(category, DOUBLE_ROUND_VALUE_INCREMENT);
+      count += 1;
+    }
+    i += 1;
   }
 
   const game = {

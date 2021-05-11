@@ -7,20 +7,51 @@ function playSound(url) {
 }
 
 class Clue extends React.Component {
+  static defaultBorderColor = '#1D08A3';
+  static hoverBorderColor = '#FFCC00';
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      borderColor: Clue.defaultBorderColor,
+    };
+  }
+
   handleClick() {
     if (!this.props.played) {
       this.props.onClick(this);
     }
   }
 
+  handleMouseEnter() {
+    if (!this.props.played) {
+      this.setState({borderColor: Clue.hoverBorderColor});
+    }
+  }
+
+  handleMouseLeave() {
+    if (!this.props.played) {
+      this.setState({borderColor: Clue.defaultBorderColor});
+    }
+  }
+
   render() {
-    let classes = 'border border-2 clue col fw-bold p-4 text-center';
+    let classes = 'border border-2 clue col fw-bold text-center';
     let text = <br />;
     if (!this.props.played) {
       classes += ' active-clue';
       text = `$${this.props.clue.value}`;
     }
-    return <div className={classes} onClick={() => this.handleClick()}>{text}</div>;
+    return (
+      <div className={classes}
+           onClick={() => this.handleClick()}
+           onMouseEnter={() => this.handleMouseEnter()}
+           onMouseLeave={() => this.handleMouseLeave()}>
+        <div className="p-2" style={{border: `10px solid ${this.state.borderColor}`}}>
+          {text}
+        </div>
+      </div>
+    );
   }
 }
 
@@ -160,6 +191,33 @@ function StatusText(props) {
   );
 }
 
+function Podium(props) {
+  let score = props.score.toLocaleString();
+  let scoreClasses = 'py-2 podium-score';
+  if (props.score < 0) {
+    score = '-$' + score.substring(1);
+    scoreClasses += ' podium-score-negative';
+  } else {
+    score = '$' + score;
+  }
+  return (
+    <div className="mb-2 mx-4 podium row text-center">
+      <div className="col-2 podium-side podium-left-side">
+        <div className="podium-stripe" />
+        <div className="podium-stripe" />
+      </div>
+      <div className="col-4 podium-center">
+        <div className={scoreClasses}>{score}</div>
+        <div className="py-3 podium-name">{props.name}</div>
+      </div>
+      <div className="col-2 podium-side podium-right-side">
+        <div className="podium-stripe" />
+        <div className="podium-stripe" />
+      </div>
+    </div>
+  );
+}
+
 function Board(props) {
   const headings = Object.keys(props.categories).map(name => {
     let classes = 'align-items-center border border-2 category-heading col d-flex fw-bold justify-content-center p-3 text-center text-uppercase';
@@ -199,6 +257,10 @@ class Game extends React.Component {
     this.state = {
       currentClue: null,
       playedClues: [],
+      players: [
+        {name: 'William', score: 0},
+        {name: 'Jenn', score: 0},
+      ],
       playerToAct: false,
       allowAnswers: false,
       revealAnswer: false,
@@ -218,9 +280,13 @@ class Game extends React.Component {
 
   dismissCurrentClue() {
     const playedClues = this.state.playedClues.concat(this.state.currentClue.clueID);
+    const player = this.state.players[0];
+    const newPlayer = {...player, score: player.score + this.state.currentClue.value};
+    const players = [newPlayer, ...this.state.players.slice(1)];
     this.setState({
       currentClue: null,
       playedClues: playedClues,
+      players: players,
       playerToAct: true,
       allowAnswers: false,
       revealAnswer: false,
@@ -246,6 +312,7 @@ class Game extends React.Component {
     if (!this.props.board) {
       return (<div className="alert alert-primary fs-3 m-5 text-center" role="alert">Creating a new game, please wait...</div>);
     }
+    const podiums = this.state.players.map(player => <Podium key={player.name} name={player.name} score={player.score} />);
     return (
       <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}
@@ -257,6 +324,9 @@ class Game extends React.Component {
                dismissCurrentClue={() => this.dismissCurrentClue()}
                {...this.state} />
         <StatusText action={this.state.playerToAct} text={this.state.status} />
+        <div className="d-flex justify-content-center podium-container">
+          {podiums}
+        </div>
       </div>
     );
   }

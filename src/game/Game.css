@@ -3,6 +3,11 @@
     src: url("../fonts/Newsreader-VariableFont_opsz,wght.ttf");
 }
 
+@font-face {
+    font-family: "Dancing Script";
+    src: url("../fonts/DancingScript-VariableFont_wght.ttf");
+}
+
 .game {
     color: white;
     font: 24px "Swiss 911", Helvetica, sans-serif;
@@ -26,16 +31,14 @@
 .clue {
     background-color: #1D08A3;
     color: #FFCC00;
-    font-size: 36px;
+    font-size: 48px;
     min-width: 200px;
+    padding: 0;
     text-shadow: 5px 5px black;
 }
 
 .active-clue:hover {
-    background-image: radial-gradient(#FFFF00, #FFCC00);
-    color: #1D08A3;
     cursor: pointer;
-    text-shadow: none;
 }
 
 .current-clue-container {
@@ -64,4 +67,58 @@
 
 .countdown-timer {
     height: 25px;
+}
+
+.podium-container {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.podium {
+    border-radius: 1.25rem;
+    min-width: 305px;
+}
+
+.podium-center {
+    background-color: #1D08A3;
+    font-weight: bold;
+    min-width: 200px;
+    min-height: 50px;
+}
+
+.podium-side {
+    background-color: #8A482D;
+    min-height: 50px;
+    padding: 0;
+}
+
+.podium-left-side {
+    border-top-left-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+}
+
+.podium-right-side {
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+}
+
+.podium-stripe {
+    background-color: white;
+    margin-top: 15px;
+    margin-left: 5px;
+    margin-right: 5px;
+    height: 5%;
+}
+
+.podium-score {
+    border-bottom: 3px solid black;
+}
+
+.podium-score-negative {
+    color: red;
+}
+
+.podium-name {
+    font: 30px "Dancing Script", "Brush Script MT", Helvetica, sans-serif;
 }
