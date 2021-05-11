@@ -105,14 +105,14 @@
 
 .podium-stripe {
     background-color: white;
-    margin-top: 15px;
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-top: 16px;
+    margin-left: 3px;
+    margin-right: 3px;
     height: 5%;
 }
 
 .podium-score {
-    border-bottom: 3px solid black;
+    border-bottom: 4px solid black;
 }
 
 .podium-score-negative {

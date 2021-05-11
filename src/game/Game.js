@@ -36,7 +36,7 @@ class Clue extends React.Component {
   }
 
   render() {
-    let classes = 'border border-2 clue col fw-bold text-center';
+    let classes = 'border border-2 clue col fw-bold text-center user-select-none';
     let text = <br />;
     if (!this.props.played) {
       classes += ' active-clue';
@@ -46,7 +46,9 @@ class Clue extends React.Component {
       <div className={classes}
            onClick={() => this.handleClick()}
            onMouseEnter={() => this.handleMouseEnter()}
-           onMouseLeave={() => this.handleMouseLeave()}>
+           onMouseLeave={() => this.handleMouseLeave()}
+           onMouseOver={() => this.handleMouseEnter()}
+           onMouseOut={() => this.handleMouseLeave()}>
         <div className="p-2" style={{border: `10px solid ${this.state.borderColor}`}}>
           {text}
         </div>
@@ -87,7 +89,7 @@ class CurrentClue extends React.Component {
   }
 
   render() {
-    const containerClasses = 'align-items-center current-clue-container row animate__animated animate__zoomIn';
+    const containerClasses = 'align-items-center current-clue-container row user-select-none animate__animated animate__zoomIn';
     const clueClasses = 'col-12 current-clue p-5 text-center text-uppercase';
     const board = document.getElementById('board');
     return (
@@ -172,7 +174,7 @@ class CountdownTimer extends React.Component {
       value = 0;
     }
     return (
-      <div className="countdown-timer progress mb-3">
+      <div className="countdown-timer progress mb-3 user-select-none">
         <div className={classes} style={{width: `${value}%`}} role="progressbar" aria-valuenow={value} aria-valuemin="0" aria-valuemax="100">
           {secondsRemaining}
         </div>
@@ -183,7 +185,7 @@ class CountdownTimer extends React.Component {
 
 function StatusText(props) {
   const colorClasses = props.action ? 'bg-success' : 'bg-light text-dark';
-  const classes = 'card mt-3 rounded-pill ' + colorClasses;
+  const classes = 'card mt-3 rounded-pill user-select-none ' + colorClasses;
   return (
     <div className={classes}>
       <div className="card-body">{props.text}</div>
@@ -201,7 +203,7 @@ function Podium(props) {
     score = '$' + score;
   }
   return (
-    <div className="mb-2 mx-4 podium row text-center">
+    <div className="mb-2 mx-4 podium row text-center user-select-none">
       <div className="col-2 podium-side podium-left-side">
         <div className="podium-stripe" />
         <div className="podium-stripe" />
@@ -220,7 +222,8 @@ function Podium(props) {
 
 function Board(props) {
   const headings = Object.keys(props.categories).map(name => {
-    let classes = 'align-items-center border border-2 category-heading col d-flex fw-bold justify-content-center p-3 text-center text-uppercase';
+    let classes = 'align-items-center border border-2 category-heading col d-flex fw-bold justify-content-center p-3 ' +
+                  'text-center text-uppercase user-select-none';
     let words = name.split(' ');
     let meanLength = words.reduce((sum, word) => sum + word.length, 0) / words.length;
     if (name.length > 30 || meanLength > 7 || (words.length > 3 && meanLength > 4)) {
