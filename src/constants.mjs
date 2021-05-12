@@ -10,3 +10,9 @@ export const Rounds = {
   DOUBLE: 'double',
   FINAL: 'final',
 };
+
+export const EventTypes = {
+  JOIN_GAME: 'join_game',
+  JOIN_FAILED: 'join_failed',
+  PLAYER_JOINED: 'player_joined',
+}

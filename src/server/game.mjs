@@ -24,7 +24,7 @@ function transformCategory(category, round) {
   let clues = [];
   let usedClues = new Set();
   category.clues.forEach(clue => {
-    if (clues.length < CLUES_PER_CATEGORY && !usedClues.has(clue.question)) {
+    if (clues.length < CLUES_PER_CATEGORY && !!clue.question && !!clue.answer && !usedClues.has(clue.question)) {
       clues.push({
         clueID: clue.id,
         answer: clue.answer,
@@ -77,12 +77,14 @@ async function createRound(round) {
 
   while (Object.keys(roundCategories).length < CATEGORIES_PER_ROUND) {
     const category = categories[i];
-    const name = category.title;
-    if (!categoryNames.has(name)) {
-      let transformedCategory = transformCategory(category, round);
-      if (transformedCategory) {
-        categoryNames.add(name);
-        roundCategories[category.id] = transformedCategory;
+    if (category) {
+      const name = category.title;
+      if (!categoryNames.has(name)) {
+        let transformedCategory = transformCategory(category, round);
+        if (transformedCategory) {
+          categoryNames.add(name);
+          roundCategories[category.id] = transformedCategory;
+        }
       }
     }
     i += 1;

@@ -28,4 +28,16 @@ export async function getGame(gameID) {
   return await gamesCollection.findOne({gameID: gameID});
 }
 
+async function updateGameFields(gameID, updates) {
+  await gamesCollection.updateOne({gameID: gameID}, updates);
+}
+
+export async function updateGame(gameID, newFields) {
+  await updateGameFields(gameID, {$set: newFields});
+}
+
+export async function addPlayerToGame(gameID, player) {
+  await updateGameFields(gameID, {$addToSet: {players: player}});
+}
+
 export default db;

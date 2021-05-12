@@ -1,13 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { fetchBoard } from '../data/action_creators';
+import { fetchGame, joinGame, websocketConnect } from '../data/action_creators';
 import Game from './Game';
 
 function mapStateToProps(state) {
   return {...state};
 }
 
-const actionCreators = {fetchBoard,};
+const actionCreators = {fetchGame, joinGame, websocketConnect};
 
 class Connector extends React.Component {
   render() {
@@ -15,7 +15,7 @@ class Connector extends React.Component {
   }
 
   componentDidMount() {
-    this.props.fetchBoard();
+    this.props.fetchGame();
   }
 }
 

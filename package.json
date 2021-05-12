@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.3",
+    "@giantmachines/redux-websocket": "^1.5.1",
     "@gouch/to-title-case": "^2.2.1",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
@@ -11,6 +12,7 @@
     "bootstrap": "^5.0.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-ws": "^4.0.0",
     "mongodb": "^3.6.6",
     "node-fetch": "^2.6.1",
     "react": "^17.0.2",
@@ -19,7 +21,8 @@
     "react-scripts": "4.0.3",
     "redux": "^4.1.0",
     "uuid": "^3.4.0",
-    "web-vitals": "^1.0.1"
+    "web-vitals": "^1.0.1",
+    "ws": "^7.4.5"
   },
   "scripts": {
     "start": "react-scripts start",

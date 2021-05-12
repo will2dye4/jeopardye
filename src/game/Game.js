@@ -1,6 +1,8 @@
 import React from 'react';
-import { CLUES_PER_CATEGORY } from '../constants.mjs';
+import { CLUES_PER_CATEGORY, Rounds } from '../constants.mjs';
 import './Game.css';
+
+const PLAYER_ID = 'William';
 
 function playSound(url) {
   new Audio(url).play().catch(console.log);
@@ -229,19 +231,37 @@ function Board(props) {
 class Game extends React.Component {
   constructor(props) {
     super(props);
+    let status = 'Loading...';
+    if (props.game) {
+      const round = (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
+      status = `Game started. Let's play the ${round} round.`;
+    }
     this.state = {
       currentClue: null,
       playedClues: [],
-      players: [
-        {name: 'William', score: 0},
-        {name: 'Jenn', score: 0},
-      ],
-      playerToAct: false,
+      players: props.players,
+      playerToAct: !!props.game,
       allowAnswers: false,
       revealAnswer: false,
-      status: 'Game started.',
+      status: status,
       timerRef: React.createRef(),
     };
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (!prevProps.game && this.props.game && !this.props.connected) {
+      console.log('New game loaded. Opening websocket connection...');
+      this.props.websocketConnect();
+    }
+    if (!prevProps.connected && this.props.connected && this.props.game) {
+      console.log('Websocket connection successful. Joining game...');
+      this.props.joinGame(this.props.game.gameID, PLAYER_ID, PLAYER_ID);
+      const round = (this.props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
+      this.setState({status: `Game started. Let's play the ${round} round.`, playerToAct: true});
+    }
+    if (prevProps.players !== this.props.players) {
+      this.setState({players: this.props.players});
+    }
   }
 
   revealAnswer() {
@@ -255,9 +275,9 @@ class Game extends React.Component {
 
   dismissCurrentClue() {
     const playedClues = this.state.playedClues.concat(this.state.currentClue.clueID);
-    const player = this.state.players[0];
+    const player = this.state.players[PLAYER_ID];
     const newPlayer = {...player, score: player.score + this.state.currentClue.value};
-    const players = [newPlayer, ...this.state.players.slice(1)];
+    const players = {...this.state.players, [player.playerID]: newPlayer};
     this.setState({
       currentClue: null,
       playedClues: playedClues,
@@ -271,9 +291,14 @@ class Game extends React.Component {
   }
 
   handleClueClick(clue) {
+    let status = (
+      <React.Fragment>
+        Playing <span className="fw-bold">{clue.category}</span> for <span className="fw-bold">${clue.value}</span>...
+      </React.Fragment>
+    );
     this.setState({
       playerToAct: false,
-      status: `Playing ${clue.category} for $${clue.value}...`,
+      status: status,
     });
     setTimeout(function() {
       this.setState({
@@ -284,10 +309,10 @@ class Game extends React.Component {
   }
 
   render() {
-    if (!this.props.board) {
+    if (!this.props.game) {
       return (<div className="alert alert-primary fs-3 m-5 text-center" role="alert">Creating a new game, please wait...</div>);
     }
-    const podiums = this.state.players.map(player => <Podium key={player.name} name={player.name} score={player.score} />);
+    const podiums = Object.values(this.state.players).map(player => <Podium key={player.playerID} name={player.name} score={player.score} />);
     return (
       <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}

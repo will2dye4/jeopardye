@@ -4,12 +4,12 @@ import { Provider } from 'react-redux';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import { GameConnector } from './game/GameConnector';
-import { GameDataStore } from './data/data_store';
+import { store } from './data/data_store';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
-    <Provider store={GameDataStore}>
+    <Provider store={store}>
       <GameConnector />
     </Provider>
   </React.StrictMode>,
