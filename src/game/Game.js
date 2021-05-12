@@ -56,6 +56,7 @@ class CurrentClue extends React.Component {
     if (this.state.reveal) {
       this.props.dismiss();
     } else if (this.props.allowAnswers) {
+      this.props.buzzIn(this.props.gameID, PLAYER_ID, this.props.clue.categoryID, this.props.clue.clueID);
       this.revealAnswer();
       this.props.timerRef.current.reset();
     }
@@ -217,13 +218,15 @@ function Board(props) {
     <div key="headings" className="row row-cols-6">{headings}</div>,
     ...rows,
   ];
-  if (props.currentClue) {
+  if (props.showActiveClue && props.activeClue) {
     content.push(<CurrentClue key="current-clue"
-                              clue={props.currentClue}
+                              gameID={props.gameID}
+                              clue={props.activeClue}
                               allowAnswers={props.allowAnswers}
                               reveal={props.revealAnswer}
                               timerRef={props.timerRef}
-                              dismiss={() => props.dismissCurrentClue()} />);
+                              buzzIn={props.buzzIn}
+                              dismiss={props.dismissCurrentClue} />);
   }
   return <div id="board" className="position-relative">{content}</div>;
 }
@@ -237,12 +240,13 @@ class Game extends React.Component {
       status = `Game started. Let's play the ${round} round.`;
     }
     this.state = {
-      currentClue: null,
+      activeClue: props.activeClue,
       playedClues: [],
       players: props.players,
       playerToAct: !!props.game,
       allowAnswers: false,
       revealAnswer: false,
+      showActiveClue: !!props.activeClue,
       status: status,
       timerRef: React.createRef(),
     };
@@ -262,6 +266,9 @@ class Game extends React.Component {
     if (prevProps.players !== this.props.players) {
       this.setState({players: this.props.players});
     }
+    if (prevProps.activeClue !== this.props.activeClue) {
+      this.setState({activeClue: this.props.activeClue});
+    }
   }
 
   revealAnswer() {
@@ -274,20 +281,22 @@ class Game extends React.Component {
   }
 
   dismissCurrentClue() {
-    const playedClues = this.state.playedClues.concat(this.state.currentClue.clueID);
+    const playedClues = this.state.playedClues.concat(this.props.activeClue.clueID);
     const player = this.state.players[PLAYER_ID];
-    const newPlayer = {...player, score: player.score + this.state.currentClue.value};
+    const newPlayer = {...player, score: player.score + this.props.activeClue.value};
     const players = {...this.state.players, [player.playerID]: newPlayer};
     this.setState({
-      currentClue: null,
+      activeClue: null,
       playedClues: playedClues,
       players: players,
       playerToAct: true,
       allowAnswers: false,
       revealAnswer: false,
+      showActiveClue: false,
       status: 'Choose another clue.',
     });
     this.state.timerRef.current.reset();
+    this.props.dismissActiveClue();
   }
 
   handleClueClick(clue) {
@@ -296,13 +305,14 @@ class Game extends React.Component {
         Playing <span className="fw-bold">{clue.category}</span> for <span className="fw-bold">${clue.value}</span>...
       </React.Fragment>
     );
+    this.props.selectClue(this.props.game.gameID, PLAYER_ID, clue.categoryID, clue.clueID);
     this.setState({
       playerToAct: false,
       status: status,
     });
     setTimeout(function() {
       this.setState({
-        currentClue: clue,
+        showActiveClue: true,
       });
       this.state.timerRef.current.start();
     }.bind(this), 1500);
@@ -319,8 +329,10 @@ class Game extends React.Component {
                         seconds="10"
                         onTimeStarted={() => this.setState({allowAnswers: true})}
                         onTimeElapsed={() => this.revealAnswer()} />
-        <Board categories={this.props.board.categories}
+        <Board gameID={this.props.game.gameID}
+               categories={this.props.board.categories}
                handleClueClick={(clue) => this.handleClueClick(clue)}
+               buzzIn={this.props.buzzIn}
                dismissCurrentClue={() => this.dismissCurrentClue()}
                {...this.state} />
         <StatusText action={this.state.playerToAct} text={this.state.status} />

@@ -52,7 +52,7 @@
     top: 0;
     left: 0;
     vertical-align: center;
-    z-index: 1000;
+    z-index: 100;
 }
 
 .current-clue {
@@ -78,11 +78,13 @@
     position: fixed;
     bottom: 0;
     width: 100%;
+    z-index: 200;
 }
 
 .podium {
+    border: 5px solid white;
     border-radius: 1.25rem;
-    min-width: 305px;
+    min-width: 310px;
 }
 
 .podium-center {

@@ -1,9 +1,10 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { newEvent } from '../utils.mjs';
+import { WebsocketEvent } from '../utils.mjs';
 import { EventTypes } from '../constants.mjs';
 
 export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
+  DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -22,7 +23,26 @@ export function fetchGame() {
 }
 
 export function joinGame(gameID, playerID, playerName) {
-  return send(newEvent(EventTypes.JOIN_GAME, {gameID: gameID, playerID: playerID, playerName: playerName}));
+  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID: gameID, playerID: playerID, playerName: playerName}));
+}
+
+export function selectClue(gameID, playerID, categoryID, clueID) {
+  return send(new WebsocketEvent(EventTypes.SELECT_CLUE, {gameID: gameID, playerID: playerID, categoryID: categoryID, clueID: clueID}));
+}
+
+export function buzzIn(gameID, playerID, categoryID, clueID) {
+  return send(new WebsocketEvent(EventTypes.BUZZ_IN, {gameID: gameID, playerID: playerID, categoryID: categoryID, clueID: clueID}));
+}
+
+export function submitAnswer() {
+  return send(new WebsocketEvent(EventTypes.SUBMIT_ANSWER, {/*TODO*/}));
+}
+
+export function dismissActiveClue() {
+  return {
+    type: ActionTypes.DISMISS_CLUE,
+    payload: {},
+  }
 }
 
 export function websocketConnect(url = WS_BASE) {

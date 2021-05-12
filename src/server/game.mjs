@@ -17,6 +17,11 @@ function titleizeCategoryName(categoryName) {
   return categoryName.toTitleCase();
 }
 
+function sanitizeQuestionText(text) {
+  /* remove backslashes and HTML style tags (<b>, </b>, <i>, </i>, <u>, </u>) */
+  return text.replaceAll(/\\|<\/?[biu]>/g, '');
+}
+
 function transformCategory(category, round) {
   const valueIncrement = (round === Rounds.SINGLE ? SINGLE_ROUND_VALUE_INCREMENT : DOUBLE_ROUND_VALUE_INCREMENT);
 
@@ -27,8 +32,10 @@ function transformCategory(category, round) {
     if (clues.length < CLUES_PER_CATEGORY && !!clue.question && !!clue.answer && !usedClues.has(clue.question)) {
       clues.push({
         clueID: clue.id,
-        answer: clue.answer,
-        question: clue.question,
+        answer: sanitizeQuestionText(clue.answer),
+        rawAnswer: clue.answer,
+        question: sanitizeQuestionText(clue.question),
+        rawQuestion: clue.question,
         value: valueIncrement * i,
       });
       usedClues.add(clue.question);

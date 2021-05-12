@@ -12,7 +12,13 @@ export const Rounds = {
 };
 
 export const EventTypes = {
+  ERROR: 'error',
   JOIN_GAME: 'join_game',
-  JOIN_FAILED: 'join_failed',
   PLAYER_JOINED: 'player_joined',
+  SELECT_CLUE: 'select_clue',
+  PLAYER_SELECTED_CLUE: 'player_selected_clue',
+  BUZZ_IN: 'buzz_in',
+  PLAYER_BUZZED: 'player_buzzed',
+  SUBMIT_ANSWER: 'submit_answer',
+  PLAYER_ANSWERED: 'player_answered',
 }
