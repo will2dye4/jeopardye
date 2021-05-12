@@ -1,4 +1,4 @@
-import { connect, send } from '@giantmachines/redux-websocket';
+import { connect, disconnect, send } from '@giantmachines/redux-websocket';
 import { newEvent } from '../utils.mjs';
 import { EventTypes } from '../constants.mjs';
 
@@ -27,4 +27,8 @@ export function joinGame(gameID, playerID, playerName) {
 
 export function websocketConnect(url = WS_BASE) {
   return connect(url);
+}
+
+export function websocketDisconnect() {
+  return disconnect();
 }

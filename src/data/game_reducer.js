@@ -10,7 +10,7 @@ function newStoreData() {
   };
 }
 
-function handleWebsocketAction(storeData, event) {
+function handleWebsocketEvent(storeData, event) {
   if (event.hasOwnProperty('message')) {
     event = JSON.parse(event.message);
   }
@@ -42,7 +42,7 @@ export function GameReducer(storeData, action) {
     case ActionTypes.REDUX_WEBSOCKET_CLOSED:
       return {...storeData, connected: false};
     case ActionTypes.REDUX_WEBSOCKET_MESSAGE:
-      return handleWebsocketAction(storeData, action.payload);
+      return handleWebsocketEvent(storeData, action.payload);
     default:
       return storeData || newStoreData();
   }
