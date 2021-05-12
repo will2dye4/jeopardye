@@ -1,6 +1,6 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { WebsocketEvent } from '../utils.mjs';
-import { EventTypes } from '../constants.mjs';
+import { WebsocketEvent } from '../../utils.mjs';
+import { EventTypes } from '../../constants.mjs';
 
 export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',

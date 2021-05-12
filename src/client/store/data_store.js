@@ -1,7 +1,7 @@
 import { applyMiddleware, createStore } from 'redux';
 import reduxWebsocket from '@giantmachines/redux-websocket';
-import { asyncActions } from './async_middleware';
-import { GameReducer } from './game_reducer';
+import { asyncActions } from '../middleware/async_middleware';
+import { GameReducer } from '../reducers/game_reducer';
 
 const reduxWebsocketMiddleware = reduxWebsocket();
 

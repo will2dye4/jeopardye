@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { dismissActiveClue, fetchGame, joinGame, selectClue, buzzIn, submitAnswer, websocketConnect, websocketDisconnect } from '../data/action_creators';
-import Game from './Game';
+import { dismissActiveClue, fetchGame, joinGame, selectClue, buzzIn, submitAnswer, websocketConnect, websocketDisconnect } from '../actions/action_creators';
+import Game from './game/Game';
 
 function mapStateToProps(state) {
   return {...state};

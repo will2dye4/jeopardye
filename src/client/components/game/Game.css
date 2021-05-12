@@ -1,11 +1,11 @@
 @font-face {
     font-family: "Newsreader";
-    src: url("../fonts/Newsreader-VariableFont_opsz,wght.ttf");
+    src: url("../../fonts/Newsreader-VariableFont_opsz,wght.ttf");
 }
 
 @font-face {
     font-family: "Dancing Script";
-    src: url("../fonts/DancingScript-VariableFont_wght.ttf");
+    src: url("../../fonts/DancingScript-VariableFont_wght.ttf");
 }
 
 .game {
