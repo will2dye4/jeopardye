@@ -36,6 +36,7 @@ function Board(props) {
                              reveal={props.revealAnswer}
                              timerRef={props.timerRef}
                              buzzIn={props.buzzIn}
+                             submitAnswer={props.submitAnswer}
                              dismiss={props.dismissActiveClue} />);
   }
   return <div id="board" className="position-relative">{content}</div>;

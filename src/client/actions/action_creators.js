@@ -23,19 +23,19 @@ export function fetchGame() {
 }
 
 export function joinGame(gameID, playerID, playerName) {
-  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID: gameID, playerID: playerID, playerName: playerName}));
+  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID, playerID, playerName}));
 }
 
 export function selectClue(gameID, playerID, categoryID, clueID) {
-  return send(new WebsocketEvent(EventTypes.SELECT_CLUE, {gameID: gameID, playerID: playerID, categoryID: categoryID, clueID: clueID}));
+  return send(new WebsocketEvent(EventTypes.SELECT_CLUE, {gameID, playerID, categoryID, clueID}));
 }
 
 export function buzzIn(gameID, playerID, categoryID, clueID) {
-  return send(new WebsocketEvent(EventTypes.BUZZ_IN, {gameID: gameID, playerID: playerID, categoryID: categoryID, clueID: clueID}));
+  return send(new WebsocketEvent(EventTypes.BUZZ_IN, {gameID, playerID, categoryID, clueID}));
 }
 
-export function submitAnswer() {
-  return send(new WebsocketEvent(EventTypes.SUBMIT_ANSWER, {/*TODO*/}));
+export function submitAnswer(gameID, playerID, categoryID, clueID, answer) {
+  return send(new WebsocketEvent(EventTypes.SUBMIT_ANSWER, {gameID, playerID, categoryID, clueID, answer}));
 }
 
 export function dismissActiveClue() {

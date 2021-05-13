@@ -16,9 +16,9 @@ class Game extends React.Component {
       status = `Game started. Let's play the ${round} round.`;
     }
     this.state = {
-      activeClue: props.activeClue,
+      //activeClue: props.activeClue,
       playedClues: [],
-      players: props.players,
+      //players: props.players,
       playerToAct: !!props.game,
       allowAnswers: false,
       revealAnswer: false,
@@ -39,11 +39,22 @@ class Game extends React.Component {
       const round = (this.props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
       this.setState({status: `Game started. Let's play the ${round} round.`, playerToAct: true});
     }
-    if (prevProps.players !== this.props.players) {
-      this.setState({players: this.props.players});
+    if (!prevProps.prevAnswer && this.props.prevAnswer) {
+      if (this.props.prevAnswer.correct) {
+        this.setState({
+          playerToAct: true,
+          allowAnswers: false,
+          revealAnswer: false,
+          showActiveClue: false,
+          status: 'Correct! Well done. Choose again.',
+        });
+      } else {
+        this.setState({status: 'Sorry, no.'});
+        this.state.timerRef.current.resume();
+      }
     }
-    if (prevProps.activeClue !== this.props.activeClue) {
-      this.setState({activeClue: this.props.activeClue});
+    if (prevProps.activeClue && !this.props.activeClue) {
+      this.setState({playedClues: this.state.playedClues.concat(prevProps.activeClue.clueID)});
     }
   }
 
@@ -57,14 +68,7 @@ class Game extends React.Component {
   }
 
   dismissActiveClue() {
-    const playedClues = this.state.playedClues.concat(this.props.activeClue.clueID);
-    const player = this.state.players[DEFAULT_PLAYER_ID];
-    const newPlayer = {...player, score: player.score + this.props.activeClue.value};
-    const players = {...this.state.players, [player.playerID]: newPlayer};
     this.setState({
-      activeClue: null,
-      playedClues: playedClues,
-      players: players,
       playerToAct: true,
       allowAnswers: false,
       revealAnswer: false,
@@ -98,7 +102,7 @@ class Game extends React.Component {
     if (!this.props.game) {
       return (<div className="alert alert-primary fs-3 m-5 text-center" role="alert">Creating a new game, please wait...</div>);
     }
-    const podiums = Object.values(this.state.players).map(player => {
+    const podiums = Object.values(this.props.players).map(player => {
       const active = (player.playerID === this.props.playerAnswering);
       return <Podium key={player.playerID} name={player.name} score={player.score} active={active} />
     });
@@ -111,9 +115,11 @@ class Game extends React.Component {
         <Board gameID={this.props.game.gameID}
                categories={this.props.board.categories}
                handleClueClick={(clue) => this.handleClueClick(clue)}
+               submitAnswer={this.props.submitAnswer}
                buzzIn={this.props.buzzIn}
                dismissActiveClue={() => this.dismissActiveClue()}
                playerAnswering={this.props.playerAnswering}
+               activeClue={this.props.activeClue}
                {...this.state} />
         <StatusText action={this.state.playerToAct} text={this.state.status} />
         <div className="d-flex justify-content-center podium-container">

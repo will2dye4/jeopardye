@@ -1,6 +1,7 @@
 import { EventTypes } from '../constants.mjs';
+import { Player } from '../models/player.mjs';
 import { checkSubmittedAnswer, WebsocketEvent } from '../utils.mjs';
-import { addPlayerToGame, getGame, setActiveClue, updateGame } from './db.mjs';
+import { addPlayerToGame, getGame, setActiveClue, setPlayerAnswering, updateGame } from './db.mjs';
 
 export let connectedClients = {};
 
@@ -37,12 +38,8 @@ async function handleJoinGame(ws, event) {
     handleError(ws, event, 'game not found', 404);
     return;
   }
-  const name = playerName || `Player ${game.players.length + 1}`;
-  const player = {
-    playerID: playerID,
-    name: name,
-    score: 0,
-  };
+  const name = playerName || `Player ${Object.keys(game.players).length + 1}`;
+  const player = new Player(playerID, name);
   addPlayerToGame(gameID, player).then(() => {
     connectedClients[playerID] = ws;
     broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player: player}));
@@ -56,7 +53,7 @@ async function validateGamePlayerAndClue(ws, event) {
     handleError(ws, event, `game ${gameID} not found`, 404);
     return null;
   }
-  if (game.players.map(player => player.playerID).indexOf(playerID) === -1) {
+  if (Object.keys(game.players).indexOf(playerID) === -1) {
     handleError(ws, event, `player ${playerID} not in game ${gameID}`, 400);
     return null;
   }
@@ -107,13 +104,17 @@ async function handleBuzzIn(ws, event) {
     handleError(ws, event, `invalid buzz attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
     return;
   }
+  if (game.activeClue.playersAttempted.indexOf(playerID) !== -1) {
+    handleError(ws, event, `invalid buzz attempt - player ${playerID} has already buzzed in`, 400);
+    return;
+  }
   /* TODO - uncomment this once playerAnswering is being reset to null
   if (game.playerAnswering) {
     handleError(ws, event, `invalid buzz attempt - another player is already answering`, 400);
     return;
   }
   */
-  updateGame(gameID, {playerAnswering: playerID}).then(() => {
+  setPlayerAnswering(gameID, playerID).then(() => {
     broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
   });
 }
@@ -140,14 +141,16 @@ async function handleSubmitAnswer(ws, event) {
   const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
   const clue = clues[clueIndex];
   const correct = checkSubmittedAnswer(clue.answer, answer);
-  let newFields = {playerAnswering: null};
+  let score = game.players[playerID].score;
+  let newScore = (correct ? score + clue.value : score - clue.value);
+  let newFields = {playerAnswering: null, [`players.${playerID}.score`]: newScore};
   if (correct) {
     newFields.activeClue = null;
     newFields.playerInControl = playerID;
   }
-  /* TODO - if incorrect, prevent player from buzzing in again */
   updateGame(gameID, newFields).then(() => {
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, {...event.payload, correct: correct}));
+    const payload = {...event.payload, correct: correct, score: newScore};
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
   });
 }
 

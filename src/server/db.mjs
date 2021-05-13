@@ -41,14 +41,14 @@ export async function updateGame(gameID, newFields) {
 }
 
 export async function addPlayerToGame(gameID, player) {
-  await updateGameFields(gameID, {$addToSet: {players: player}});
+  await updateGameFields(gameID, {$set: {[`players.${player.playerID}`]: player}});
 }
 
 export async function setActiveClue(game, clue) {
   const cluePlayedKey = `rounds.${game.currentRound}.categories.${clue.categoryID}.clues.$[clue].played`;
   const updates = {
     $set: {
-      activeClue: {...clue, played: true},
+      activeClue: {...clue, played: true, playersAttempted: []},
       [cluePlayedKey]: true
     }
   };
@@ -58,6 +58,18 @@ export async function setActiveClue(game, clue) {
     },
   ];
   await updateGameFields(game.gameID, updates, arrayFilters);
+}
+
+export async function setPlayerAnswering(gameID, playerID) {
+  const updates = {
+    $set: {
+      playerAnswering: playerID,
+    },
+    $addToSet: {
+      'activeClue.playersAttempted': playerID,
+    }
+  };
+  await updateGameFields(gameID, updates);
 }
 
 export default db;

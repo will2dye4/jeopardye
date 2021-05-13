@@ -5,6 +5,7 @@ class CountdownTimer extends React.Component {
     super(props);
     this.state = {
       finished: false,
+      paused: false,
       running: false,
       waiting: false,
       interval: props.seconds * 10,
@@ -13,27 +14,29 @@ class CountdownTimer extends React.Component {
     };
   }
 
+  getUpdater() {
+    return setInterval(function() {
+      const newValue = this.state.value - 1;
+      const finished = (newValue <= 0);
+      this.setState({finished: finished, running: !finished, value: newValue});
+      if (finished) {
+        this.cancelUpdater();
+        if (this.props.onTimeElapsed) {
+          this.props.onTimeElapsed();
+        }
+      }
+    }.bind(this), this.state.interval);
+  }
+
   start() {
     if (!this.state.finished) {
       this.setState({waiting: true});
       const delay = (10 + Math.random()) * 1000;  // random delay between 10 and 11 seconds
       setTimeout(function() {
-        const updater = setInterval(function() {
-          const newValue = this.state.value - 1;
-          const finished = (newValue <= 0);
-          this.setState({finished: finished, running: !finished, value: newValue});
-          if (finished) {
-            this.cancelUpdater();
-            if (this.props.onTimeElapsed) {
-              this.props.onTimeElapsed();
-            }
-          }
-        }.bind(this), this.state.interval);
-
         this.setState({
           running: true,
           waiting: false,
-          updater: updater,
+          updater: this.getUpdater(),
         });
         if (this.props.onTimeStarted) {
           this.props.onTimeStarted();
@@ -42,10 +45,31 @@ class CountdownTimer extends React.Component {
     }
   }
 
+  pause() {
+    if (this.state.running && !this.state.paused) {
+      this.setState({
+        running: false,
+        paused: true,
+      });
+      this.cancelUpdater();
+    }
+  }
+
+  resume() {
+    if (!this.state.waiting && !this.state.finished && this.state.paused) {
+      this.setState({
+        running: true,
+        paused: false,
+        updater: this.getUpdater(),
+      });
+    }
+  }
+
   reset() {
     this.setState({
       finished: false,
       running: false,
+      paused: false,
       value: 100,
     });
     this.cancelUpdater();
@@ -65,7 +89,7 @@ class CountdownTimer extends React.Component {
       classes += ' bg-warning text-dark progress-bar-striped progress-bar-animated';
       secondsRemaining = 'Waiting...'
       value = 100;
-    } else if (this.state.running) {
+    } else if (this.state.running || this.state.paused) {
       classes += ' fw-bold bg-danger';
       secondsRemaining = Math.ceil(this.state.value * this.props.seconds / 100);
       value = this.state.value;

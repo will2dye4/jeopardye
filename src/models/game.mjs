@@ -86,7 +86,7 @@ export class Game {
       [Rounds.DOUBLE]: doubleRound,
     };
     this.currentRound = currentRound || Rounds.SINGLE;
-    this.players = players || [];
+    this.players = players || {};
     this.activeClue = activeClue || null;
     this.playerAnswering = playerAnswering || null;
     this.playerInControl = playerInControl || null;

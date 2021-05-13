@@ -10,6 +10,7 @@ function newStoreData() {
     activeClue: null,
     playerAnswering: null,
     playerInControl: null,
+    prevAnswer: null,
   };
 }
 
@@ -36,17 +37,25 @@ function handlePlayerSelectedClue(storeData, event) {
   }
   const clue = {...clues[clueIndex], category: category.name, categoryID: categoryID};
   console.log(`Playing ${category.name} for $${clue.value}.`);
-  return {...storeData, activeClue: clue};
+  return {...storeData, activeClue: clue, prevAnswer: null};
 }
 
 function handlePlayerBuzzed(storeData, event) {
   console.log(`${event.payload.playerID} buzzed in.`);
-  return {...storeData, playerAnswering: event.payload.playerID};
+  return {...storeData, playerAnswering: event.payload.playerID, prevAnswer: null};
 }
 
 function handlePlayerAnswered(storeData, event) {
-  // TODO
-  return storeData;
+  const { answer, correct, playerID, score } = event.payload;
+  console.log(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'})`);
+  const newPlayer = {...storeData.players[playerID], score: score};
+  const newPlayers = {...storeData.players, [playerID]: newPlayer};
+  let newStoreData = {...storeData, players: newPlayers, playerAnswering: null, prevAnswer: event.payload};
+  if (event.payload.correct) {
+    newStoreData.activeClue = null;
+    newStoreData.playerInControl = event.payload.playerID;
+  }
+  return newStoreData;
 }
 
 const eventHandlers = {
@@ -76,9 +85,7 @@ export function GameReducer(storeData, action) {
     case ActionTypes.FETCH_GAME:
       const newGame = action.payload;
       const newBoard = newGame.rounds[newGame.currentRound];
-      const players = {};
-      newGame.players.forEach(player => players[player.playerID] = player);
-      return {...storeData, game: newGame, board: newBoard, players: players, activeClue: null, playerAnswering: null, playerInControl: null};
+      return {...storeData, game: newGame, board: newBoard, players: newGame.players, activeClue: null, playerAnswering: null, playerInControl: null};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null};
     case ActionTypes.REDUX_WEBSOCKET_OPEN:
