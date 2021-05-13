@@ -1,79 +1,9 @@
 import express from 'express';
 import '@gouch/to-title-case';
-
-import {
-  CATEGORIES_PER_ROUND,
-  CLUES_PER_CATEGORY,
-  SINGLE_ROUND_VALUE_INCREMENT,
-  DOUBLE_ROUND_VALUE_INCREMENT,
-  Rounds,
-} from '../constants.mjs';
+import { CATEGORIES_PER_ROUND, Rounds } from '../constants.mjs';
+import { Category, Game, Round } from '../models/game.mjs';
 import { createGame, getGame } from './db.mjs';
 import { fetchRandomCategories } from './jservice.mjs';
-
-const DAILY_DOUBLE_CLUES_TO_SKIP = 2;
-
-function titleizeCategoryName(categoryName) {
-  return categoryName.toTitleCase();
-}
-
-function sanitizeQuestionText(text) {
-  /* remove backslashes and HTML style tags (<b>, </b>, <i>, </i>, <u>, </u>) */
-  return text.replaceAll(/\\|<\/?[biu]>/g, '');
-}
-
-function transformCategory(category, round) {
-  const valueIncrement = (round === Rounds.SINGLE ? SINGLE_ROUND_VALUE_INCREMENT : DOUBLE_ROUND_VALUE_INCREMENT);
-
-  let i = 1;
-  let clues = [];
-  let usedClues = new Set();
-  category.clues.forEach(clue => {
-    if (clues.length < CLUES_PER_CATEGORY && !!clue.question && !!clue.answer && !usedClues.has(clue.question)) {
-      clues.push({
-        clueID: clue.id,
-        answer: sanitizeQuestionText(clue.answer),
-        rawAnswer: clue.answer,
-        question: sanitizeQuestionText(clue.question),
-        rawQuestion: clue.question,
-        value: valueIncrement * i,
-      });
-      usedClues.add(clue.question);
-      i += 1;
-    }
-  });
-
-  if (clues.length < CLUES_PER_CATEGORY) {
-    return null;
-  }
-  return {
-    categoryID: category.id,
-    name: titleizeCategoryName(category.title),
-    clues: clues,
-  };
-}
-
-function chooseDailyDoubles(categories, round) {
-  const numDailyDoubles = (round === Rounds.SINGLE ? 1 : 2);
-  let dailyDoubles = [];
-  let usedCategories = new Set();
-  let categoryIDs = Object.keys(categories);
-  let dailyDoubleRange = CLUES_PER_CATEGORY - DAILY_DOUBLE_CLUES_TO_SKIP;
-
-  while (dailyDoubles.length < numDailyDoubles) {
-    let categoryID = categoryIDs[Math.floor(Math.random() * categoryIDs.length)];
-    let category = categories[categoryID];
-    if (!usedCategories.has(categoryID)) {
-      let clueIndex = Math.floor(Math.random() * dailyDoubleRange) + DAILY_DOUBLE_CLUES_TO_SKIP;
-      if (category.clues.length >= clueIndex) {
-        dailyDoubles.push(category.clues[clueIndex].clueID);
-        usedCategories.add(categoryID);
-      }
-    }
-  }
-
-  return dailyDoubles;
-}
 
 async function createRound(round) {
   const numCategories = CATEGORIES_PER_ROUND * 3;
@@ -87,10 +17,10 @@ async function createRound(round) {
     if (category) {
       const name = category.title;
       if (!categoryNames.has(name)) {
-        let transformedCategory = transformCategory(category, round);
+        let transformedCategory = Category.fromJService(category, round);
         if (transformedCategory) {
           categoryNames.add(name);
-          roundCategories[category.id] = transformedCategory;
+          roundCategories[transformedCategory.categoryID] = transformedCategory;
         }
       }
     }
@@ -101,10 +31,7 @@ async function createRound(round) {
     }
   }
 
-  return {
-    categories: roundCategories,
-    dailyDoubles: chooseDailyDoubles(roundCategories, round),
-  };
+  return new Round(roundCategories, round);
 }
 
 async function handleCreateGame(req, res, next) {
@@ -125,15 +52,7 @@ async function handleCreateGame(req, res, next) {
     return;
   }
 
-  const game = {
-    rounds: {
-      [Rounds.SINGLE]: singleRound,
-      [Rounds.DOUBLE]: doubleRound,
-    },
-    currentRound: Rounds.SINGLE,
-    players: [],
-  };
-
+  const game = new Game(singleRound, doubleRound);
   try {
     await createGame(game);
   } catch (e) {

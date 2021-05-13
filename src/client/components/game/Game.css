@@ -126,6 +126,14 @@
     color: red;
 }
 
+.podium-indicator {
+    min-height: 30px;
+}
+
+.podium-indicator-active {
+    background-color: white;
+}
+
 .podium-name {
     font: 30px "Dancing Script", "Brush Script MT", Helvetica, sans-serif;
 }

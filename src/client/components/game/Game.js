@@ -98,7 +98,10 @@ class Game extends React.Component {
     if (!this.props.game) {
       return (<div className="alert alert-primary fs-3 m-5 text-center" role="alert">Creating a new game, please wait...</div>);
     }
-    const podiums = Object.values(this.state.players).map(player => <Podium key={player.playerID} name={player.name} score={player.score} />);
+    const podiums = Object.values(this.state.players).map(player => {
+      const active = (player.playerID === this.props.playerAnswering);
+      return <Podium key={player.playerID} name={player.name} score={player.score} active={active} />
+    });
     return (
       <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}
@@ -110,6 +113,7 @@ class Game extends React.Component {
                handleClueClick={(clue) => this.handleClueClick(clue)}
                buzzIn={this.props.buzzIn}
                dismissActiveClue={() => this.dismissActiveClue()}
+               playerAnswering={this.props.playerAnswering}
                {...this.state} />
         <StatusText action={this.state.playerToAct} text={this.state.status} />
         <div className="d-flex justify-content-center podium-container">

@@ -28,8 +28,12 @@ export async function getGame(gameID) {
   return await gamesCollection.findOne({gameID: gameID});
 }
 
-async function updateGameFields(gameID, updates) {
-  await gamesCollection.updateOne({gameID: gameID}, updates);
+async function updateGameFields(gameID, updates, arrayFilters) {
+  let opts = {};
+  if (arrayFilters) {
+    opts.arrayFilters = arrayFilters;
+  }
+  await gamesCollection.updateOne({gameID: gameID}, updates, opts);
 }
 
 export async function updateGame(gameID, newFields) {
@@ -38,6 +42,22 @@ export async function updateGame(gameID, newFields) {
 
 export async function addPlayerToGame(gameID, player) {
   await updateGameFields(gameID, {$addToSet: {players: player}});
+}
+
+export async function setActiveClue(game, clue) {
+  const cluePlayedKey = `rounds.${game.currentRound}.categories.${clue.categoryID}.clues.$[clue].played`;
+  const updates = {
+    $set: {
+      activeClue: {...clue, played: true},
+      [cluePlayedKey]: true
+    }
+  };
+  const arrayFilters = [
+    {
+      'clue.clueID': {$eq: clue.clueID},
+    },
+  ];
+  await updateGameFields(game.gameID, updates, arrayFilters);
 }
 
 export default db;

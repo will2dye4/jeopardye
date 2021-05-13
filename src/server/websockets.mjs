@@ -1,6 +1,6 @@
 import { EventTypes } from '../constants.mjs';
-import { WebsocketEvent } from '../utils.mjs';
-import { addPlayerToGame, getGame } from './db.mjs';
+import { checkSubmittedAnswer, WebsocketEvent } from '../utils.mjs';
+import { addPlayerToGame, getGame, setActiveClue, updateGame } from './db.mjs';
 
 export let connectedClients = {};
 
@@ -54,44 +54,101 @@ async function validateGamePlayerAndClue(ws, event) {
   const game = await getGame(gameID);
   if (!game) {
     handleError(ws, event, `game ${gameID} not found`, 404);
-    return false;
+    return null;
   }
   if (game.players.map(player => player.playerID).indexOf(playerID) === -1) {
     handleError(ws, event, `player ${playerID} not in game ${gameID}`, 400);
-    return false;
+    return null;
   }
   const categories = game.rounds[game.currentRound].categories;
   if (!categories.hasOwnProperty(categoryID)) {
     handleError(ws, event, `invalid category ${categoryID}`, 400);
-    return false;
+    return null;
   }
   if (categories[categoryID].clues.map(clue => clue.clueID).indexOf(clueID) === -1) {
     handleError(ws, event, `invalid clue ${clueID} (category ${categoryID})`, 400);
-    return false;
+    return null;
   }
-  return true;
+  return game;
 }
 
 async function handleSelectClue(ws, event) {
-  if (!await validateGamePlayerAndClue(ws, event)) {
+  const game = await validateGamePlayerAndClue(ws, event);
+  if (!game) {
     return;
   }
-  /* TODO - check if clue was played already */
-  /* TODO - update game to indicate that the clue is currently active */
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_SELECTED_CLUE, event.payload));
+
+  const { categoryID, clueID } = event.payload;
+  const clues = game.rounds[game.currentRound].categories[categoryID].clues;
+  const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
+  const clue = clues[clueIndex];
+  if (clue.played) {
+    handleError(ws, event, `invalid clue ${clueID} (category ${categoryID}) - already played`, 400);
+    return;
+  }
+  /* TODO - ensure there isn't already an active clue? */
+
+  setActiveClue(game, clue).then(() => {
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_SELECTED_CLUE, event.payload));
+  });
 }
 
 async function handleBuzzIn(ws, event) {
-  if (!await validateGamePlayerAndClue(ws, event)) {
+  const game = await validateGamePlayerAndClue(ws, event);
+  if (!game) {
     return;
   }
-  /* TODO - check if clue is currently active and no one else is currently answering */
-  /* TODO - update game to indicate that the player is currently answering */
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
+  if (!game.activeClue) {
+    handleError(ws, event, 'invalid buzz attempt - no active clue', 400);
+    return;
+  }
+  const { gameID, playerID, categoryID, clueID } = event.payload;
+  if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
+    handleError(ws, event, `invalid buzz attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    return;
+  }
+  /* TODO - uncomment this once playerAnswering is being reset to null
+  if (game.playerAnswering) {
+    handleError(ws, event, `invalid buzz attempt - another player is already answering`, 400);
+    return;
+  }
+  */
+  updateGame(gameID, {playerAnswering: playerID}).then(() => {
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
+  });
 }
 
 async function handleSubmitAnswer(ws, event) {
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, {/*TODO*/}));
+  const game = await validateGamePlayerAndClue(ws, event);
+  if (!game) {
+    return;
+  }
+  if (!game.activeClue) {
+    handleError(ws, event, 'invalid answer attempt - no active clue', 400);
+    return;
+  }
+  const { gameID, playerID, categoryID, clueID, answer } = event.payload;
+  if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
+    handleError(ws, event, `invalid answer attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    return;
+  }
+  if (game.playerAnswering.toString() !== playerID.toString()) {
+    handleError(ws, event, `invalid answer attempt - player ${playerID} is not currently answering`, 400);
+    return;
+  }
+  const clues = game.rounds[game.currentRound].categories[categoryID].clues;
+  const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
+  const clue = clues[clueIndex];
+  const correct = checkSubmittedAnswer(clue.answer, answer);
+  let newFields = {playerAnswering: null};
+  if (correct) {
+    newFields.activeClue = null;
+    newFields.playerInControl = playerID;
+  }
+  /* TODO - if incorrect, prevent player from buzzing in again */
+  updateGame(gameID, newFields).then(() => {
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, {...event.payload, correct: correct}));
+  });
 }
 
 const eventHandlers = {

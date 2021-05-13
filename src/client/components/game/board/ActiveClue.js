@@ -37,9 +37,16 @@ class ActiveClue extends React.Component {
     const containerClasses = 'align-items-center current-clue-container row user-select-none animate__animated animate__zoomIn';
     const clueClasses = 'col-12 current-clue p-5 text-center text-uppercase';
     const board = document.getElementById('board');
+    let input = null;
+    /* TODO - wire this up to submit the answer
+    if (this.props.playerAnswering === DEFAULT_PLAYER_ID) {
+      input = <input type="text" />;
+    }
+    */
     return (
       <div className={containerClasses} style={{width: board.offsetWidth * 1.02, height: board.offsetHeight}}>
         <div className={clueClasses} onClick={() => this.handleClick()}>{this.state.text}</div>
+        {input}
       </div>
     );
   }

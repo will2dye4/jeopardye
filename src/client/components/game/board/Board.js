@@ -31,6 +31,7 @@ function Board(props) {
     content.push(<ActiveClue key="current-clue"
                              gameID={props.gameID}
                              clue={props.activeClue}
+                             playerAnswering={props.playerAnswering}
                              allowAnswers={props.allowAnswers}
                              reveal={props.revealAnswer}
                              timerRef={props.timerRef}
