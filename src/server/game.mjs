@@ -37,6 +37,7 @@ async function createRound(round) {
 async function handleCreateGame(req, res, next) {
   const timerLabel = 'create game';
   console.time(timerLabel);
+  console.log('Creating a new game.');
 
   const handleError = (message, e) => {
     next(new Error(`${message}: ${e}`));
@@ -61,7 +62,7 @@ async function handleCreateGame(req, res, next) {
   }
 
   res.json(game);
-  console.log(`Created game ${game.gameID}`);
+  console.log(`Created game ${game.gameID}.`);
   console.timeEnd(timerLabel);
 }
 

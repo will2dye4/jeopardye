@@ -5,7 +5,9 @@ import './Game.css';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
 import Podium from './Podium';
-import StatusText from './StatusText';
+import StatusBar from './StatusBar';
+
+const SHOW_CLUE_DELAY_MILLIS = 500;
 
 class Game extends React.Component {
   constructor(props) {
@@ -16,9 +18,6 @@ class Game extends React.Component {
       status = `Game started. Let's play the ${round} round.`;
     }
     this.state = {
-      //activeClue: props.activeClue,
-      playedClues: [],
-      //players: props.players,
       playerToAct: !!props.game,
       allowAnswers: false,
       revealAnswer: false,
@@ -48,13 +47,11 @@ class Game extends React.Component {
           showActiveClue: false,
           status: 'Correct! Well done. Choose again.',
         });
+        this.state.timerRef.current.reset();
       } else {
         this.setState({status: 'Sorry, no.'});
         this.state.timerRef.current.resume();
       }
-    }
-    if (prevProps.activeClue && !this.props.activeClue) {
-      this.setState({playedClues: this.state.playedClues.concat(prevProps.activeClue.clueID)});
     }
   }
 
@@ -95,7 +92,7 @@ class Game extends React.Component {
         showActiveClue: true,
       });
       this.state.timerRef.current.start();
-    }.bind(this), 1500);
+    }.bind(this), SHOW_CLUE_DELAY_MILLIS);
   }
 
   render() {
@@ -115,13 +112,16 @@ class Game extends React.Component {
         <Board gameID={this.props.game.gameID}
                categories={this.props.board.categories}
                handleClueClick={(clue) => this.handleClueClick(clue)}
-               submitAnswer={this.props.submitAnswer}
                buzzIn={this.props.buzzIn}
                dismissActiveClue={() => this.dismissActiveClue()}
-               playerAnswering={this.props.playerAnswering}
                activeClue={this.props.activeClue}
                {...this.state} />
-        <StatusText action={this.state.playerToAct} text={this.state.status} />
+        <StatusBar gameID={this.props.game.gameID}
+                   activeClue={this.props.activeClue}
+                   playerAnswering={this.props.playerAnswering}
+                   submitAnswer={this.props.submitAnswer}
+                   action={this.state.playerToAct}
+                   text={this.state.status} />
         <div className="d-flex justify-content-center podium-container">
           {podiums}
         </div>

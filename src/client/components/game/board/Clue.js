@@ -2,7 +2,7 @@ import React from 'react';
 
 class Clue extends React.Component {
   handleClick() {
-    if (!this.props.played) {
+    if (!this.props.clue.played) {
       this.props.onClick(this);
     }
   }
@@ -10,7 +10,7 @@ class Clue extends React.Component {
   render() {
     let classes = 'clue-border p-2';
     let text = <br />;
-    if (!this.props.played) {
+    if (!this.props.clue.played) {
       classes += ' active-clue';
       text = `$${this.props.clue.value}`;
     }

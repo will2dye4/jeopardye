@@ -23,9 +23,13 @@ export function sanitizeQuestionText(text) {
  * Reference for accented characters: https://emw3.com/unicode-accents.html
  */
 function normalizeAnswerText(text) {
-  return (text.toLowerCase()
-    .match(/\b([\w']+)\b/g)
-    .join(' ')
+  text = text.toLowerCase();
+  const words = text.match(/\b([\w']+)\b/g);
+  if (!words) {
+    return text;
+  }
+  return (
+    words.join(' ')
     .replaceAll(/['"]/g, '')
     .replaceAll(/[\u00e0\u00e1\u00e2\u00e3\u00e4]|&[aA](acute|circ|grave|tilde|uml);/g, 'a')
     .replaceAll(/[\u00e8\u00e9\u00ea\u00eb]|&[eE](acute|circ|grave|uml);/g, 'e')
@@ -52,10 +56,34 @@ export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
       return true;
     }
   }
+  /* Try replacing '&' with 'and', for both answers */
+  if (correctAnswer.indexOf('&') !== -1) {
+    const simplifiedCorrectAnswer = normalizeAnswerText(correctAnswer.replaceAll('&', 'and'));
+    if (simplifiedCorrectAnswer === normalizedSubmittedAnswer) {
+      return true;
+    }
+  } else if (submittedAnswer.indexOf('&') !== -1) {
+    const simplifiedSubmittedAnswer = normalizeAnswerText(submittedAnswer.replaceAll('&', 'and'));
+    if (normalizedCorrectAnswer === simplifiedSubmittedAnswer) {
+      return true;
+    }
+  }
   /* Try removing initial article, e.g., 'a house' --> 'house' */
   if (normalizedCorrectAnswer.startsWith('a') || normalizedCorrectAnswer.startsWith('the')) {
     const simplifiedCorrectAnswer = normalizedCorrectAnswer.replace(/^(an?|the)\s+/, '');
     if (simplifiedCorrectAnswer === normalizedSubmittedAnswer) {
+      return true;
+    }
+  }
+  /* Try removing ending 's' from both answers, e.g., 'presidents' --> 'president' */
+  if (normalizedCorrectAnswer.endsWith('s')) {
+    const simplifiedCorrectAnswer = normalizedCorrectAnswer.substring(0, normalizedCorrectAnswer.length - 1);
+    if (simplifiedCorrectAnswer === normalizedSubmittedAnswer) {
+      return true;
+    }
+  } else if (normalizedSubmittedAnswer.endsWith('s')) {
+    const simplifiedSubmittedAnswer = normalizedSubmittedAnswer.substring(0, normalizedSubmittedAnswer.length - 1);
+    if (normalizedCorrectAnswer === simplifiedSubmittedAnswer) {
       return true;
     }
   }

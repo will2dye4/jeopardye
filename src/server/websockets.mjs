@@ -6,7 +6,7 @@ import { addPlayerToGame, getGame, setActiveClue, setPlayerAnswering, updateGame
 export let connectedClients = {};
 
 export function broadcast(event, originatingPlayerID) {
-  console.log(`Broadcasting ${event.eventType} event...`);
+  // console.log(`Broadcasting ${event.eventType} event...`);
   let jsonEvent;
   Object.entries(connectedClients).forEach(([playerID, ws]) => {
     if (!originatingPlayerID || playerID !== originatingPlayerID) {
@@ -41,6 +41,7 @@ async function handleJoinGame(ws, event) {
   const name = playerName || `Player ${Object.keys(game.players).length + 1}`;
   const player = new Player(playerID, name);
   addPlayerToGame(gameID, player).then(() => {
+    console.log(`${name} joined game ${gameID}.`);
     connectedClients[playerID] = ws;
     broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player: player}));
   });
@@ -76,7 +77,8 @@ async function handleSelectClue(ws, event) {
   }
 
   const { categoryID, clueID } = event.payload;
-  const clues = game.rounds[game.currentRound].categories[categoryID].clues;
+  const category = game.rounds[game.currentRound].categories[categoryID];
+  const clues = category.clues;
   const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
   const clue = clues[clueIndex];
   if (clue.played) {
@@ -86,6 +88,7 @@ async function handleSelectClue(ws, event) {
   /* TODO - ensure there isn't already an active clue? */
 
   setActiveClue(game, clue).then(() => {
+    console.log(`Playing ${category.name} for $${clue.value}.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_SELECTED_CLUE, event.payload));
   });
 }
@@ -115,6 +118,7 @@ async function handleBuzzIn(ws, event) {
   }
   */
   setPlayerAnswering(gameID, playerID).then(() => {
+    console.log(`${playerID} buzzed in.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
   });
 }
@@ -149,6 +153,7 @@ async function handleSubmitAnswer(ws, event) {
     newFields.playerInControl = playerID;
   }
   updateGame(gameID, newFields).then(() => {
+    console.log(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
     const payload = {...event.payload, correct: correct, score: newScore};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
   });

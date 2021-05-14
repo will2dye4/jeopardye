@@ -35,9 +35,11 @@ function handlePlayerSelectedClue(storeData, event) {
     console.log(`Player selected invalid clue: ${clueID} (category ${categoryID})`);
     return storeData;
   }
-  const clue = {...clues[clueIndex], category: category.name, categoryID: categoryID};
+  const clue = {...clues[clueIndex], category: category.name, played: true};
+  const newBoard = {...storeData.board};
+  newBoard.categories[categoryID].clues[clueIndex] = clue;
   console.log(`Playing ${category.name} for $${clue.value}.`);
-  return {...storeData, activeClue: clue, prevAnswer: null};
+  return {...storeData, board: newBoard, activeClue: clue, prevAnswer: null};
 }
 
 function handlePlayerBuzzed(storeData, event) {
@@ -85,9 +87,9 @@ export function GameReducer(storeData, action) {
     case ActionTypes.FETCH_GAME:
       const newGame = action.payload;
       const newBoard = newGame.rounds[newGame.currentRound];
-      return {...storeData, game: newGame, board: newBoard, players: newGame.players, activeClue: null, playerAnswering: null, playerInControl: null};
+      return {...storeData, game: newGame, board: newBoard, players: newGame.players, activeClue: null, playerAnswering: null, playerInControl: null, prevAnswer: null};
     case ActionTypes.DISMISS_CLUE:
-      return {...storeData, activeClue: null, playerAnswering: null};
+      return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null};
     case ActionTypes.REDUX_WEBSOCKET_OPEN:
       return {...storeData, connected: true};
     case ActionTypes.REDUX_WEBSOCKET_CLOSED:

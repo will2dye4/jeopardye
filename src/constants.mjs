@@ -7,6 +7,8 @@ export const ROUNDS_PER_GAME = 2;
 export const SINGLE_ROUND_VALUE_INCREMENT = 200;
 export const DOUBLE_ROUND_VALUE_INCREMENT = 2 * SINGLE_ROUND_VALUE_INCREMENT;
 
+export const ENTER_KEY_CODE = 13;
+
 export const Rounds = {
   SINGLE: 'single',
   DOUBLE: 'double',
