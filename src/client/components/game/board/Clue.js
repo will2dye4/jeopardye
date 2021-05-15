@@ -11,7 +11,7 @@ class Clue extends React.Component {
     let classes = 'clue-border p-2';
     let text = <br />;
     if (!this.props.clue.played) {
-      classes += ' active-clue';
+      classes += ' active-clue hover-pointer';
       text = `$${this.props.clue.value}`;
     }
     return (

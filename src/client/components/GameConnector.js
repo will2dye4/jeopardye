@@ -1,13 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { dismissActiveClue, fetchGame, joinGame, selectClue, buzzIn, submitAnswer, websocketConnect, websocketDisconnect } from '../actions/action_creators';
+import { dismissActiveClue, fetchGame, joinGame, selectClue, buzzIn, submitAnswer, setPlayer, websocketConnect, websocketDisconnect } from '../actions/action_creators';
 import Game from './game/Game';
 
 function mapStateToProps(state) {
   return {...state};
 }
 
-const actionCreators = {dismissActiveClue, fetchGame, joinGame, selectClue, buzzIn, submitAnswer, websocketConnect, websocketDisconnect};
+const actionCreators = {dismissActiveClue, fetchGame, joinGame, selectClue, buzzIn, submitAnswer, setPlayer, websocketConnect, websocketDisconnect};
 
 class Connector extends React.Component {
   render() {

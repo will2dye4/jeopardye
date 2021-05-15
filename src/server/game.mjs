@@ -1,9 +1,12 @@
 import express from 'express';
+import log from 'log';
 import '@gouch/to-title-case';
 import { CATEGORIES_PER_ROUND, Rounds } from '../constants.mjs';
 import { Category, Game, Round } from '../models/game.mjs';
 import { createGame, getGame } from './db.mjs';
 import { fetchRandomCategories } from './jservice.mjs';
+
+const logger = log.get('api');
 
 async function createRound(round) {
   const numCategories = CATEGORIES_PER_ROUND * 3;
@@ -35,14 +38,9 @@ async function createRound(round) {
 }
 
 async function handleCreateGame(req, res, next) {
-  const timerLabel = 'create game';
-  console.time(timerLabel);
-  console.log('Creating a new game.');
+  logger.info('Creating a new game.');
 
-  const handleError = (message, e) => {
-    next(new Error(`${message}: ${e}`));
-    console.timeEnd(timerLabel);
-  };
+  const handleError = (message, e) => next(new Error(`${message}: ${e}`));
 
   let singleRound, doubleRound;
   try {
@@ -62,8 +60,7 @@ async function handleCreateGame(req, res, next) {
   }
 
   res.json(game);
-  console.log(`Created game ${game.gameID}.`);
-  console.timeEnd(timerLabel);
+  logger.info(`Created game ${game.gameID}.`);
 }
 
 async function handleGetGame(req, res, next) {

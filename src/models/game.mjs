@@ -90,5 +90,7 @@ export class Game {
     this.activeClue = activeClue || null;
     this.playerAnswering = playerAnswering || null;
     this.playerInControl = playerInControl || null;
+    this.createdTime = new Date();
+    this.finishedTime = null;
   }
 }

@@ -5,6 +5,7 @@ import { EventTypes } from '../../constants.mjs';
 export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
+  SET_PLAYER: 'JEOPARDYE::SET_PLAYER',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -22,8 +23,8 @@ export function fetchGame() {
   };
 }
 
-export function joinGame(gameID, playerID, playerName) {
-  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID, playerID, playerName}));
+export function joinGame(gameID, player) {
+  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID: gameID, playerID: player.playerID, playerName: player.name}));
 }
 
 export function selectClue(gameID, playerID, categoryID, clueID) {
@@ -42,6 +43,13 @@ export function dismissActiveClue() {
   return {
     type: ActionTypes.DISMISS_CLUE,
     payload: {},
+  }
+}
+
+export function setPlayer(player) {
+  return {
+    type: ActionTypes.SET_PLAYER,
+    payload: player,
   }
 }
 

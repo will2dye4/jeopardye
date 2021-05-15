@@ -40,6 +40,7 @@ function Board(props) {
   if (props.showActiveClue && props.activeClue) {
     content.push(<ActiveClue key="current-clue"
                              gameID={props.gameID}
+                             playerID={props.playerID}
                              clue={props.activeClue}
                              allowAnswers={props.allowAnswers}
                              reveal={props.revealAnswer}

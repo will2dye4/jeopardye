@@ -1,12 +1,15 @@
+import log from 'log';
 import { EventTypes } from '../constants.mjs';
-import { Player } from '../models/player.mjs';
+import { GamePlayer } from '../models/player.mjs';
 import { checkSubmittedAnswer, WebsocketEvent } from '../utils.mjs';
 import { addPlayerToGame, getGame, setActiveClue, setPlayerAnswering, updateGame } from './db.mjs';
+
+const logger = log.get('ws');
 
 export let connectedClients = {};
 
 export function broadcast(event, originatingPlayerID) {
-  // console.log(`Broadcasting ${event.eventType} event...`);
+  logger.debug(`Broadcasting ${event.eventType} event...`);
   let jsonEvent;
   Object.entries(connectedClients).forEach(([playerID, ws]) => {
     if (!originatingPlayerID || playerID !== originatingPlayerID) {
@@ -19,7 +22,7 @@ export function broadcast(event, originatingPlayerID) {
 }
 
 function handleError(ws, event, message, status) {
-  console.log(`Error handling ${event.eventType} event: ${message} (${status})`);
+  logger.error(`Error handling ${event.eventType} event: ${message} (${status})`);
   ws.send(JSON.stringify(new WebsocketEvent(EventTypes.ERROR, {eventType: event.eventType, error: message, status: status})));
 }
 
@@ -39,9 +42,9 @@ async function handleJoinGame(ws, event) {
     return;
   }
   const name = playerName || `Player ${Object.keys(game.players).length + 1}`;
-  const player = new Player(playerID, name);
+  const player = new GamePlayer(playerID, name);
   addPlayerToGame(gameID, player).then(() => {
-    console.log(`${name} joined game ${gameID}.`);
+    logger.info(`${name} joined game ${gameID}.`);
     connectedClients[playerID] = ws;
     broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player: player}));
   });
@@ -88,7 +91,7 @@ async function handleSelectClue(ws, event) {
   /* TODO - ensure there isn't already an active clue? */
 
   setActiveClue(game, clue).then(() => {
-    console.log(`Playing ${category.name} for $${clue.value}.`);
+    logger.info(`Playing ${category.name} for $${clue.value}.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_SELECTED_CLUE, event.payload));
   });
 }
@@ -118,7 +121,7 @@ async function handleBuzzIn(ws, event) {
   }
   */
   setPlayerAnswering(gameID, playerID).then(() => {
-    console.log(`${playerID} buzzed in.`);
+    logger.info(`${playerID} buzzed in.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
   });
 }
@@ -153,7 +156,7 @@ async function handleSubmitAnswer(ws, event) {
     newFields.playerInControl = playerID;
   }
   updateGame(gameID, newFields).then(() => {
-    console.log(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
+    logger.info(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
     const payload = {...event.payload, correct: correct, score: newScore};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
   });
@@ -172,9 +175,13 @@ export function handleWebsocket(ws, req) {
     const eventType = event.eventType;
     if (eventHandlers.hasOwnProperty(eventType)) {
       const handler = eventHandlers[eventType];
-      await handler(ws, event);
+      try {
+        await handler(ws, event);
+      } catch (e) {
+        logger.error(`Caught unexpected error while handling ${eventType} event: ${e}`);
+      }
     } else {
-      console.log(`Ignoring event with unknown type: ${eventType} (${msg})`);
+      logger.info(`Ignoring event with unknown type: ${eventType} (${msg})`);
     }
   });
 }

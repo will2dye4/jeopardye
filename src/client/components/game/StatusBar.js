@@ -1,25 +1,37 @@
 import React from 'react';
-import { DEFAULT_PLAYER_ID, ENTER_KEY_CODE } from '../../../constants.mjs';
+import {getCLS} from "web-vitals";
 
 class StatusBar extends React.Component {
   handleSubmit() {
     const answer = document.getElementById('answer-input').value;
-    this.props.submitAnswer(this.props.gameID, DEFAULT_PLAYER_ID, this.props.activeClue.categoryID, this.props.activeClue.clueID, answer);
+    this.props.submitAnswer(this.props.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID, answer);
   }
 
   handleKeyUp(event) {
-    if (event.keyCode === ENTER_KEY_CODE) {
+    if (event.key === 'Enter') {
       event.preventDefault();
       this.handleSubmit();
     }
   }
 
+  getColorClasses() {
+    const defaultClasses = 'bg-light text-dark';
+    if (typeof this.props.status === 'string') {
+      return defaultClasses;
+    }
+    switch (this.props.status.color) {
+      case 'success':
+        return 'bg-success';
+      default:
+        return defaultClasses;
+    }
+  }
+
   render() {
-    const colorClasses = this.props.action ? 'bg-success' : 'bg-light text-dark';
-    const classes = 'card mt-3 rounded-pill user-select-none ' + colorClasses;
+    const classes = 'card mt-3 rounded-pill user-select-none ' + this.getColorClasses();
     let bodyClasses = 'card-body';
     let content;
-    if (this.props.activeClue && this.props.playerAnswering === DEFAULT_PLAYER_ID) {
+    if (this.props.activeClue && this.props.playerAnswering === this.props.playerID) {
       bodyClasses += ' d-flex justify-content-center';
       content = (
         <div className="row w-75">
@@ -39,7 +51,7 @@ class StatusBar extends React.Component {
         </div>
       );
     } else {
-      content = this.props.text;
+      content = (typeof this.props.status === 'string' ? this.props.status : this.props.status.text);
     }
     return (
       <div className={classes}>

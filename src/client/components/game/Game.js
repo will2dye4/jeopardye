@@ -15,16 +15,41 @@ class Game extends React.Component {
     let status = 'Loading...';
     if (props.game) {
       const round = (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
-      status = `Game started. Let's play the ${round} round.`;
+      status = {
+        color: 'success',
+        text: `Game started. Let's play the ${round} round.`,
+      };
     }
     this.state = {
-      playerToAct: !!props.game,
       allowAnswers: false,
       revealAnswer: false,
       showActiveClue: !!props.activeClue,
       status: status,
       timerRef: React.createRef(),
     };
+  }
+
+  componentDidMount() {
+    if (!localStorage.getItem('playerID')) {
+      localStorage.setItem('playerID', DEFAULT_PLAYER_ID);
+      localStorage.setItem('playerName', DEFAULT_PLAYER_ID);
+    }
+    const playerID = localStorage.getItem('playerID');
+    const playerName = localStorage.getItem('playerName') || playerID;
+    this.props.setPlayer({playerID: playerID, name: playerName});
+
+    document.addEventListener('keyup', function handleKeyUp(event) {
+      if ((event.key === ' ' || event.key === 'Enter') && this.state.showActiveClue) {
+        if (this.state.allowAnswers && !this.props.playerAnswering) {
+          event.preventDefault();
+          this.props.buzzIn(this.props.game.gameID, this.props.player.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+          this.state.timerRef.current.pause();
+        } else if (this.state.revealAnswer) {
+          event.preventDefault();
+          this.dismissActiveClue();
+        }
+      }
+    }.bind(this));
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -34,22 +59,32 @@ class Game extends React.Component {
     }
     if (!prevProps.connected && this.props.connected && this.props.game) {
       console.log('Websocket connection successful. Joining game...');
-      this.props.joinGame(this.props.game.gameID, DEFAULT_PLAYER_ID, DEFAULT_PLAYER_ID);
+      this.props.joinGame(this.props.game.gameID, this.props.player);
       const round = (this.props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
-      this.setState({status: `Game started. Let's play the ${round} round.`, playerToAct: true});
+      this.setState({
+        status: {
+          color: 'success',
+          text: `Game started. Let's play the ${round} round.`,
+        },
+      });
     }
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
       if (this.props.prevAnswer.correct) {
         this.setState({
-          playerToAct: true,
           allowAnswers: false,
           revealAnswer: false,
           showActiveClue: false,
-          status: 'Correct! Well done. Choose again.',
+          status: {
+            color: 'success',
+            text: 'Correct! Well done. Choose again.',
+          },
         });
         this.state.timerRef.current.reset();
       } else {
-        this.setState({status: 'Sorry, no.'});
+        this.setState({
+          allowAnswers: false,
+          status: 'Sorry, no.',
+        });
         this.state.timerRef.current.resume();
       }
     }
@@ -66,11 +101,13 @@ class Game extends React.Component {
 
   dismissActiveClue() {
     this.setState({
-      playerToAct: true,
       allowAnswers: false,
       revealAnswer: false,
       showActiveClue: false,
-      status: 'Choose another clue.',
+      status: {
+        color: 'success',
+        text: 'Choose another clue.',
+      },
     });
     this.state.timerRef.current.reset();
     this.props.dismissActiveClue();
@@ -82,11 +119,8 @@ class Game extends React.Component {
         Playing <span className="fw-bold">{clue.category}</span> for <span className="fw-bold">${clue.value}</span>...
       </React.Fragment>
     );
-    this.props.selectClue(this.props.game.gameID, DEFAULT_PLAYER_ID, clue.categoryID, clue.clueID);
-    this.setState({
-      playerToAct: false,
-      status: status,
-    });
+    this.props.selectClue(this.props.game.gameID, this.props.player.playerID, clue.categoryID, clue.clueID);
+    this.setState({status: {text: status}});
     setTimeout(function() {
       this.setState({
         showActiveClue: true,
@@ -103,6 +137,7 @@ class Game extends React.Component {
       const active = (player.playerID === this.props.playerAnswering);
       return <Podium key={player.playerID} name={player.name} score={player.score} active={active} />
     });
+    const playerID = (this.props.player ? this.props.player.playerID : null);
     return (
       <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}
@@ -110,6 +145,7 @@ class Game extends React.Component {
                         onTimeStarted={() => this.setState({allowAnswers: true})}
                         onTimeElapsed={() => this.revealAnswer()} />
         <Board gameID={this.props.game.gameID}
+               playerID={playerID}
                categories={this.props.board.categories}
                handleClueClick={(clue) => this.handleClueClick(clue)}
                buzzIn={this.props.buzzIn}
@@ -117,11 +153,11 @@ class Game extends React.Component {
                activeClue={this.props.activeClue}
                {...this.state} />
         <StatusBar gameID={this.props.game.gameID}
+                   playerID={playerID}
                    activeClue={this.props.activeClue}
                    playerAnswering={this.props.playerAnswering}
                    submitAnswer={this.props.submitAnswer}
-                   action={this.state.playerToAct}
-                   text={this.state.status} />
+                   status={this.state.status} />
         <div className="d-flex justify-content-center podium-container">
           {podiums}
         </div>

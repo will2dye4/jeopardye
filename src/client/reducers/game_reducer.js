@@ -4,6 +4,7 @@ import { EventTypes } from '../../constants.mjs';
 function newStoreData() {
   return {
     connected: false,
+    playerID: null,
     board: null,
     game: null,
     players: {},
@@ -90,6 +91,8 @@ export function GameReducer(storeData, action) {
       return {...storeData, game: newGame, board: newBoard, players: newGame.players, activeClue: null, playerAnswering: null, playerInControl: null, prevAnswer: null};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null};
+    case ActionTypes.SET_PLAYER:
+      return {...storeData, player: action.payload};
     case ActionTypes.REDUX_WEBSOCKET_OPEN:
       return {...storeData, connected: true};
     case ActionTypes.REDUX_WEBSOCKET_CLOSED:

@@ -8,6 +8,10 @@
     src: url("../../fonts/DancingScript-VariableFont_wght.ttf");
 }
 
+.hover-pointer:hover {
+    cursor: pointer;
+}
+
 .game {
     color: white;
     font: 24px "Swiss 911", Helvetica, sans-serif;
@@ -43,7 +47,6 @@
 
 .clue-border.active-clue:hover {
     border: 10px solid #FFCC00;
-    cursor: pointer;
 }
 
 .current-clue-container {

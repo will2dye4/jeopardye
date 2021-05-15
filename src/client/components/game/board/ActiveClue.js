@@ -1,5 +1,4 @@
 import React from 'react';
-import { DEFAULT_PLAYER_ID } from '../../../../constants.mjs';
 
 class ActiveClue extends React.Component {
   constructor(props) {
@@ -20,18 +19,22 @@ class ActiveClue extends React.Component {
     if (this.props.reveal) {
       this.props.dismiss();
     } else if (this.props.allowAnswers) {
-      this.props.buzzIn(this.props.gameID, DEFAULT_PLAYER_ID, this.props.clue.categoryID, this.props.clue.clueID);
+      this.props.buzzIn(this.props.gameID, this.props.playerID, this.props.clue.categoryID, this.props.clue.clueID);
       this.props.timerRef.current.pause();
     }
   }
 
   render() {
-    const containerClasses = 'align-items-center current-clue-container row user-select-none animate__animated animate__zoomIn';
+    let containerClasses = 'align-items-center current-clue-container row user-select-none animate__animated animate__zoomIn';
     const clueClasses = 'col-12 current-clue p-5 text-center text-uppercase';
+    if (this.props.allowAnswers || this.props.reveal) {
+      containerClasses += ' hover-pointer';
+    }
     const board = document.getElementById('board');
     return (
-      <div className={containerClasses} style={{width: board.offsetWidth * 1.02, height: board.offsetHeight}}>
-        <div className={clueClasses} onClick={() => this.handleClick()}>{this.state.text}</div>
+      <div className={containerClasses} style={{width: board.offsetWidth * 1.02, height: board.offsetHeight}}
+           onClick={() => this.handleClick()}>
+        <div className={clueClasses}>{this.state.text}</div>
       </div>
     );
   }

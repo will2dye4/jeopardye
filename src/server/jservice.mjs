@@ -1,3 +1,4 @@
+import log from 'log';
 import fetch from 'node-fetch';
 import { CLUES_PER_CATEGORY } from '../constants.mjs';
 
@@ -5,8 +6,10 @@ const API_BASE = 'http://jservice.io/api';
 const CATEGORY_URL = `${API_BASE}/category`;
 const RANDOM_CLUES_URL = `${API_BASE}/random`;
 
-const MIN_CLUES_TO_FETCH = 25;
-const MAX_CLUES_TO_FETCH = 100;
+const MIN_CLUES_TO_FETCH = 50;
+const MAX_CLUES_TO_FETCH = 100;  /* Limit of 100 is enforced by the JService API */
+
+const logger = log.get('jservice');
 
 export async function fetchCategory(categoryID) {
   let response = await fetch(`${CATEGORY_URL}?id=${categoryID}`);
@@ -17,7 +20,7 @@ export async function fetchCategory(categoryID) {
 }
 
 export async function fetchRandomClues(count) {
-  console.log(`Fetching ${count} random clues`);
+  logger.info(`Fetching ${count} random clues`);
   let response = await fetch(`${RANDOM_CLUES_URL}?count=${count}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch random clues: ${response.status} ${response.statusText}`);
