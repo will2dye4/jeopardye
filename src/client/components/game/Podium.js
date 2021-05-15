@@ -22,7 +22,8 @@ function Podium(props) {
       <div className="col-4 podium-center">
         <div className={scoreClasses}>{score}</div>
         <div className={indicatorClasses} />
-        <div className="pt-1 pb-3 podium-name">{props.name}</div>
+        <div className="py-1 podium-name">{props.name}</div>
+        <div className={indicatorClasses + ' mb-1'} />
       </div>
       <div className="col-2 podium-side podium-right-side">
         <div className="podium-stripe" />

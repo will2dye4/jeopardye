@@ -16,7 +16,7 @@ class Game extends React.Component {
     if (props.game) {
       const round = (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
       status = {
-        color: 'success',
+        color: 'action',
         text: `Game started. Let's play the ${round} round.`,
       };
     }
@@ -63,7 +63,7 @@ class Game extends React.Component {
       const round = (this.props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
       this.setState({
         status: {
-          color: 'success',
+          color: 'action',
           text: `Game started. Let's play the ${round} round.`,
         },
       });
@@ -75,7 +75,7 @@ class Game extends React.Component {
           revealAnswer: false,
           showActiveClue: false,
           status: {
-            color: 'success',
+            color: 'correct',
             text: 'Correct! Well done. Choose again.',
           },
         });
@@ -83,7 +83,10 @@ class Game extends React.Component {
       } else {
         this.setState({
           allowAnswers: false,
-          status: 'Sorry, no.',
+          status: {
+            color: 'incorrect',
+            text: 'Sorry, no.',
+          },
         });
         this.state.timerRef.current.resume();
       }
@@ -105,7 +108,7 @@ class Game extends React.Component {
       revealAnswer: false,
       showActiveClue: false,
       status: {
-        color: 'success',
+        color: 'action',
         text: 'Choose another clue.',
       },
     });

@@ -1,5 +1,4 @@
 import React from 'react';
-import {getCLS} from "web-vitals";
 
 class StatusBar extends React.Component {
   handleSubmit() {
@@ -15,21 +14,39 @@ class StatusBar extends React.Component {
   }
 
   getColorClasses() {
-    const defaultClasses = 'bg-light text-dark';
+    const defaultClasses = 'alert-secondary text-dark';
     if (typeof this.props.status === 'string') {
       return defaultClasses;
     }
     switch (this.props.status.color) {
-      case 'success':
-        return 'bg-success';
+      case 'action':
+        return 'alert-primary';
+      case 'correct':
+        return 'alert-success';
+      case 'incorrect':
+        return 'alert-danger';
+      default:
+        return defaultClasses;
+    }
+  }
+
+  getTextClasses() {
+    const defaultClasses = '';
+    if (typeof this.props.status === 'string') {
+      return defaultClasses;
+    }
+    switch (this.props.status.color) {
+      case 'action':
+      case 'correct':
+        return 'fw-bold animate__animated animate__pulse animate__infinite';
       default:
         return defaultClasses;
     }
   }
 
   render() {
-    const classes = 'card mt-3 rounded-pill user-select-none ' + this.getColorClasses();
-    let bodyClasses = 'card-body';
+    const classes = 'card mt-3 rounded-pill status-bar user-select-none ' + this.getColorClasses();
+    let bodyClasses = 'card-body text-center';
     let content;
     if (this.props.activeClue && this.props.playerAnswering === this.props.playerID) {
       bodyClasses += ' d-flex justify-content-center';
@@ -51,7 +68,9 @@ class StatusBar extends React.Component {
         </div>
       );
     } else {
-      content = (typeof this.props.status === 'string' ? this.props.status : this.props.status.text);
+      bodyClasses += ' m-2';
+      const text = (typeof this.props.status === 'string' ? this.props.status : this.props.status.text);
+      content = <div className={this.getTextClasses()}>{text}</div>;
     }
     return (
       <div className={classes}>

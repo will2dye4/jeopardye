@@ -80,6 +80,7 @@
 .podium-container {
     position: fixed;
     bottom: 0;
+    left: 0;
     width: 100%;
     z-index: 200;
 }
@@ -130,7 +131,7 @@
 }
 
 .podium-indicator {
-    min-height: 30px;
+    min-height: 15px;
 }
 
 .podium-indicator-active {
@@ -139,4 +140,8 @@
 
 .podium-name {
     font: 30px "Dancing Script", "Brush Script MT", Helvetica, sans-serif;
+}
+
+.status-bar {
+    min-height: 50px;
 }
