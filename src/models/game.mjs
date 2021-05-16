@@ -1,6 +1,6 @@
 import uuid from 'uuid';
 import { CLUES_PER_CATEGORY, DOUBLE_ROUND_VALUE_INCREMENT, Rounds, SINGLE_ROUND_VALUE_INCREMENT } from '../constants.mjs';
-import { sanitizeQuestionText, titleizeCategoryName } from '../utils.mjs';
+import { randomChoice, sanitizeQuestionText, titleizeCategoryName } from '../utils.mjs';
 
 const DAILY_DOUBLE_CLUES_TO_SKIP = 2;
 
@@ -58,7 +58,7 @@ export class Round {
     let dailyDoubleRange = CLUES_PER_CATEGORY - DAILY_DOUBLE_CLUES_TO_SKIP;
 
     while (dailyDoubles.length < numDailyDoubles) {
-      let categoryID = categoryIDs[Math.floor(Math.random() * categoryIDs.length)];
+      let categoryID = randomChoice(categoryIDs);
       let category = categories[categoryID];
       if (!usedCategories.has(categoryID)) {
         let clueIndex = Math.floor(Math.random() * dailyDoubleRange) + DAILY_DOUBLE_CLUES_TO_SKIP;

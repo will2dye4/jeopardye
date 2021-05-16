@@ -142,6 +142,11 @@
     font: 30px "Dancing Script", "Brush Script MT", Helvetica, sans-serif;
 }
 
+.podium-name-active {
+    background-color: white;
+    color: #1D08A3;
+}
+
 .status-bar {
     min-height: 50px;
 }

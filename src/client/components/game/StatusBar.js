@@ -1,5 +1,8 @@
 import React from 'react';
 
+const CHECK_MARK_EMOJI = '\u2705';
+const CROSS_MARK_EMOJI = '\u274c';
+
 class StatusBar extends React.Component {
   handleSubmit() {
     const answer = document.getElementById('answer-input').value;
@@ -13,12 +16,15 @@ class StatusBar extends React.Component {
     }
   }
 
-  getColorClasses() {
-    const defaultClasses = 'alert-secondary text-dark';
-    if (typeof this.props.status === 'string') {
-      return defaultClasses;
+  getAppearance() {
+    if (this.props.status.hasOwnProperty('appearance')) {
+      return this.props.status.appearance;
     }
-    switch (this.props.status.color) {
+    return null;
+  }
+
+  getColorClasses() {
+    switch (this.getAppearance()) {
       case 'action':
         return 'alert-primary';
       case 'correct':
@@ -26,21 +32,28 @@ class StatusBar extends React.Component {
       case 'incorrect':
         return 'alert-danger';
       default:
-        return defaultClasses;
+        return 'alert-secondary text-dark';
     }
   }
 
   getTextClasses() {
-    const defaultClasses = '';
-    if (typeof this.props.status === 'string') {
-      return defaultClasses;
-    }
-    switch (this.props.status.color) {
+    switch (this.getAppearance()) {
       case 'action':
       case 'correct':
         return 'fw-bold animate__animated animate__pulse animate__infinite';
       default:
-        return defaultClasses;
+        return '';
+    }
+  }
+
+  getEmoji() {
+    switch (this.getAppearance()) {
+      case 'correct':
+        return CHECK_MARK_EMOJI;
+      case 'incorrect':
+        return CROSS_MARK_EMOJI;
+      default:
+        return null;
     }
   }
 
@@ -68,9 +81,12 @@ class StatusBar extends React.Component {
         </div>
       );
     } else {
-      bodyClasses += ' m-2';
-      const text = (typeof this.props.status === 'string' ? this.props.status : this.props.status.text);
-      content = <div className={this.getTextClasses()}>{text}</div>;
+      let text = (this.getAppearance() === null ? this.props.status : this.props.status.text);
+      const emoji = this.getEmoji();
+      if (emoji) {
+        text = `${emoji} ${text}`;
+      }
+      content = <div className={this.getTextClasses() + ' fs-2'}>{text}</div>;
     }
     return (
       <div className={classes}>

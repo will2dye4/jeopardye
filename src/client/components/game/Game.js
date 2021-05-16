@@ -1,5 +1,13 @@
 import React from 'react';
-import { DEFAULT_PLAYER_ID, Rounds } from '../../../constants.mjs';
+import {
+  CORRECT_RESPONSES_KEEP_CONTROL,
+  CORRECT_RESPONSES_TAKE_CONTROL,
+  DEFAULT_PLAYER_ID,
+  INCORRECT_RESPONSES,
+  PLAYER_PLACEHOLDER,
+  Rounds
+} from '../../../constants.mjs';
+import { randomChoice } from '../../../utils.mjs';
 import { playSound } from '../../utils';
 import './Game.css';
 import Board from './board/Board';
@@ -12,11 +20,11 @@ const SHOW_CLUE_DELAY_MILLIS = 500;
 class Game extends React.Component {
   constructor(props) {
     super(props);
-    let status = 'Loading...';
+    let status = 'Creating a new game, please wait ...';
     if (props.game) {
       const round = (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
       status = {
-        color: 'action',
+        appearance: 'action',
         text: `Game started. Let's play the ${round} round.`,
       };
     }
@@ -63,32 +71,77 @@ class Game extends React.Component {
       const round = (this.props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
       this.setState({
         status: {
-          color: 'action',
+          appearance: 'action',
           text: `Game started. Let's play the ${round} round.`,
         },
       });
     }
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
       if (this.props.prevAnswer.correct) {
-        this.setState({
-          allowAnswers: false,
-          revealAnswer: false,
-          showActiveClue: false,
-          status: {
-            color: 'correct',
-            text: 'Correct! Well done. Choose again.',
-          },
-        });
-        this.state.timerRef.current.reset();
+        const tookControl = this.props.playerInControl !== prevProps.playerInControl;
+        this.handleCorrectAnswer(tookControl);
       } else {
-        this.setState({
-          allowAnswers: false,
-          status: {
-            color: 'incorrect',
-            text: 'Sorry, no.',
-          },
-        });
-        this.state.timerRef.current.resume();
+        this.handleIncorrectAnswer();
+      }
+    }
+  }
+
+  handleCorrectAnswer(tookControl) {
+    const responses = (tookControl ? CORRECT_RESPONSES_TAKE_CONTROL : CORRECT_RESPONSES_KEEP_CONTROL);
+    const response = randomChoice(responses).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
+    this.setState({
+      allowAnswers: false,
+      revealAnswer: false,
+      showActiveClue: false,
+      status: {
+        appearance: 'correct',
+        text: response,
+      },
+    });
+    this.state.timerRef.current.reset();
+    this.checkForLastClue(true);
+  }
+
+  handleIncorrectAnswer() {
+    const response = randomChoice(INCORRECT_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
+    this.setState({
+      allowAnswers: false,
+      status: {
+        appearance: 'incorrect',
+        text: response,
+      },
+    });
+    this.state.timerRef.current.resume();
+  }
+
+  checkForLastClue(prevAnswerCorrect = false) {
+    let unplayedClues = [];
+  loop:
+    for (const category of Object.values(this.props.board.categories)) {
+      for (const clue of category.clues) {
+        if (!clue.played) {
+          unplayedClues.push(clue);
+          if (unplayedClues.length > 1) {
+            break loop;
+          }
+        }
+      }
+    }
+    if (unplayedClues.length === 1) {
+      let clue = {...unplayedClues[0]};
+      clue.category = this.props.board.categories[clue.categoryID].name;
+      let status = 'And now the last clue ...';
+      if (prevAnswerCorrect) {
+        status = {
+          appearance: 'correct',
+          text: 'Correct! And now the last clue ...',
+        };
+      }
+      this.setState({status: status});
+      if (this.props.player.playerID === this.props.playerInControl) {
+        setTimeout(function() {
+          this.handleClueClick(clue);
+        }.bind(this), SHOW_CLUE_DELAY_MILLIS);
       }
     }
   }
@@ -108,22 +161,23 @@ class Game extends React.Component {
       revealAnswer: false,
       showActiveClue: false,
       status: {
-        color: 'action',
+        appearance: 'action',
         text: 'Choose another clue.',
       },
     });
     this.state.timerRef.current.reset();
     this.props.dismissActiveClue();
+    this.checkForLastClue();
   }
 
   handleClueClick(clue) {
     let status = (
       <React.Fragment>
-        Playing <span className="fw-bold">{clue.category}</span> for <span className="fw-bold">${clue.value}</span>...
+        Playing <span className="fw-bold">{clue.category}</span> for <span className="fw-bold">${clue.value}</span> ...
       </React.Fragment>
     );
     this.props.selectClue(this.props.game.gameID, this.props.player.playerID, clue.categoryID, clue.clueID);
-    this.setState({status: {text: status}});
+    this.setState({status: status});
     setTimeout(function() {
       this.setState({
         showActiveClue: true,
@@ -133,29 +187,28 @@ class Game extends React.Component {
   }
 
   render() {
-    if (!this.props.game) {
-      return (<div className="alert alert-primary fs-3 m-5 text-center" role="alert">Creating a new game, please wait...</div>);
-    }
     const podiums = Object.values(this.props.players).map(player => {
       const active = (player.playerID === this.props.playerAnswering);
       return <Podium key={player.playerID} name={player.name} score={player.score} active={active} />
     });
+    const gameID = (this.props.game ? this.props.game.gameID : null);
     const playerID = (this.props.player ? this.props.player.playerID : null);
+    const categories = (this.props.board ? this.props.board.categories : null);
     return (
       <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}
                         seconds="10"
                         onTimeStarted={() => this.setState({allowAnswers: true})}
                         onTimeElapsed={() => this.revealAnswer()} />
-        <Board gameID={this.props.game.gameID}
+        <Board gameID={gameID}
                playerID={playerID}
-               categories={this.props.board.categories}
+               categories={categories}
                handleClueClick={(clue) => this.handleClueClick(clue)}
                buzzIn={this.props.buzzIn}
                dismissActiveClue={() => this.dismissActiveClue()}
                activeClue={this.props.activeClue}
                {...this.state} />
-        <StatusBar gameID={this.props.game.gameID}
+        <StatusBar gameID={gameID}
                    playerID={playerID}
                    activeClue={this.props.activeClue}
                    playerAnswering={this.props.playerAnswering}

@@ -9,9 +9,9 @@ function Podium(props) {
   } else {
     score = '$' + score;
   }
-  let indicatorClasses = 'podium-indicator';
+  let nameClasses = 'podium-name my-2 py-2 rounded';
   if (props.active) {
-    indicatorClasses += ' podium-indicator-active';
+    nameClasses += ' podium-name-active';
   }
   return (
     <div className="mb-2 mx-4 podium row text-center user-select-none">
@@ -21,9 +21,7 @@ function Podium(props) {
       </div>
       <div className="col-4 podium-center">
         <div className={scoreClasses}>{score}</div>
-        <div className={indicatorClasses} />
-        <div className="py-1 podium-name">{props.name}</div>
-        <div className={indicatorClasses + ' mb-1'} />
+        <div className={nameClasses}>{props.name}</div>
       </div>
       <div className="col-2 podium-side podium-right-side">
         <div className="podium-stripe" />

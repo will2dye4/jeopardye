@@ -16,6 +16,10 @@ export class WebsocketEvent {
   }
 }
 
+export function randomChoice(values) {
+  return values[Math.floor(Math.random() * values.length)];
+}
+
 export function titleizeCategoryName(categoryName) {
   return categoryName.toTitleCase();
 }
