@@ -6,7 +6,7 @@ const API_BASE = 'http://jservice.io/api';
 const CATEGORY_URL = `${API_BASE}/category`;
 const RANDOM_CLUES_URL = `${API_BASE}/random`;
 
-const MIN_CLUES_TO_FETCH = 50;
+const MIN_CLUES_TO_FETCH = 25;
 const MAX_CLUES_TO_FETCH = 100;  /* Limit of 100 is enforced by the JService API */
 
 const logger = log.get('jservice');

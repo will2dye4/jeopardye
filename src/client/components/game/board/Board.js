@@ -58,7 +58,8 @@ function Board(props) {
                              reveal={props.revealAnswer}
                              timerRef={props.timerRef}
                              buzzIn={props.buzzIn}
-                             dismiss={props.dismissActiveClue} />);
+                             dismiss={props.dismissActiveClue}
+                             skipActiveClue={props.skipActiveClue} />);
   }
   return <div id="board" className="position-relative">{content}</div>;
 }

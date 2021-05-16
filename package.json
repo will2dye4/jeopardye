@@ -4,6 +4,9 @@
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.3",
+    "@fortawesome/fontawesome-svg-core": "^1.2.35",
+    "@fortawesome/free-solid-svg-icons": "^5.15.3",
+    "@fortawesome/react-fontawesome": "^0.1.14",
     "@giantmachines/redux-websocket": "^1.5.1",
     "@gouch/to-title-case": "^2.2.1",
     "@nlpjs/lang-en": "^4.22.0",

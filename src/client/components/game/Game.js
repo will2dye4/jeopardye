@@ -1,5 +1,7 @@
 import React from 'react';
 import {
+  CATEGORIES_PER_ROUND,
+  CLUES_PER_CATEGORY,
   CORRECT_RESPONSES_KEEP_CONTROL,
   CORRECT_RESPONSES_TAKE_CONTROL,
   DEFAULT_PLAYER_ID,
@@ -8,7 +10,7 @@ import {
   Rounds
 } from '../../../constants.mjs';
 import { randomChoice } from '../../../utils.mjs';
-import { playSound } from '../../utils';
+import { getUnplayedClues, playSound } from '../../utils';
 import './Game.css';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
@@ -47,7 +49,8 @@ class Game extends React.Component {
     this.props.setPlayer({playerID: playerID, name: playerName});
 
     document.addEventListener('keyup', function handleKeyUp(event) {
-      if ((event.key === ' ' || event.key === 'Enter') && this.state.showActiveClue) {
+      const key = event.key.toLowerCase();
+      if ((key === ' ' || key === 'enter') && this.state.showActiveClue) {
         if (this.state.allowAnswers && !this.props.playerAnswering) {
           event.preventDefault();
           this.props.buzzIn(this.props.game.gameID, this.props.player.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
@@ -56,23 +59,38 @@ class Game extends React.Component {
           event.preventDefault();
           this.dismissActiveClue();
         }
+      } else if (key === 's' && this.state.showActiveClue && !this.state.revealAnswer) {
+        console.log('Skipping the current clue...');
+        event.preventDefault();
+        this.revealAnswer();
       }
     }.bind(this));
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (!prevProps.game && this.props.game && !this.props.connected) {
-      console.log('New game loaded. Opening websocket connection...');
+      console.log('Game loaded. Opening websocket connection...');
       this.props.websocketConnect();
     }
     if (!prevProps.connected && this.props.connected && this.props.game) {
       console.log('Websocket connection successful. Joining game...');
       this.props.joinGame(this.props.game.gameID, this.props.player);
       const round = (this.props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
+      const isNewGame = (getUnplayedClues(this.props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
+      const playerToAct = (this.props.playerInControl === this.props.player.playerID);
+      let status;
+      if (isNewGame) {
+        status = `Game started. Let's play the ${round} round.`;
+      } else {
+        status = `Joined existing game in the ${round} round.`;
+      }
+      if (playerToAct) {
+        status += ` It's your turn!`;
+      }
       this.setState({
         status: {
-          appearance: 'action',
-          text: `Game started. Let's play the ${round} round.`,
+          appearance: (playerToAct ? 'action' : 'default'),
+          text: status,
         },
       });
     }
@@ -115,18 +133,7 @@ class Game extends React.Component {
   }
 
   checkForLastClue(prevAnswerCorrect = false) {
-    let unplayedClues = [];
-  loop:
-    for (const category of Object.values(this.props.board.categories)) {
-      for (const clue of category.clues) {
-        if (!clue.played) {
-          unplayedClues.push(clue);
-          if (unplayedClues.length > 1) {
-            break loop;
-          }
-        }
-      }
-    }
+    let unplayedClues = getUnplayedClues(this.props.board, 2);
     if (unplayedClues.length === 1) {
       let clue = {...unplayedClues[0]};
       clue.category = this.props.board.categories[clue.categoryID].name;
@@ -186,6 +193,11 @@ class Game extends React.Component {
     }.bind(this), SHOW_CLUE_DELAY_MILLIS);
   }
 
+  skipActiveClue(event) {
+    event.stopPropagation();
+    this.revealAnswer();
+  }
+
   render() {
     const podiums = Object.values(this.props.players).map(player => {
       const active = (player.playerID === this.props.playerAnswering);
@@ -206,6 +218,7 @@ class Game extends React.Component {
                handleClueClick={(clue) => this.handleClueClick(clue)}
                buzzIn={this.props.buzzIn}
                dismissActiveClue={() => this.dismissActiveClue()}
+               skipActiveClue={(event) => this.skipActiveClue(event)}
                activeClue={this.props.activeClue}
                {...this.state} />
         <StatusBar gameID={gameID}

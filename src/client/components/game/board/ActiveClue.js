@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFastForward } from '@fortawesome/free-solid-svg-icons';
 
 class ActiveClue extends React.Component {
   constructor(props) {
@@ -27,6 +29,10 @@ class ActiveClue extends React.Component {
   render() {
     let containerClasses = 'align-items-center current-clue-container row user-select-none animate__animated animate__zoomIn';
     const clueClasses = 'col-12 current-clue p-5 text-center text-uppercase';
+    let buttons = [];
+    if (this.props.allowAnswers) {
+      buttons.push(<FontAwesomeIcon key="fast-forward" className="hover-pointer" icon={faFastForward} onClick={(event) => this.props.skipActiveClue(event)} />);
+    }
     if (this.props.allowAnswers || this.props.reveal) {
       containerClasses += ' hover-pointer';
     }
@@ -35,6 +41,9 @@ class ActiveClue extends React.Component {
       <div className={containerClasses} style={{width: board.offsetWidth * 1.02, height: board.offsetHeight}}
            onClick={() => this.handleClick()}>
         <div className={clueClasses}>{this.state.text}</div>
+        <div className="current-clue-buttons mb-2 position-absolute">
+          {buttons}
+        </div>
       </div>
     );
   }

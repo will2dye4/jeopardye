@@ -1,6 +1,7 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
 import { WebsocketEvent } from '../../utils.mjs';
 import { EventTypes } from '../../constants.mjs';
+import {getUnplayedClues} from "../utils";
 
 export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
@@ -14,12 +15,35 @@ export const ActionTypes = {
 
 const API_BASE = 'http://localhost:3333/api';
 const WS_BASE = 'ws://localhost:3333/api/ws';
-const CREATE_GAME_URL = `${API_BASE}/game`;
+const GAME_URL = `${API_BASE}/game`;
+
+function getGameByID(gameID) {
+  return fetch(`${GAME_URL}/${gameID}`).then(response => response.json());
+}
+
+function createNewGame() {
+ return fetch(GAME_URL, {method: 'POST'}).then(response => response.json());
+}
 
 export function fetchGame() {
+  const gameID = localStorage.getItem('gameID');
+  let promise;
+  if (gameID) {
+    promise = getGameByID(gameID).then(game => {
+      if (game.finishedTime !== null || !getUnplayedClues(game.rounds[game.currentRound]).length) {
+        console.log(`Previous game ${gameID} finished. Creating a new game...`);
+        return createNewGame();
+      }
+      console.log(`Using previous game ${gameID}...`);
+      return game;
+    });
+  } else {
+    console.log('No previous game found. Creating a new game...');
+    promise = createNewGame();
+  }
   return {
     type: ActionTypes.FETCH_GAME,
-    payload: fetch(CREATE_GAME_URL, {method: 'POST'}).then(response => response.json()),
+    payload: promise,
   };
 }
 

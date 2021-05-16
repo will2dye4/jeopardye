@@ -88,7 +88,17 @@ export function GameReducer(storeData, action) {
     case ActionTypes.FETCH_GAME:
       const newGame = action.payload;
       const newBoard = newGame.rounds[newGame.currentRound];
-      return {...storeData, game: newGame, board: newBoard, players: newGame.players, activeClue: null, playerAnswering: null, playerInControl: null, prevAnswer: null};
+      localStorage.setItem('gameID', newGame.gameID);
+      return {
+        ...storeData,
+        game: newGame,
+        board: newBoard,
+        players: newGame.players,
+        activeClue: newGame.activeClue,
+        playerAnswering: newGame.playerAnswering,
+        playerInControl: newGame.playerInControl,
+        prevAnswer: null,
+      };
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null};
     case ActionTypes.SET_PLAYER:
