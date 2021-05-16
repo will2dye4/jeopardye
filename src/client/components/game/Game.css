@@ -8,13 +8,41 @@
     src: url("../../fonts/DancingScript-VariableFont_wght.ttf");
 }
 
+@font-face {
+    font-family: "Korinna";
+    src: url("../../fonts/Korinna-Regular.otf");
+}
+
+@font-face {
+    font-family: "Korinna Bold";
+    src: url("../../fonts/Korinna_Bold_BT.ttf");
+}
+
+@font-face {
+    font-family: "Square 721";
+    src: url("../../fonts/Square_721_Bold_BT.woff");
+}
+
+@font-face {
+    font-family: "Swiss 911";
+    src: url("../../fonts/Swiss_911_Compressed.ttf");
+}
+
+@font-face {
+    font-family: "Swiss 911 Extra";
+    src: url("../../fonts/Swiss_911_Extra_Compressed.woff");
+}
+
+body {
+    font: 24px Helvetica, sans-serif;
+}
+
 .hover-pointer:hover {
     cursor: pointer;
 }
 
 .game {
     color: white;
-    font: 24px "Swiss 911", Helvetica, sans-serif;
     height: 550px;
     min-height: 550px;
     min-width: 1200px;
@@ -23,6 +51,8 @@
 .category-heading {
     background-color: #1D08A3;
     color: white;
+    font-family: Helvetica, sans-serif;
+    font-weight: bold;
     min-height: 90px;
     min-width: 200px;
     text-shadow: 3px 3px 1px black;
@@ -35,6 +65,7 @@
 .clue {
     background-color: #1D08A3;
     color: #FFCC00;
+    font-family: "Swiss 911", Helvetica, sans-serif;
     font-size: 48px;
     min-width: 200px;
     padding: 0;
@@ -59,8 +90,8 @@
 }
 
 .current-clue {
-    font: 70px "ITC Korinna", "Newsreader", "Times", serif;
-    font-weight: 500;
+    font: 70px "Korinna", "Korinna Bold", "Newsreader", "Times", serif;
+    font-weight: bold;
     text-shadow: 5px 5px 2px black;
     word-spacing: 0.2em;
 }
