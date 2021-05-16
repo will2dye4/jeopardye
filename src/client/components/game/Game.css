@@ -70,6 +70,10 @@
     left: 96% !important;
 }
 
+.current-clue-button:hover {
+    font-size: 125%;
+}
+
 .progress-no-transition {
     -webkit-transition: none !important;
     -moz-transition: none !important;

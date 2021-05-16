@@ -7,7 +7,7 @@ import {
   DEFAULT_PLAYER_ID,
   INCORRECT_RESPONSES,
   PLAYER_PLACEHOLDER,
-  Rounds
+  Rounds,
 } from '../../../constants.mjs';
 import { randomChoice } from '../../../utils.mjs';
 import { getUnplayedClues, playSound } from '../../utils';
@@ -17,24 +17,19 @@ import CountdownTimer from './CountdownTimer';
 import Podium from './Podium';
 import StatusBar from './StatusBar';
 
+const DAILY_DOUBLE_DELAY_MILLIS = 2500;
 const SHOW_CLUE_DELAY_MILLIS = 500;
 
 class Game extends React.Component {
   constructor(props) {
     super(props);
-    let status = 'Creating a new game, please wait ...';
-    if (props.game) {
-      const round = (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
-      status = {
-        appearance: 'action',
-        text: `Game started. Let's play the ${round} round.`,
-      };
-    }
     this.state = {
       allowAnswers: false,
       revealAnswer: false,
       showActiveClue: !!props.activeClue,
-      status: status,
+      showClueAnimation: !!props.activeClue,
+      showDailyDouble: false,
+      status: this.getInitialStatus(props),
       timerRef: React.createRef(),
     };
   }
@@ -59,7 +54,7 @@ class Game extends React.Component {
           event.preventDefault();
           this.dismissActiveClue();
         }
-      } else if (key === 's' && this.state.showActiveClue && !this.state.revealAnswer) {
+      } else if (key === 's' && this.state.showActiveClue && !this.state.revealAnswer && !this.props.playerAnswering) {
         console.log('Skipping the current clue...');
         event.preventDefault();
         this.revealAnswer();
@@ -75,24 +70,7 @@ class Game extends React.Component {
     if (!prevProps.connected && this.props.connected && this.props.game) {
       console.log('Websocket connection successful. Joining game...');
       this.props.joinGame(this.props.game.gameID, this.props.player);
-      const round = (this.props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
-      const isNewGame = (getUnplayedClues(this.props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
-      const playerToAct = (this.props.playerInControl === this.props.player.playerID);
-      let status;
-      if (isNewGame) {
-        status = `Game started. Let's play the ${round} round.`;
-      } else {
-        status = `Joined existing game in the ${round} round.`;
-      }
-      if (playerToAct) {
-        status += ` It's your turn!`;
-      }
-      this.setState({
-        status: {
-          appearance: (playerToAct ? 'action' : 'default'),
-          text: status,
-        },
-      });
+      this.setState({status: this.getInitialStatus()});
     }
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
       if (this.props.prevAnswer.correct) {
@@ -104,6 +82,31 @@ class Game extends React.Component {
     }
   }
 
+  getInitialStatus(props = null) {
+    if (!props) {
+      props = this.props;
+    }
+    if (!props.game) {
+      return 'Creating a new game, please wait ...';
+    }
+    const round = (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
+    const isNewGame = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
+    const playerToAct = (props.playerInControl === props.player.playerID);
+    let status;
+    if (isNewGame) {
+      status = `Game started. Let's play the ${round} round.`;
+    } else {
+      status = `Joined existing game in the ${round} round.`;
+    }
+    if (playerToAct) {
+      status += ` It's your turn!`;
+    }
+    return {
+      appearance: (playerToAct ? 'action' : 'default'),
+      text: status,
+    };
+  }
+
   handleCorrectAnswer(tookControl) {
     const responses = (tookControl ? CORRECT_RESPONSES_TAKE_CONTROL : CORRECT_RESPONSES_KEEP_CONTROL);
     const response = randomChoice(responses).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
@@ -111,6 +114,8 @@ class Game extends React.Component {
       allowAnswers: false,
       revealAnswer: false,
       showActiveClue: false,
+      showClueAnimation: false,
+      showDailyDouble: false,
       status: {
         appearance: 'correct',
         text: response,
@@ -124,6 +129,8 @@ class Game extends React.Component {
     const response = randomChoice(INCORRECT_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
     this.setState({
       allowAnswers: false,
+      showClueAnimation: false,
+      showDailyDouble: false,
       status: {
         appearance: 'incorrect',
         text: response,
@@ -154,10 +161,12 @@ class Game extends React.Component {
   }
 
   revealAnswer() {
-    playSound(' https://www.soundboard.com/mediafiles/mt/MTMxOTQ5Nzc4MTMxOTcx_FJGXeSZhwls.mp3');
+    playSound('/audio/timer_elapsed.mp3');
     this.setState({
       allowAnswers: false,
       revealAnswer: true,
+      showClueAnimation: false,
+      showDailyDouble: false,
       status: 'Time\'s up! No one buzzed in quickly enough.',
     });
   }
@@ -167,6 +176,8 @@ class Game extends React.Component {
       allowAnswers: false,
       revealAnswer: false,
       showActiveClue: false,
+      showClueAnimation: false,
+      showDailyDouble: false,
       status: {
         appearance: 'action',
         text: 'Choose another clue.',
@@ -184,13 +195,28 @@ class Game extends React.Component {
       </React.Fragment>
     );
     this.props.selectClue(this.props.game.gameID, this.props.player.playerID, clue.categoryID, clue.clueID);
-    this.setState({status: status});
+
+    const isDailyDouble = (this.props.board.dailyDoubles.indexOf(clue.clueID) !== -1);
+    this.setState({
+      showClueAnimation: true,
+      showDailyDouble: isDailyDouble,
+      status: status,
+    });
+
     setTimeout(function() {
-      this.setState({
-        showActiveClue: true,
-      });
-      this.state.timerRef.current.start();
+      this.setState({showActiveClue: true});
+      if (!isDailyDouble) {
+        this.state.timerRef.current.start();
+      }
     }.bind(this), SHOW_CLUE_DELAY_MILLIS);
+
+    if (isDailyDouble) {
+      playSound('/audio/daily_double.m4a');
+      setTimeout(function() {
+        this.setState({showDailyDouble: false});
+        this.state.timerRef.current.start();
+      }.bind(this), DAILY_DOUBLE_DELAY_MILLIS);
+    }
   }
 
   skipActiveClue(event) {

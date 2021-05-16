@@ -54,6 +54,8 @@ function Board(props) {
                              gameID={props.gameID}
                              playerID={props.playerID}
                              clue={props.activeClue}
+                             showAnimation={props.showClueAnimation}
+                             showDailyDouble={props.showDailyDouble}
                              allowAnswers={props.allowAnswers}
                              reveal={props.revealAnswer}
                              timerRef={props.timerRef}
