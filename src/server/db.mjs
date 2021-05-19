@@ -49,6 +49,7 @@ export async function setActiveClue(game, clue) {
   const updates = {
     $set: {
       activeClue: {...clue, played: true, playersAttempted: []},
+      currentWager: null,
       [cluePlayedKey]: true
     }
   };

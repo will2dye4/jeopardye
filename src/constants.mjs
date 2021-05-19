@@ -23,7 +23,15 @@ export const EventTypes = {
   PLAYER_BUZZED: 'player_buzzed',
   SUBMIT_ANSWER: 'submit_answer',
   PLAYER_ANSWERED: 'player_answered',
+  SUBMIT_WAGER: 'submit_wager',
+  PLAYER_WAGERED: 'player_wagered',
 }
+
+export const DAILY_DOUBLE_MINIMUM_WAGER = 5;
+export const DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS = {
+  [Rounds.SINGLE]: SINGLE_ROUND_VALUE_INCREMENT * CLUES_PER_CATEGORY,
+  [Rounds.DOUBLE]: DOUBLE_ROUND_VALUE_INCREMENT * CLUES_PER_CATEGORY,
+};
 
 export const PLAYER_PLACEHOLDER = '{{PLAYER}}';
 

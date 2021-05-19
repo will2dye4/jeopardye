@@ -1,7 +1,7 @@
 import log from 'log';
 import { EventTypes } from '../constants.mjs';
 import { GamePlayer } from '../models/player.mjs';
-import { checkSubmittedAnswer, WebsocketEvent } from '../utils.mjs';
+import { isDailyDouble, checkSubmittedAnswer, getWagerRange, WebsocketEvent } from '../utils.mjs';
 import { addPlayerToGame, getGame, setActiveClue, setPlayerAnswering, updateGame } from './db.mjs';
 
 const logger = log.get('ws');
@@ -148,9 +148,10 @@ async function handleSubmitAnswer(ws, event) {
   const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
   const clue = clues[clueIndex];
   const correct = checkSubmittedAnswer(clue.answer, answer);
+  const value = game.currentWager || clue.value;
   let score = game.players[playerID].score;
-  let newScore = (correct ? score + clue.value : score - clue.value);
-  let newFields = {playerAnswering: null, [`players.${playerID}.score`]: newScore};
+  let newScore = (correct ? score + value : score - value);
+  let newFields = {playerAnswering: null, currentWager: null, [`players.${playerID}.score`]: newScore};
   if (correct) {
     newFields.activeClue = null;
     newFields.playerInControl = playerID;
@@ -162,11 +163,43 @@ async function handleSubmitAnswer(ws, event) {
   });
 }
 
+async function handleSubmitWager(ws, event) {
+  const game = await validateGamePlayerAndClue(ws, event);
+  if (!game) {
+    return;
+  }
+  if (!game.activeClue) {
+    handleError(ws, event, 'invalid wager attempt - no active clue', 400);
+    return;
+  }
+  const { gameID, playerID, categoryID, clueID, wager } = event.payload;
+  if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
+    handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    return;
+  }
+  if (!isDailyDouble(game.rounds[game.currentRound], clueID)) {
+    handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not a daily double`, 400);
+    return;
+  }
+  const [minWager, maxWager] = getWagerRange(game.currentRound, game.players[playerID].score);
+  const playerWager = parseInt(wager);
+  if (isNaN(playerWager) || playerWager < minWager || playerWager > maxWager) {
+    handleError(ws, event, `invalid wager attempt - wager ${wager} is invalid (range is ${minWager} - ${maxWager})`, 400);
+    return;
+  }
+  updateGame(gameID, {playerAnswering: playerID, currentWager: playerWager}).then(() => {
+    logger.info(`${playerID} wagered $${playerWager}.`);
+    const payload = {playerID: playerID, wager: playerWager};
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, payload));
+  });
+}
+
 const eventHandlers = {
   [EventTypes.JOIN_GAME]: handleJoinGame,
   [EventTypes.SELECT_CLUE]: handleSelectClue,
   [EventTypes.BUZZ_IN]: handleBuzzIn,
   [EventTypes.SUBMIT_ANSWER]: handleSubmitAnswer,
+  [EventTypes.SUBMIT_WAGER]: handleSubmitWager,
 }
 
 export function handleWebsocket(ws, req) {

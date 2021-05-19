@@ -1,5 +1,6 @@
 import langEn from '@nlpjs/lang-en';
 import similarity from '@nlpjs/similarity';
+import { DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS, DAILY_DOUBLE_MINIMUM_WAGER } from './constants.mjs';
 
 const { StemmerEn, StopwordsEn } = langEn;
 const { leven } = similarity;
@@ -18,6 +19,16 @@ export class WebsocketEvent {
 
 export function randomChoice(values) {
   return values[Math.floor(Math.random() * values.length)];
+}
+
+export function getWagerRange(currentRound, playerScore) {
+  const defaultMax = DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS[currentRound];
+  const maxWager = Math.max(playerScore, defaultMax);
+  return [DAILY_DOUBLE_MINIMUM_WAGER, maxWager];
+}
+
+export function isDailyDouble(round, clueID) {
+  return (round.dailyDoubles.indexOf(clueID) !== -1);
 }
 
 export function titleizeCategoryName(categoryName) {
@@ -103,5 +114,6 @@ export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
       }
     }
   }
-  return false;
+  /* Try checking if the correct answer is a substring of the submitted answer, e.g., 'salinger' vs. 'j.d. salinger' */
+  return (removeWhitespace(normalizedSubmittedAnswer).indexOf(removeWhitespace(normalizedCorrectAnswer)) !== -1);
 }

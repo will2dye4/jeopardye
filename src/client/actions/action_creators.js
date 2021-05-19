@@ -63,6 +63,10 @@ export function submitAnswer(gameID, playerID, categoryID, clueID, answer) {
   return send(new WebsocketEvent(EventTypes.SUBMIT_ANSWER, {gameID, playerID, categoryID, clueID, answer}));
 }
 
+export function submitWager(gameID, playerID, categoryID, clueID, wager) {
+  return send(new WebsocketEvent(EventTypes.SUBMIT_WAGER, {gameID, playerID, categoryID, clueID, wager}));
+}
+
 export function dismissActiveClue() {
   return {
     type: ActionTypes.DISMISS_CLUE,

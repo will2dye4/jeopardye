@@ -9,7 +9,7 @@ import {
   PLAYER_PLACEHOLDER,
   Rounds,
 } from '../../../constants.mjs';
-import { randomChoice } from '../../../utils.mjs';
+import { isDailyDouble, randomChoice } from '../../../utils.mjs';
 import { getUnplayedClues, playSound } from '../../utils';
 import './Game.css';
 import Board from './board/Board';
@@ -17,7 +17,6 @@ import CountdownTimer from './CountdownTimer';
 import Podium from './Podium';
 import StatusBar from './StatusBar';
 
-const DAILY_DOUBLE_DELAY_MILLIS = 2500;
 const SHOW_CLUE_DELAY_MILLIS = 500;
 
 class Game extends React.Component {
@@ -54,7 +53,7 @@ class Game extends React.Component {
           event.preventDefault();
           this.dismissActiveClue();
         }
-      } else if (key === 's' && this.state.showActiveClue && !this.state.revealAnswer && !this.props.playerAnswering) {
+      } else if (key === 's' && this.state.showActiveClue && !this.state.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDouble) {
         console.log('Skipping the current clue...');
         event.preventDefault();
         this.revealAnswer();
@@ -77,8 +76,13 @@ class Game extends React.Component {
         const tookControl = this.props.playerInControl !== prevProps.playerInControl;
         this.handleCorrectAnswer(tookControl);
       } else {
-        this.handleIncorrectAnswer();
+        const dailyDouble = isDailyDouble(this.props.board, this.props.prevAnswer.clueID);
+        this.handleIncorrectAnswer(dailyDouble);
       }
+    }
+    if (!prevProps.currentWager && this.props.currentWager) {
+      this.setState({showDailyDouble: false});
+      this.state.timerRef.current.start();
     }
   }
 
@@ -125,7 +129,7 @@ class Game extends React.Component {
     this.checkForLastClue(true);
   }
 
-  handleIncorrectAnswer() {
+  handleIncorrectAnswer(dailyDouble) {
     const response = randomChoice(INCORRECT_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
     this.setState({
       allowAnswers: false,
@@ -136,7 +140,12 @@ class Game extends React.Component {
         text: response,
       },
     });
-    this.state.timerRef.current.resume();
+    if (dailyDouble) {
+      this.state.timerRef.current.reset();
+      this.revealAnswer(false, false);
+    } else {
+      this.state.timerRef.current.resume();
+    }
   }
 
   checkForLastClue(prevAnswerCorrect = false) {
@@ -160,15 +169,20 @@ class Game extends React.Component {
     }
   }
 
-  revealAnswer() {
-    playSound('/audio/timer_elapsed.mp3');
-    this.setState({
+  revealAnswer(playBuzzerSound = true, setStatus = true) {
+    if (playBuzzerSound) {
+      playSound('/audio/timer_elapsed.mp3');
+    }
+    let newState = {
       allowAnswers: false,
       revealAnswer: true,
       showClueAnimation: false,
       showDailyDouble: false,
-      status: 'Time\'s up! No one buzzed in quickly enough.',
-    });
+    };
+    if (setStatus) {
+      newState.status = 'Time\'s up! No one buzzed in quickly enough.';
+    }
+    this.setState(newState);
   }
 
   dismissActiveClue() {
@@ -196,26 +210,22 @@ class Game extends React.Component {
     );
     this.props.selectClue(this.props.game.gameID, this.props.player.playerID, clue.categoryID, clue.clueID);
 
-    const isDailyDouble = (this.props.board.dailyDoubles.indexOf(clue.clueID) !== -1);
+    const dailyDouble = isDailyDouble(this.props.board, clue.clueID);
     this.setState({
       showClueAnimation: true,
-      showDailyDouble: isDailyDouble,
+      showDailyDouble: isDailyDouble(this.props.board, clue.clueID),
       status: status,
     });
 
     setTimeout(function() {
       this.setState({showActiveClue: true});
-      if (!isDailyDouble) {
+      if (!dailyDouble) {
         this.state.timerRef.current.start();
       }
     }.bind(this), SHOW_CLUE_DELAY_MILLIS);
 
-    if (isDailyDouble) {
+    if (dailyDouble) {
       playSound('/audio/daily_double.m4a');
-      setTimeout(function() {
-        this.setState({showDailyDouble: false});
-        this.state.timerRef.current.start();
-      }.bind(this), DAILY_DOUBLE_DELAY_MILLIS);
     }
   }
 
@@ -230,8 +240,11 @@ class Game extends React.Component {
       return <Podium key={player.playerID} name={player.name} score={player.score} active={active} />
     });
     const gameID = (this.props.game ? this.props.game.gameID : null);
+    const currentRound = (this.props.game ? this.props.game.currentRound : null);
     const playerID = (this.props.player ? this.props.player.playerID : null);
+    const playerScore = (playerID ? this.props.players[playerID]?.score : null);
     const categories = (this.props.board ? this.props.board.categories : null);
+    const dailyDouble = (this.props.board && this.props.activeClue ? isDailyDouble(this.props.board, this.props.activeClue.clueID) : null);
     return (
       <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}
@@ -249,9 +262,16 @@ class Game extends React.Component {
                {...this.state} />
         <StatusBar gameID={gameID}
                    playerID={playerID}
+                   playerScore={playerScore}
+                   currentRound={currentRound}
+                   isDailyDouble={dailyDouble}
+                   showWager={this.state.showDailyDouble}
                    activeClue={this.props.activeClue}
+                   currentWager={this.props.currentWager}
                    playerAnswering={this.props.playerAnswering}
+                   playerInControl={this.props.playerInControl}
                    submitAnswer={this.props.submitAnswer}
+                   submitWager={this.props.submitWager}
                    status={this.state.status} />
         <div className="d-flex justify-content-center podium-container">
           {podiums}

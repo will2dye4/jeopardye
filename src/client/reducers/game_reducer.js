@@ -12,6 +12,7 @@ function newStoreData() {
     playerAnswering: null,
     playerInControl: null,
     prevAnswer: null,
+    currentWager: null,
   };
 }
 
@@ -40,7 +41,7 @@ function handlePlayerSelectedClue(storeData, event) {
   const newBoard = {...storeData.board};
   newBoard.categories[categoryID].clues[clueIndex] = clue;
   console.log(`Playing ${category.name} for $${clue.value}.`);
-  return {...storeData, board: newBoard, activeClue: clue, prevAnswer: null};
+  return {...storeData, board: newBoard, activeClue: clue, prevAnswer: null, currentWager: null};
 }
 
 function handlePlayerBuzzed(storeData, event) {
@@ -50,15 +51,21 @@ function handlePlayerBuzzed(storeData, event) {
 
 function handlePlayerAnswered(storeData, event) {
   const { answer, correct, playerID, score } = event.payload;
-  console.log(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'})`);
+  console.log(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
   const newPlayer = {...storeData.players[playerID], score: score};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
-  let newStoreData = {...storeData, players: newPlayers, playerAnswering: null, prevAnswer: event.payload};
-  if (event.payload.correct) {
+  let newStoreData = {...storeData, players: newPlayers, playerAnswering: null, prevAnswer: event.payload, currentWager: null};
+  if (correct) {
     newStoreData.activeClue = null;
-    newStoreData.playerInControl = event.payload.playerID;
+    newStoreData.playerInControl = playerID;
   }
   return newStoreData;
+}
+
+function handlePlayerWagered(storeData, event) {
+  const { playerID, wager } = event.payload;
+  console.log(`${playerID} wagered $${wager}.`);
+  return {...storeData, currentWager: wager, playerAnswering: playerID};
 }
 
 const eventHandlers = {
@@ -67,6 +74,7 @@ const eventHandlers = {
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
   [EventTypes.PLAYER_BUZZED]: handlePlayerBuzzed,
   [EventTypes.PLAYER_ANSWERED]: handlePlayerAnswered,
+  [EventTypes.PLAYER_WAGERED]: handlePlayerWagered,
 }
 
 function handleWebsocketEvent(storeData, event) {

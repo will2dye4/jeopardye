@@ -79,7 +79,7 @@ export class Round {
 }
 
 export class Game {
-  constructor(singleRound, doubleRound, currentRound, players, activeClue, playerAnswering, playerInControl) {
+  constructor(singleRound, doubleRound, currentRound, players, activeClue, playerAnswering, playerInControl, currentWager) {
     this.gameID = uuid.v4();
     this.rounds = {
       [Rounds.SINGLE]: singleRound,
@@ -90,6 +90,7 @@ export class Game {
     this.activeClue = activeClue || null;
     this.playerAnswering = playerAnswering || null;
     this.playerInControl = playerInControl || null;
+    this.currentWager = currentWager || null;
     this.createdTime = new Date();
     this.finishedTime = null;
   }
