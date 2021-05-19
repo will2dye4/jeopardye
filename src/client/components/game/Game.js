@@ -27,7 +27,7 @@ class Game extends React.Component {
       revealAnswer: false,
       showActiveClue: !!props.activeClue,
       showClueAnimation: !!props.activeClue,
-      showDailyDouble: false,
+      showDailyDoubleWager: false,
       status: this.getInitialStatus(props),
       timerRef: React.createRef(),
     };
@@ -53,7 +53,7 @@ class Game extends React.Component {
           event.preventDefault();
           this.dismissActiveClue();
         }
-      } else if (key === 's' && this.state.showActiveClue && !this.state.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDouble) {
+      } else if (key === 's' && this.state.showActiveClue && !this.state.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
         console.log('Skipping the current clue...');
         event.preventDefault();
         this.revealAnswer();
@@ -81,7 +81,7 @@ class Game extends React.Component {
       }
     }
     if (!prevProps.currentWager && this.props.currentWager) {
-      this.setState({showDailyDouble: false});
+      this.setState({showDailyDoubleWager: false});
       this.state.timerRef.current.start();
     }
   }
@@ -119,7 +119,7 @@ class Game extends React.Component {
       revealAnswer: false,
       showActiveClue: false,
       showClueAnimation: false,
-      showDailyDouble: false,
+      showDailyDoubleWager: false,
       status: {
         appearance: 'correct',
         text: response,
@@ -132,9 +132,9 @@ class Game extends React.Component {
   handleIncorrectAnswer(dailyDouble) {
     const response = randomChoice(INCORRECT_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
     this.setState({
-      allowAnswers: false,
+      allowAnswers: false,  /* TODO - only set this to false for the player who answered incorrectly */
       showClueAnimation: false,
-      showDailyDouble: false,
+      showDailyDoubleWager: false,
       status: {
         appearance: 'incorrect',
         text: response,
@@ -173,16 +173,25 @@ class Game extends React.Component {
     if (playBuzzerSound) {
       playSound('/audio/timer_elapsed.mp3');
     }
+    let status;
+    if (setStatus) {
+      if (isDailyDouble(this.props.board, this.props.activeClue.clueID)) {
+        status = 'Sorry, you didn\'t answer in time.';
+      } else {
+        status = 'Time\'s up! No one buzzed in quickly enough.';  /* TODO - show a different message if anyone buzzed in */
+      }
+    }
     let newState = {
       allowAnswers: false,
       revealAnswer: true,
       showClueAnimation: false,
-      showDailyDouble: false,
+      showDailyDoubleWager: false,
     };
-    if (setStatus) {
-      newState.status = 'Time\'s up! No one buzzed in quickly enough.';
+    if (status) {
+      newState.status = status;
     }
     this.setState(newState);
+    this.props.revealAnswer();
   }
 
   dismissActiveClue() {
@@ -191,7 +200,7 @@ class Game extends React.Component {
       revealAnswer: false,
       showActiveClue: false,
       showClueAnimation: false,
-      showDailyDouble: false,
+      showDailyDoubleWager: false,
       status: {
         appearance: 'action',
         text: 'Choose another clue.',
@@ -213,7 +222,7 @@ class Game extends React.Component {
     const dailyDouble = isDailyDouble(this.props.board, clue.clueID);
     this.setState({
       showClueAnimation: true,
-      showDailyDouble: isDailyDouble(this.props.board, clue.clueID),
+      showDailyDoubleWager: isDailyDouble(this.props.board, clue.clueID),
       status: status,
     });
 
@@ -235,44 +244,32 @@ class Game extends React.Component {
   }
 
   render() {
+    const gameState = {
+      gameID: this.props.game?.gameID,
+      currentRound: this.props.game?.currentRound,
+      categories: this.props.board?.categories,
+      isDailyDouble: (this.props.board && this.props.activeClue ? isDailyDouble(this.props.board, this.props.activeClue.clueID) : false),
+      playerID: this.props.player?.playerID,
+      playerScore: this.props.players[this.props.player?.playerID]?.score,
+    };
     const podiums = Object.values(this.props.players).map(player => {
       const active = (player.playerID === this.props.playerAnswering);
       return <Podium key={player.playerID} name={player.name} score={player.score} active={active} />
     });
-    const gameID = (this.props.game ? this.props.game.gameID : null);
-    const currentRound = (this.props.game ? this.props.game.currentRound : null);
-    const playerID = (this.props.player ? this.props.player.playerID : null);
-    const playerScore = (playerID ? this.props.players[playerID]?.score : null);
-    const categories = (this.props.board ? this.props.board.categories : null);
-    const dailyDouble = (this.props.board && this.props.activeClue ? isDailyDouble(this.props.board, this.props.activeClue.clueID) : null);
     return (
       <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}
                         seconds="10"
-                        onTimeStarted={() => this.setState({allowAnswers: true})}
+                        onTimeStarted={() => this.setState({allowAnswers: !gameState.isDailyDouble})}
                         onTimeElapsed={() => this.revealAnswer()} />
-        <Board gameID={gameID}
-               playerID={playerID}
-               categories={categories}
-               handleClueClick={(clue) => this.handleClueClick(clue)}
+        <Board gameState={gameState}
+               activeClue={this.props.activeClue}
                buzzIn={this.props.buzzIn}
                dismissActiveClue={() => this.dismissActiveClue()}
+               handleClueClick={(clue) => this.handleClueClick(clue)}
                skipActiveClue={(event) => this.skipActiveClue(event)}
-               activeClue={this.props.activeClue}
                {...this.state} />
-        <StatusBar gameID={gameID}
-                   playerID={playerID}
-                   playerScore={playerScore}
-                   currentRound={currentRound}
-                   isDailyDouble={dailyDouble}
-                   showWager={this.state.showDailyDouble}
-                   activeClue={this.props.activeClue}
-                   currentWager={this.props.currentWager}
-                   playerAnswering={this.props.playerAnswering}
-                   playerInControl={this.props.playerInControl}
-                   submitAnswer={this.props.submitAnswer}
-                   submitWager={this.props.submitWager}
-                   status={this.state.status} />
+        <StatusBar gameState={gameState} {...this.props} {...this.state} />
         <div className="d-flex justify-content-center podium-container">
           {podiums}
         </div>

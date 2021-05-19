@@ -10,8 +10,15 @@ class StatusBar extends React.Component {
     this.state = {
       answerInputValue: '',
       wagerInputValue: '',
+      invalidAnswer: false,
       invalidWager: false,
     };
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (!prevProps.currentWager && this.props.currentWager) {
+      document.getElementById('answer-input').focus();
+    }
   }
 
   handleInputChange(event) {
@@ -24,8 +31,12 @@ class StatusBar extends React.Component {
 
   handleSubmit() {
     const answer = this.state.answerInputValue;
-    this.props.submitAnswer(this.props.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID, answer);
-    this.setState({answerInputValue: ''});
+    if (answer === '') {
+      this.setState({invalidAnswer: true});
+    } else {
+      this.props.submitAnswer(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID, answer);
+      this.setState({answerInputValue: '', invalidAnswer: false});
+    }
   }
 
   handleSubmitWager() {
@@ -35,7 +46,7 @@ class StatusBar extends React.Component {
     if (isNaN(wager) || wager < minWager || wager > maxWager) {
       this.setState({invalidWager: true});
     } else {
-      this.props.submitWager(this.props.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID, wager);
+      this.props.submitWager(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID, wager);
       this.setState({wagerInputValue: '', invalidWager: false});
     }
   }
@@ -93,22 +104,26 @@ class StatusBar extends React.Component {
   }
 
   getWagerRange() {
-    return getWagerRange(this.props.currentRound, this.props.playerScore);
+    return getWagerRange(this.props.gameState.currentRound, this.props.gameState.playerScore);
   }
 
   render() {
     const classes = 'card mt-3 rounded-pill status-bar user-select-none ' + this.getColorClasses();
     let bodyClasses = 'card-body text-center';
     let content;
-    if (this.props.activeClue && this.props.playerAnswering === this.props.playerID) {
+    if (this.props.activeClue && this.props.playerAnswering === this.props.gameState.playerID) {
       bodyClasses += ' d-flex justify-content-center';
+      let inputClasses = 'form-control form-control-lg w-100';
+      if (this.state.invalidAnswer) {
+        inputClasses += ' is-invalid';
+      }
       content = (
         <div className="row w-75">
           <div className="col p-2">
             <label htmlFor="answer-input" className="form-label">What is ...</label>
           </div>
           <div className="col-8">
-            <input id="answer-input" type="text" value={this.state.answerInputValue} className="form-control form-control-lg w-100"
+            <input id="answer-input" type="text" value={this.state.answerInputValue} className={inputClasses}
                    autoFocus={true} onChange={event => this.handleInputChange(event)}
                    onKeyUp={event => this.handleKeyUp(event)} />
           </div>
@@ -119,7 +134,8 @@ class StatusBar extends React.Component {
           </div>
         </div>
       );
-    } else if (this.props.activeClue && this.props.playerInControl === this.props.playerID && this.props.isDailyDouble && this.props.showWager) {
+    } else if (this.props.activeClue && this.props.playerInControl === this.props.gameState.playerID &&
+        this.props.gameState.isDailyDouble && this.props.showDailyDoubleWager) {
       bodyClasses += ' d-flex justify-content-center';
       const category = this.props.activeClue.category;
       const [minWager, maxWager] = this.getWagerRange().map(value => value.toLocaleString());
