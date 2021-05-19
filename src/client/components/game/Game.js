@@ -260,7 +260,7 @@ class Game extends React.Component {
       <div id="game" className="game m-4">
         <CountdownTimer ref={this.state.timerRef}
                         seconds="10"
-                        onTimeStarted={() => this.setState({allowAnswers: !gameState.isDailyDouble})}
+                        onTimeStarted={() => this.setState({allowAnswers: !gameState.isDailyDouble})}  /* TODO - also update status */
                         onTimeElapsed={() => this.revealAnswer()} />
         <Board gameState={gameState}
                activeClue={this.props.activeClue}
