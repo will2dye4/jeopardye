@@ -1,6 +1,11 @@
 import React from 'react';
 
 class Clue extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleClick = this.handleClick.bind(this);
+  }
+
   handleClick() {
     if (!this.props.clue.played) {
       this.props.onClick(this);
@@ -15,7 +20,7 @@ class Clue extends React.Component {
       text = `$${this.props.clue.value}`;
     }
     return (
-      <div className="border border-2 clue col fw-bold text-center user-select-none" onClick={() => this.handleClick()}>
+      <div className="border border-2 clue col fw-bold text-center user-select-none" onClick={this.handleClick}>
         <div className={classes}>{text}</div>
       </div>
     );

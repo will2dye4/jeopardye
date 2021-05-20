@@ -17,6 +17,10 @@ export class WebsocketEvent {
   }
 }
 
+export function range(n) {
+  return [...Array(n).keys()];
+}
+
 export function randomChoice(values) {
   return values[Math.floor(Math.random() * values.length)];
 }

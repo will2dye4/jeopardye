@@ -1,6 +1,5 @@
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFastForward } from '@fortawesome/free-solid-svg-icons';
+import ActiveClueButtons from './ActiveClueButtons';
 
 class ActiveClue extends React.Component {
   constructor(props) {
@@ -8,6 +7,7 @@ class ActiveClue extends React.Component {
     this.state = {
       text: props.revealAnswer ? props.activeClue.answer : props.activeClue.question,
     };
+    this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -45,28 +45,16 @@ class ActiveClue extends React.Component {
     if (this.props.showDailyDoubleWager) {
       content = <img src="/images/daily_double.jpg" alt="Daily Double" style={{...style, objectFit: 'cover'}} />;
     } else {
-      const clueClasses = 'col-12 current-clue p-5 text-center text-uppercase';
-      let buttons = [];
-      if (this.props.allowAnswers) {
-        const skipIcon = <FontAwesomeIcon id="skip-icon"
-                                          key="skip"
-                                          icon={faFastForward}
-                                          className="hover-pointer current-clue-button"
-                                          title="Skip this clue" />;
-        buttons.push(skipIcon);
-      }
       content = (
         <React.Fragment>
-          <div className={clueClasses}>{this.state.text}</div>
-          <div className="current-clue-buttons mb-2 position-absolute">
-            {buttons}
-          </div>
+          <div className="col-12 current-clue p-5 text-center text-uppercase">{this.state.text}</div>
+          <ActiveClueButtons {...this.props} />
         </React.Fragment>
       );
     }
 
     return (
-      <div className={containerClasses} style={style} onClick={(event) => this.handleClick(event)}>
+      <div className={containerClasses} style={style} onClick={this.handleClick}>
         {content}
       </div>
     );

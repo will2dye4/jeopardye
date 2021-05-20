@@ -15,7 +15,7 @@ import './Game.css';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
 import Podium from './Podium';
-import StatusBar from './StatusBar';
+import StatusBar from './status/StatusBar';
 
 const SHOW_CLUE_DELAY_MILLIS = 500;
 
