@@ -6,26 +6,27 @@ const DAILY_DOUBLE_COUNTDOWN_SECONDS = 20;
 const MIN_CLUE_READING_DELAY_SECONDS = 5;
 const MAX_CLUE_READING_DELAY_SECONDS = 15;
 
+const READING_SPEED_WORDS_PER_MINUTE = 130;
+const READING_SPEED_SECONDS_PER_WORD = 60 / READING_SPEED_WORDS_PER_MINUTE;
+
+function newTimerState() {
+  return {
+    finished: false,
+    paused: false,
+    running: false,
+    waiting: false,
+    seconds: DEFAULT_COUNTDOWN_SECONDS,
+    updater: null,
+    value: 100,
+  };
+}
+
 class CountdownTimer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      finished: false,
-      paused: false,
-      running: false,
-      waiting: false,
-      seconds: DEFAULT_COUNTDOWN_SECONDS,
-      updater: null,
-      value: 100,
-      responseTimer: {
-        finished: false,
-        paused: false,
-        running: false,
-        waiting: false,
-        seconds: DEFAULT_COUNTDOWN_SECONDS,
-        updater: null,
-        value: 100,
-      },
+      ...newTimerState(),
+      responseTimer: newTimerState(),
       showResponseTimer: false,
     };
     this.startCountdown = this.startCountdown.bind(this);
@@ -38,7 +39,8 @@ class CountdownTimer extends React.Component {
   getClueReadingDelay() {
     const question = this.props.activeClue?.question || '';
     const words = question.split(/[-\s]/);
-    const seconds = Math.min(Math.max(words.length, MIN_CLUE_READING_DELAY_SECONDS), MAX_CLUE_READING_DELAY_SECONDS);
+    const readingSpeed = words.length * READING_SPEED_SECONDS_PER_WORD;
+    const seconds = Math.ceil(Math.min(Math.max(readingSpeed, MIN_CLUE_READING_DELAY_SECONDS), MAX_CLUE_READING_DELAY_SECONDS));
     return (seconds + Math.random()) * 1000;
   }
 
@@ -102,12 +104,13 @@ class CountdownTimer extends React.Component {
     }
   }
 
-  startResponseTimer() {
-    if (!this.state.responseTimer.finished && !this.props.gameState.isDailyDouble) {
+  startResponseTimer(wagering = false) {
+    if (!this.state.responseTimer.finished) {
       this.setState({
         responseTimer: {
           ...this.state.responseTimer,
           running: true,
+          wagering: wagering,
           updater: this.getResponseTimeUpdater(),
         },
         showResponseTimer: true,
@@ -127,6 +130,7 @@ class CountdownTimer extends React.Component {
 
   resume() {
     if (!this.state.waiting && !this.state.finished && this.state.paused) {
+      this.resetResponseTimer();
       this.setState({
         running: true,
         paused: false,
@@ -153,6 +157,7 @@ class CountdownTimer extends React.Component {
         ...this.state.responseTimer,
         finished: false,
         running: false,
+        wagering: false,
         value: 100,
       },
       showResponseTimer: false,
@@ -186,17 +191,25 @@ class CountdownTimer extends React.Component {
       classes += ' bg-warning text-dark progress-bar-striped progress-bar-animated';
       secondsRemaining = 'Waiting...'
       value = 100;
-    } else if (timer.running || timer.paused) {
-      const backgroundColor = (this.state.showResponseTimer ? 'purple' : 'danger');
-      classes += ` fw-bold bg-${backgroundColor}`;
-      secondsRemaining = Math.ceil(timer.value * timer.seconds / 100);
-      if (this.state.showResponseTimer && secondsRemaining > 1) {
-        secondsRemaining = `Answer in ${secondsRemaining}`;
-      }
-      value = timer.value;
     } else {
-      classes += ' bg-danger';
-      value = 0;
+      const answering = (this.state.showResponseTimer || this.props.gameState.isDailyDouble);
+      classes += ' bg-' + (answering ? 'danger' : 'purple');
+      if (timer.running || timer.paused) {
+        classes += ' fw-bold';
+        secondsRemaining = Math.ceil(timer.value * timer.seconds / 100);
+        if (secondsRemaining > 1) {
+          let verb = 'Buzz';
+          if (timer.wagering) {
+            verb = 'Wager';
+          } else if (answering) {
+            verb = 'Answer';
+          }
+          secondsRemaining = `${verb} in ${secondsRemaining}`;
+        }
+        value = timer.value;
+      } else {
+        value = 0;
+      }
     }
     return (
       <div className="countdown-timer progress mb-3 user-select-none">

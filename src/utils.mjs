@@ -1,5 +1,6 @@
 import langEn from '@nlpjs/lang-en';
 import similarity from '@nlpjs/similarity';
+import '@gouch/to-title-case';
 import { DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS, DAILY_DOUBLE_MINIMUM_WAGER } from './constants.mjs';
 
 const { StemmerEn, StopwordsEn } = langEn;
@@ -36,7 +37,12 @@ export function isDailyDouble(round, clueID) {
 }
 
 export function titleizeCategoryName(categoryName) {
-  return categoryName.toTitleCase();
+  return (
+    categoryName.toTitleCase()
+    .replaceAll('u.s.a.', 'U.S.A.')
+    .replaceAll('u.s.', 'U.S.')
+    .replaceAll('Tv', 'TV')
+  );
 }
 
 export function sanitizeQuestionText(text) {

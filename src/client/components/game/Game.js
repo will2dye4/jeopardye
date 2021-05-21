@@ -4,13 +4,14 @@ import {
   CLUES_PER_CATEGORY,
   CORRECT_RESPONSES_KEEP_CONTROL,
   CORRECT_RESPONSES_TAKE_CONTROL,
+  DAILY_DOUBLE_MINIMUM_WAGER,
   DEFAULT_PLAYER_ID,
   INCORRECT_RESPONSES,
   PLAYER_PLACEHOLDER,
   Rounds,
 } from '../../../constants.mjs';
 import { isDailyDouble, randomChoice } from '../../../utils.mjs';
-import { getUnplayedClues, playSound } from '../../utils';
+import { getUnplayedClues, playSound, speakClue } from '../../utils';
 import './Game.css';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
@@ -88,14 +89,23 @@ class Game extends React.Component {
     }
     if (!prevProps.currentWager && this.props.currentWager) {
       this.setState({showDailyDoubleWager: false});
+      this.state.timerRef.current.resetResponseTimer();
       this.state.timerRef.current.start();
+      speakClue(this.props.activeClue);
     }
-    if (!prevProps.playerAnswering && this.props.playerAnswering) {
+    if (!prevProps.playerAnswering && this.props.playerAnswering && !isDailyDouble(this.props.board, this.props.activeClue.clueID)) {
       this.state.timerRef.current.pause();
       if (this.props.playerAnswering === this.props.player.playerID) {
         this.state.timerRef.current.startResponseTimer();
       }
     }
+  }
+
+  getCurrentRoundName(props = null) {
+    if (!props) {
+      props = this.props;
+    }
+    return (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
   }
 
   getInitialStatus(props = null) {
@@ -105,7 +115,7 @@ class Game extends React.Component {
     if (!props.game) {
       return 'Creating a new game, please wait ...';
     }
-    const round = (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
+    const round = this.getCurrentRoundName(props);
     const isNewGame = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
     const playerToAct = (props.playerInControl === props.player.playerID);
     let status;
@@ -164,7 +174,10 @@ class Game extends React.Component {
 
   checkForLastClue(prevAnswerCorrect = false) {
     let unplayedClues = getUnplayedClues(this.props.board, 2);
-    if (unplayedClues.length === 1) {
+    if (!unplayedClues) {
+      const round = this.getCurrentRoundName();
+      this.setState({status: `That's the end of the ${round} round.`});
+    } else if (unplayedClues.length === 1) {
       let clue = {...unplayedClues[0]};
       clue.category = this.props.board.categories[clue.categoryID].name;
       let status = 'And now the last clue ...';
@@ -178,7 +191,7 @@ class Game extends React.Component {
       if (this.props.player.playerID === this.props.playerInControl) {
         setTimeout(function() {
           this.handleClueClick(clue);
-        }.bind(this), SHOW_CLUE_DELAY_MILLIS);
+        }.bind(this), SHOW_CLUE_DELAY_MILLIS * 2);
       }
     }
   }
@@ -236,14 +249,17 @@ class Game extends React.Component {
     const dailyDouble = isDailyDouble(this.props.board, clue.clueID);
     this.setState({
       showClueAnimation: true,
-      showDailyDoubleWager: isDailyDouble(this.props.board, clue.clueID),
+      showDailyDoubleWager: dailyDouble,
       status: status,
     });
 
     setTimeout(function() {
       this.setState({showActiveClue: true});
-      if (!dailyDouble) {
+      if (dailyDouble) {
+        this.state.timerRef.current.startResponseTimer(true);  /* start wager timer */
+      } else {
         this.state.timerRef.current.start();
+        speakClue(this.props.activeClue);
       }
     }.bind(this), SHOW_CLUE_DELAY_MILLIS);
 
@@ -271,9 +287,14 @@ class Game extends React.Component {
   }
 
   handleResponseTimerElapsed() {
-    const dailyDouble = isDailyDouble(this.props.board, this.props.activeClue.clueID);
-    this.handleIncorrectAnswer(dailyDouble, 'Sorry, you didn\'t answer in time.');
-    this.props.resetPlayerAnswering();
+    if (this.state.showDailyDoubleWager) {
+      this.props.submitWager(this.props.game.gameID, this.props.player.playerID,
+                             this.props.activeClue.categoryID, this.props.activeClue.clueID, DAILY_DOUBLE_MINIMUM_WAGER);
+    } else {
+      const dailyDouble = isDailyDouble(this.props.board, this.props.activeClue.clueID);
+      this.handleIncorrectAnswer(dailyDouble, 'Sorry, you didn\'t answer in time.');
+      this.props.resetPlayerAnswering();
+    }
   }
 
   render() {

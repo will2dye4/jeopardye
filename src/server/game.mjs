@@ -1,6 +1,5 @@
 import express from 'express';
 import log from 'log';
-import '@gouch/to-title-case';
 import { CATEGORIES_PER_ROUND, Rounds } from '../constants.mjs';
 import { Category, Game, Round } from '../models/game.mjs';
 import { createGame, getGame } from './db.mjs';
