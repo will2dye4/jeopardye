@@ -41,6 +41,10 @@ body {
     cursor: pointer;
 }
 
+.bg-purple {
+    background-color: #8D2AB5;
+}
+
 .game {
     color: white;
     height: 550px;

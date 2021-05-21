@@ -1,7 +1,16 @@
 import React from 'react';
 
+const BELL_EMOJI = '\uD83D\uDD14';
 const CHECK_MARK_EMOJI = '\u2705';
-const CROSS_MARK_EMOJI = '\u274c';
+const CROSS_MARK_EMOJI = '\u274C';
+const TIMER_CLOCK_EMOJI = '\u23F2';
+
+const EMOJI_NAME_TO_EMOJI = {
+  'bell': BELL_EMOJI,
+  'check_mark': CHECK_MARK_EMOJI,
+  'cross_mark': CROSS_MARK_EMOJI,
+  'timer_clock': TIMER_CLOCK_EMOJI,
+}
 
 class StatusBarText extends React.Component {
   getAppearance() {
@@ -14,6 +23,7 @@ class StatusBarText extends React.Component {
   getTextClasses() {
     switch (this.getAppearance()) {
       case 'action':
+      case 'attention':
       case 'correct':
         return 'fw-bold animate__animated animate__pulse animate__infinite';
       default:
@@ -22,6 +32,9 @@ class StatusBarText extends React.Component {
   }
 
   getEmoji() {
+    if (this.props.status.hasOwnProperty('emoji')) {
+      return EMOJI_NAME_TO_EMOJI[this.props.status.emoji];
+    }
     switch (this.getAppearance()) {
       case 'correct':
         return CHECK_MARK_EMOJI;

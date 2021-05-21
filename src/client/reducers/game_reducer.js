@@ -109,6 +109,8 @@ export function GameReducer(storeData, action) {
       };
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null};
+    case ActionTypes.RESET_PLAYER_ANSWERING:
+      return {...storeData, playerAnswering: null};
     case ActionTypes.REVEAL_ANSWER:
       return {...storeData, playerAnswering: null};
     case ActionTypes.SET_PLAYER:

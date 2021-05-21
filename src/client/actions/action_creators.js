@@ -6,6 +6,7 @@ import {getUnplayedClues} from "../utils";
 export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
+  RESET_PLAYER_ANSWERING: 'JEOPARDYE::RESET_PLAYER_ANSWERING',
   REVEAL_ANSWER: 'JEOPARDYE::REVEAL_ANSWER',
   SET_PLAYER: 'JEOPARDYE::SET_PLAYER',
   /* actions provided by the redux-websocket middleware */
@@ -85,6 +86,13 @@ export function setPlayer(player) {
 export function revealAnswer() {
   return {
     type: ActionTypes.REVEAL_ANSWER,
+    payload: {},
+  }
+}
+
+export function resetPlayerAnswering() {
+  return {
+    type: ActionTypes.RESET_PLAYER_ANSWERING,
     payload: {},
   }
 }

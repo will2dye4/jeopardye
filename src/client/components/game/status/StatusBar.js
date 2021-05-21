@@ -29,6 +29,8 @@ class StatusBar extends React.Component {
     switch (this.getAppearance()) {
       case 'action':
         return 'alert-primary';
+      case 'attention':
+        return 'alert-warning';
       case 'correct':
         return 'alert-success';
       case 'incorrect':

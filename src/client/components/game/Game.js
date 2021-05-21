@@ -14,7 +14,7 @@ import { getUnplayedClues, playSound } from '../../utils';
 import './Game.css';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
-import Podium from './Podium';
+import Podiums from './podium/Podiums';
 import StatusBar from './status/StatusBar';
 
 const SHOW_CLUE_DELAY_MILLIS = 500;
@@ -31,6 +31,12 @@ class Game extends React.Component {
       status: this.getInitialStatus(props),
       timerRef: React.createRef(),
     };
+    this.dismissActiveClue = this.dismissActiveClue.bind(this);
+    this.handleClueClick = this.handleClueClick.bind(this);
+    this.handleResponseTimerElapsed = this.handleResponseTimerElapsed.bind(this);
+    this.handleTimerStarted = this.handleTimerStarted.bind(this);
+    this.revealAnswer = this.revealAnswer.bind(this);
+    this.skipActiveClue = this.skipActiveClue.bind(this);
   }
 
   componentDidMount() {
@@ -48,7 +54,6 @@ class Game extends React.Component {
         if (this.state.allowAnswers && !this.props.playerAnswering) {
           event.preventDefault();
           this.props.buzzIn(this.props.game.gameID, this.props.player.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
-          this.state.timerRef.current.pause();
         } else if (this.state.revealAnswer) {
           event.preventDefault();
           this.dismissActiveClue();
@@ -72,6 +77,7 @@ class Game extends React.Component {
       this.setState({status: this.getInitialStatus()});
     }
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
+      this.state.timerRef.current.resetResponseTimer();
       if (this.props.prevAnswer.correct) {
         const tookControl = this.props.playerInControl !== prevProps.playerInControl;
         this.handleCorrectAnswer(tookControl);
@@ -83,6 +89,12 @@ class Game extends React.Component {
     if (!prevProps.currentWager && this.props.currentWager) {
       this.setState({showDailyDoubleWager: false});
       this.state.timerRef.current.start();
+    }
+    if (!prevProps.playerAnswering && this.props.playerAnswering) {
+      this.state.timerRef.current.pause();
+      if (this.props.playerAnswering === this.props.player.playerID) {
+        this.state.timerRef.current.startResponseTimer();
+      }
     }
   }
 
@@ -129,8 +141,10 @@ class Game extends React.Component {
     this.checkForLastClue(true);
   }
 
-  handleIncorrectAnswer(dailyDouble) {
-    const response = randomChoice(INCORRECT_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
+  handleIncorrectAnswer(dailyDouble, response) {
+    if (!response) {
+      response = randomChoice(INCORRECT_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
+    }
     this.setState({
       allowAnswers: false,  /* TODO - only set this to false for the player who answered incorrectly */
       showClueAnimation: false,
@@ -243,6 +257,25 @@ class Game extends React.Component {
     this.revealAnswer();
   }
 
+  handleTimerStarted() {
+    const dailyDouble = isDailyDouble(this.props.board, this.props.activeClue.clueID);
+    let newState = {allowAnswers: !dailyDouble};
+    if (!dailyDouble) {
+      newState.status = {
+        appearance: 'action',
+        emoji: 'bell',
+        text: `Buzz in if you know the answer in ${this.props.activeClue.category}!`,
+      };
+    }
+    this.setState(newState);
+  }
+
+  handleResponseTimerElapsed() {
+    const dailyDouble = isDailyDouble(this.props.board, this.props.activeClue.clueID);
+    this.handleIncorrectAnswer(dailyDouble, 'Sorry, you didn\'t answer in time.');
+    this.props.resetPlayerAnswering();
+  }
+
   render() {
     const gameState = {
       gameID: this.props.game?.gameID,
@@ -252,27 +285,23 @@ class Game extends React.Component {
       playerID: this.props.player?.playerID,
       playerScore: this.props.players[this.props.player?.playerID]?.score,
     };
-    const podiums = Object.values(this.props.players).map(player => {
-      const active = (player.playerID === this.props.playerAnswering);
-      return <Podium key={player.playerID} name={player.name} score={player.score} active={active} />
-    });
     return (
       <div id="game" className="game m-4">
-        <CountdownTimer ref={this.state.timerRef}
-                        seconds="10"
-                        onTimeStarted={() => this.setState({allowAnswers: !gameState.isDailyDouble})}  /* TODO - also update status */
-                        onTimeElapsed={() => this.revealAnswer()} />
+        <CountdownTimer gameState={gameState}
+                        ref={this.state.timerRef}
+                        activeClue={this.props.activeClue}
+                        onTimeStarted={this.handleTimerStarted}
+                        onTimeElapsed={this.revealAnswer}
+                        onResponseTimeElapsed={this.handleResponseTimerElapsed} />
         <Board gameState={gameState}
                activeClue={this.props.activeClue}
                buzzIn={this.props.buzzIn}
-               dismissActiveClue={() => this.dismissActiveClue()}
-               handleClueClick={(clue) => this.handleClueClick(clue)}
-               skipActiveClue={(event) => this.skipActiveClue(event)}
+               dismissActiveClue={this.dismissActiveClue}
+               handleClueClick={this.handleClueClick}
+               skipActiveClue={this.skipActiveClue}
                {...this.state} />
         <StatusBar gameState={gameState} {...this.props} {...this.state} />
-        <div className="d-flex justify-content-center podium-container">
-          {podiums}
-        </div>
+        <Podiums {...this.props} />
       </div>
     );
   }
