@@ -102,7 +102,11 @@ body {
 
 .current-clue-buttons {
     bottom: 0 !important;
-    left: 96% !important;
+    left: 93% !important;
+}
+
+.current-clue-button {
+    margin: 5px;
 }
 
 .current-clue-button:hover {

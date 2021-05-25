@@ -1,3 +1,7 @@
+import { JSERVICE_API_BASE } from '../constants.mjs';
+
+const INVALID_CLUE_URL =`${JSERVICE_API_BASE}/invalid`;
+
 const SPEECH_DELAY_MILLIS = 500;
 
 export function playSound(url) {
@@ -28,4 +32,15 @@ loop:
     }
   }
   return unplayedClues;
+}
+
+export function markClueAsInvalid(clueID) {
+  return fetch(`${INVALID_CLUE_URL}?id=${clueID}`).then(response => {
+    if (response.ok) {
+      console.log(`Marked clue ${clueID} as invalid.`);
+    } else {
+      console.log(`Failed to mark clue ${clueID} as invalid: ${response.status} ${response.statusText}`)
+    }
+    return response;
+  });
 }

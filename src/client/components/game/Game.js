@@ -11,7 +11,7 @@ import {
   Rounds,
 } from '../../../constants.mjs';
 import { isDailyDouble, randomChoice } from '../../../utils.mjs';
-import { getUnplayedClues, playSound, speakClue } from '../../utils';
+import { getUnplayedClues, markClueAsInvalid, playSound, speakClue } from '../../utils';
 import './Game.css';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
@@ -59,10 +59,19 @@ class Game extends React.Component {
           event.preventDefault();
           this.dismissActiveClue();
         }
-      } else if (key === 's' && this.state.showActiveClue && !this.state.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
-        console.log('Skipping the current clue...');
-        event.preventDefault();
-        this.revealAnswer();
+      } else if (this.state.showActiveClue && !this.state.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
+        if (key === 's') {
+          console.log('Skipping the current clue...');
+          event.preventDefault();
+          this.revealAnswer();
+        } else if (key === 'i' && this.props.playersMarkingClueInvalid.indexOf(this.props.player?.playerID) === -1) {
+          event.preventDefault();
+          markClueAsInvalid(this.props.activeClue.clueID).then(response => {
+            if (response.ok) {
+              this.props.markClueAsInvalid(this.props.game.gameID, this.props.player.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+            }
+          });
+        }
       }
     }.bind(this));
   }
@@ -174,7 +183,7 @@ class Game extends React.Component {
 
   checkForLastClue(prevAnswerCorrect = false) {
     let unplayedClues = getUnplayedClues(this.props.board, 2);
-    if (!unplayedClues) {
+    if (unplayedClues.length === 0) {
       const round = this.getCurrentRoundName();
       this.setState({status: `That's the end of the ${round} round.`});
     } else if (unplayedClues.length === 1) {
@@ -204,8 +213,10 @@ class Game extends React.Component {
     if (setStatus) {
       if (isDailyDouble(this.props.board, this.props.activeClue.clueID)) {
         status = 'Sorry, you didn\'t answer in time.';
+      } else if (this.props.activeClue.playersAttempted.length > 0) {
+        status = 'Time\'s up! Looks like no one got this one right.';
       } else {
-        status = 'Time\'s up! No one buzzed in quickly enough.';  /* TODO - show a different message if anyone buzzed in */
+        status = 'Time\'s up! No one buzzed in quickly enough.';
       }
     }
     let newState = {
@@ -317,6 +328,8 @@ class Game extends React.Component {
         <Board gameState={gameState}
                activeClue={this.props.activeClue}
                buzzIn={this.props.buzzIn}
+               markClueAsInvalid={this.props.markClueAsInvalid}
+               playersMarkingClueInvalid={this.props.playersMarkingClueInvalid}
                dismissActiveClue={this.dismissActiveClue}
                handleClueClick={this.handleClueClick}
                skipActiveClue={this.skipActiveClue}

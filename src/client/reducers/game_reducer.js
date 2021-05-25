@@ -11,6 +11,7 @@ function newStoreData() {
     activeClue: null,
     playerAnswering: null,
     playerInControl: null,
+    playersMarkingClueInvalid: [],
     prevAnswer: null,
     currentWager: null,
   };
@@ -37,16 +38,17 @@ function handlePlayerSelectedClue(storeData, event) {
     console.log(`Player selected invalid clue: ${clueID} (category ${categoryID})`);
     return storeData;
   }
-  const clue = {...clues[clueIndex], category: category.name, played: true};
+  const clue = {...clues[clueIndex], category: category.name, played: true, playersAttempted: []};
   const newBoard = {...storeData.board};
   newBoard.categories[categoryID].clues[clueIndex] = clue;
   console.log(`Playing ${category.name} for $${clue.value}.`);
-  return {...storeData, board: newBoard, activeClue: clue, prevAnswer: null, currentWager: null};
+  return {...storeData, board: newBoard, activeClue: clue, playersMarkingClueInvalid: [], prevAnswer: null, currentWager: null};
 }
 
 function handlePlayerBuzzed(storeData, event) {
   console.log(`${event.payload.playerID} buzzed in.`);
-  return {...storeData, playerAnswering: event.payload.playerID, prevAnswer: null};
+  const activeClue = {...storeData.activeClue, playersAttempted: storeData.activeClue.playersAttempted.concat(event.payload.playerID)};
+  return {...storeData, activeClue: activeClue, playerAnswering: event.payload.playerID, prevAnswer: null};
 }
 
 function handlePlayerAnswered(storeData, event) {
@@ -109,6 +111,14 @@ export function GameReducer(storeData, action) {
       };
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null};
+    case ActionTypes.MARK_CLUE_AS_INVALID:
+      const { gameID, playerID, categoryID, clueID } = action.payload;
+      if (storeData.game?.gameID === gameID && storeData.activeClue?.categoryID === categoryID &&
+          storeData.activeClue?.clueID === clueID && Object.keys(storeData.game?.players).indexOf(playerID) !== -1) {
+        return {...storeData, playersMarkingClueInvalid: storeData.playersMarkingClueInvalid.concat(playerID)};
+      } else {
+        return storeData;
+      }
     case ActionTypes.RESET_PLAYER_ANSWERING:
       return {...storeData, playerAnswering: null};
     case ActionTypes.REVEAL_ANSWER:

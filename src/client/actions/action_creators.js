@@ -6,6 +6,7 @@ import {getUnplayedClues} from "../utils";
 export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
+  MARK_CLUE_AS_INVALID: 'JEOPARDYE::MARK_CLUE_AS_INVALID',
   RESET_PLAYER_ANSWERING: 'JEOPARDYE::RESET_PLAYER_ANSWERING',
   REVEAL_ANSWER: 'JEOPARDYE::REVEAL_ANSWER',
   SET_PLAYER: 'JEOPARDYE::SET_PLAYER',
@@ -94,6 +95,14 @@ export function resetPlayerAnswering() {
   return {
     type: ActionTypes.RESET_PLAYER_ANSWERING,
     payload: {},
+  }
+}
+
+export function markClueAsInvalid(gameID, playerID, categoryID, clueID) {
+  /* TODO - convert this to a websocket event so other players are notified (show a badge next to the icon) */
+  return {
+    type: ActionTypes.MARK_CLUE_AS_INVALID,
+    payload: {gameID, playerID, categoryID, clueID},
   }
 }
 

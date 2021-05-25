@@ -1,10 +1,9 @@
 import log from 'log';
 import fetch from 'node-fetch';
-import { CLUES_PER_CATEGORY } from '../constants.mjs';
+import { CLUES_PER_CATEGORY, JSERVICE_API_BASE } from '../constants.mjs';
 
-const API_BASE = 'http://jservice.io/api';
-const CATEGORY_URL = `${API_BASE}/category`;
-const RANDOM_CLUES_URL = `${API_BASE}/random`;
+const CATEGORY_URL = `${JSERVICE_API_BASE}/category`;
+const RANDOM_CLUES_URL = `${JSERVICE_API_BASE}/random`;
 
 const MIN_CLUES_TO_FETCH = 25;
 const MAX_CLUES_TO_FETCH = 100;  /* Limit of 100 is enforced by the JService API */

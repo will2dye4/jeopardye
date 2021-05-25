@@ -1,7 +1,8 @@
 import React from 'react';
 
 const DEFAULT_COUNTDOWN_SECONDS = 10;
-const DAILY_DOUBLE_COUNTDOWN_SECONDS = 20;
+const DAILY_DOUBLE_COUNTDOWN_SECONDS = 25;
+const WAGER_COUNTDOWN_SECONDS = 15;
 
 const MIN_CLUE_READING_DELAY_SECONDS = 5;
 const MAX_CLUE_READING_DELAY_SECONDS = 15;
@@ -59,8 +60,8 @@ class CountdownTimer extends React.Component {
     }.bind(this), interval);
   }
 
-  getResponseTimeUpdater() {
-    const interval = DEFAULT_COUNTDOWN_SECONDS * 10;
+  getResponseTimeUpdater(seconds) {
+    const interval = seconds * 10;
     return setInterval(function() {
       const newValue = this.state.responseTimer.value - 1;
       const finished = (newValue <= 0);
@@ -105,13 +106,15 @@ class CountdownTimer extends React.Component {
   }
 
   startResponseTimer(wagering = false) {
+    const seconds = (wagering ? WAGER_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS);
     if (!this.state.responseTimer.finished) {
       this.setState({
         responseTimer: {
           ...this.state.responseTimer,
+          seconds: seconds,
           running: true,
           wagering: wagering,
-          updater: this.getResponseTimeUpdater(),
+          updater: this.getResponseTimeUpdater(seconds),
         },
         showResponseTimer: true,
       });

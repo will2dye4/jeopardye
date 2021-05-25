@@ -1,5 +1,7 @@
 export const DEFAULT_PLAYER_ID = 'William';
 
+export const JSERVICE_API_BASE = 'http://jservice.io/api';
+
 export const CATEGORIES_PER_ROUND = 6;
 export const CLUES_PER_CATEGORY = 5;
 export const ROUNDS_PER_GAME = 2;
