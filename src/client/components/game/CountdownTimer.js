@@ -56,9 +56,6 @@ class CountdownTimer extends React.Component {
       });
       if (finished) {
         this.cancelResponseTimeUpdater();
-        if (this.props.onResponseTimeElapsed) {
-          this.props.onResponseTimeElapsed();
-        }
       }
     }.bind(this), interval);
   }

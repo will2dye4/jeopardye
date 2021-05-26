@@ -4,11 +4,11 @@ import { EventTypes } from '../../constants.mjs';
 import { getUnplayedClues } from '../utils';
 
 export const ActionTypes = {
+  FETCH_CURRENT_GAME: 'JEOPARDYE::FETCH_CURRENT_GAME',
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   MARK_CLUE_AS_INVALID: 'JEOPARDYE::MARK_CLUE_AS_INVALID',
-  RESET_PLAYER_ANSWERING: 'JEOPARDYE::RESET_PLAYER_ANSWERING',
   SKIP_ACTIVE_CLUE: 'JEOPARDYE::SKIP_ACTIVE_CLUE',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
@@ -31,6 +31,20 @@ function createNewGame() {
 
 function getPlayerByID(playerID) {
   return fetch(`${PLAYER_URL}/${playerID}`).then(response => response.json());
+}
+
+export function fetchCurrentGame() {
+  const gameID = localStorage.getItem('gameID');
+  let payload = null;
+  if (gameID) {
+    payload = getGameByID(gameID).then(game => {
+      return (game.finishedTime !== null || !getUnplayedClues(game.rounds[game.currentRound]).length ? null : game);
+    });
+  }
+  return {
+    type: ActionTypes.FETCH_CURRENT_GAME,
+    payload: payload,
+  };
 }
 
 export function fetchGame() {
@@ -85,13 +99,6 @@ export function submitWager(gameID, playerID, categoryID, clueID, wager) {
 export function dismissActiveClue() {
   return {
     type: ActionTypes.DISMISS_CLUE,
-    payload: {},
-  }
-}
-
-export function resetPlayerAnswering() {
-  return {
-    type: ActionTypes.RESET_PLAYER_ANSWERING,
     payload: {},
   }
 }

@@ -95,3 +95,11 @@ export class Game {
     this.finishedTime = null;
   }
 }
+
+export class GameSettings {
+  constructor(numRounds, dailyDoubles, finalJeopardye) {
+    this.numRounds = numRounds;
+    this.dailyDoubles = dailyDoubles;
+    this.finalJeopardye = finalJeopardye;
+  }
+}

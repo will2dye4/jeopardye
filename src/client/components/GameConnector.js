@@ -3,11 +3,11 @@ import { connect } from 'react-redux';
 import {
   buzzIn,
   dismissActiveClue,
+  fetchCurrentGame,
   fetchGame,
   fetchPlayer,
   joinGame,
   markClueAsInvalid,
-  resetPlayerAnswering,
   selectClue,
   skipActiveClue,
   submitAnswer,
@@ -16,6 +16,8 @@ import {
   websocketDisconnect,
 } from '../actions/action_creators';
 import Game from './game/Game';
+import Lobby from './lobby/Lobby';
+import {DEFAULT_PLAYER_ID} from "../../constants.mjs";
 
 function mapStateToProps(state) {
   return {...state};
@@ -24,11 +26,11 @@ function mapStateToProps(state) {
 const actionCreators = {
   buzzIn,
   dismissActiveClue,
+  fetchCurrentGame,
   fetchGame,
   fetchPlayer,
   joinGame,
   markClueAsInvalid,
-  resetPlayerAnswering,
   selectClue,
   skipActiveClue,
   submitAnswer,
@@ -39,11 +41,17 @@ const actionCreators = {
 
 class Connector extends React.Component {
   render() {
-    return <Game {...this.props} />;
+    return (this.props.game && false ? <Game {...this.props} /> : <Lobby {...this.props} />);
   }
 
   componentDidMount() {
-    this.props.fetchGame();
+    if (!localStorage.getItem('playerID')) {
+      localStorage.setItem('playerID', DEFAULT_PLAYER_ID);
+    }
+    const playerID = localStorage.getItem('playerID');
+    this.props.fetchPlayer(playerID);
+
+    this.props.fetchCurrentGame();
   }
 }
 

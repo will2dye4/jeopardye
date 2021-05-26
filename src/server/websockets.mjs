@@ -1,5 +1,10 @@
 import log from 'log';
-import { EventTypes } from '../constants.mjs';
+import {
+  DAILY_DOUBLE_COUNTDOWN_SECONDS,
+  DEFAULT_COUNTDOWN_SECONDS,
+  EventTypes,
+  WAGER_COUNTDOWN_SECONDS
+} from '../constants.mjs';
 import { GamePlayer } from '../models/player.mjs';
 import {
   isDailyDouble,
@@ -15,7 +20,8 @@ const logger = log.get('ws');
 
 export let connectedClients = {};
 
-let timers = {};
+let buzzTimers = {};
+let responseTimers = {};
 
 export function broadcast(event, originatingPlayerID) {
   logger.debug(`Broadcasting ${event.eventType} event...`);
@@ -86,23 +92,23 @@ async function validateGamePlayerAndClue(ws, event) {
   return game;
 }
 
-function setExpirationTimerForClue(gameID, clue, dailyDouble = false, delayMillis = 0) {
+function setExpirationTimerForClue(gameID, clue, delayMillis = 0) {
   if (!delayMillis) {
-    delayMillis = getCountdownTimeInMillis(dailyDouble);
+    delayMillis = getCountdownTimeInMillis();
   }
   const timerID = setTimeout(function() {
     getGame(gameID).then(game => {
       if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID) {
-        logger.info(`Time expired.`);
+        logger.info('Time expired.');
         updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
           const payload = {gameID: gameID, categoryID: clue.categoryID, clueID: clue.clueID};
           broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, payload));
-          delete timers[gameID];
+          delete buzzTimers[gameID];
         });
       }
     });
   }, delayMillis);
-  timers[gameID] = {
+  buzzTimers[gameID] = {
     categoryID: clue.categoryID,
     clueID: clue.clueID,
     timerID: timerID,
@@ -112,14 +118,60 @@ function setExpirationTimerForClue(gameID, clue, dailyDouble = false, delayMilli
   };
 }
 
-function setTimerForActiveClue(game, clue) {
+function setResponseTimerForClue(game, clue, playerID, wagering = false) {
+  const dailyDouble = isDailyDouble(game.rounds[game.currentRound], clue.clueID);
+  const delayMillis = (wagering ? WAGER_COUNTDOWN_SECONDS : (dailyDouble ? DAILY_DOUBLE_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS)) * 1000;
+  const timerID = setTimeout(function() {
+    getGame(game.gameID).then(game => {
+      const expectedPlayerID = (wagering ? game.playerInControl : game.playerAnswering);
+      if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID && expectedPlayerID === playerID) {
+        logger.info(`${wagering ? 'Wagering' : 'Response'} time expired for ${playerID}.`);
+        let newScore = game.players[playerID].score;
+        let newFields = {currentWager: null};
+        if (!wagering) {
+          const value = game.currentWager || clue.value;
+          newScore -= value;
+          newFields[`players.${playerID}.score`] = newScore;
+          newFields.playerAnswering = null;
+        }
+        updateGame(game.gameID, newFields).then(() => {
+          const answerDelayMillis = (dailyDouble || wagering ? 0 : buzzTimers[game.gameID]?.delayMillis);
+          const payload = {
+            gameID: game.gameID,
+            playerID: playerID,
+            categoryID: clue.categoryID,
+            clueID: clue.clueID,
+            score: newScore,
+            wagering: wagering,
+            answerDelayMillis: answerDelayMillis,
+          };
+          broadcast(new WebsocketEvent(EventTypes.RESPONSE_PERIOD_ENDED, payload));
+          delete responseTimers[game.gameID];
+          if (answerDelayMillis) {
+            setExpirationTimerForClue(game.gameID, clue, answerDelayMillis);
+          }
+        });
+      }
+    });
+  }, delayMillis);
+  responseTimers[game.gameID] = {
+    playerID: playerID,
+    categoryID: clue.categoryID,
+    clueID: clue.clueID,
+    timerID: timerID,
+    running: true,
+    wagering: wagering,
+  };
+}
+
+function setTimerForActiveClue(game, clue, playerID) {
   if (isDailyDouble(game.rounds[game.currentRound], clue.clueID)) {
-    setExpirationTimerForClue(game.gameID, clue, true);
+    setResponseTimerForClue(game, clue, playerID, true);
   } else {
     setTimeout(function() {
       getGame(game.gameID).then(game => {
         if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID) {
-          logger.info(`Now accepting answers.`);
+          logger.info('Now accepting answers.');
           const payload = {gameID: game.gameID, categoryID: clue.categoryID, clueID: clue.clueID};
           broadcast(new WebsocketEvent(EventTypes.WAITING_PERIOD_ENDED, payload));
           setExpirationTimerForClue(game.gameID, clue);
@@ -135,7 +187,7 @@ async function handleSelectClue(ws, event) {
     return;
   }
 
-  const { categoryID, clueID } = event.payload;
+  const { categoryID, clueID, playerID } = event.payload;
   const category = game.rounds[game.currentRound].categories[categoryID];
   const clues = category.clues;
   const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
@@ -149,7 +201,7 @@ async function handleSelectClue(ws, event) {
   setActiveClue(game, clue).then(() => {
     logger.info(`Playing ${category.name} for $${clue.value}.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_SELECTED_CLUE, event.payload));
-    setTimerForActiveClue(game, clue);
+    setTimerForActiveClue(game, clue, playerID);
   });
 }
 
@@ -180,14 +232,15 @@ async function handleBuzzIn(ws, event) {
   setPlayerAnswering(gameID, playerID).then(() => {
     logger.info(`${playerID} buzzed in.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
-    const timer = timers[gameID];
-    if (timer.categoryID === categoryID && timer.clueID === clueID && timer.running) {
+    const timer = buzzTimers[gameID];
+    if (timer && timer.categoryID === categoryID && timer.clueID === clueID && timer.running) {
       clearTimeout(timer.timerID);
       const elapsedMillis = Date.now() - timer.started;
       timer.running = false;
       timer.started = 0;
       timer.delayMillis -= elapsedMillis;
     }
+    setResponseTimerForClue(game, game.activeClue, playerID);
   });
 }
 
@@ -224,11 +277,11 @@ async function handleSubmitAnswer(ws, event) {
   updateGame(gameID, newFields).then(() => {
     logger.info(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
     const dailyDouble = isDailyDouble(game.rounds[game.currentRound], clue.clueID);
-    const delayMillis = (dailyDouble || correct ? 0 : timers[gameID]?.delayMillis);
+    const delayMillis = (dailyDouble || correct ? 0 : buzzTimers[gameID]?.delayMillis);
     const payload = {...event.payload, correct: correct, score: newScore, answerDelayMillis: delayMillis};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
-    if (!correct && !dailyDouble) {
-      setExpirationTimerForClue(game.gameID, clue, false, delayMillis);
+    if (delayMillis) {
+      setExpirationTimerForClue(game.gameID, clue, delayMillis);
     }
   });
 }
@@ -261,6 +314,11 @@ async function handleSubmitWager(ws, event) {
     logger.info(`${playerID} wagered $${playerWager}.`);
     const payload = {playerID: playerID, wager: playerWager};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, payload));
+    const timer = responseTimers[gameID];
+    if (timer && timer.categoryID === categoryID && timer.clueID === clueID && timer.playerID === playerID && timer.wagering && timer.running) {
+      clearTimeout(timer.timerID);
+    }
+    setResponseTimerForClue(game, game.activeClue, playerID);
   });
 }
 

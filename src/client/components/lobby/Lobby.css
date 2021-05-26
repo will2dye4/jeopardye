@@ -1,0 +1,62 @@
+@font-face {
+    font-family: "Gyparody";
+    src: url("../../fonts/gyparody.woff");
+}
+
+html, body {
+    height: 100%;
+}
+
+#root {
+    background-image: linear-gradient(to bottom right, #FFCC00, #1D08A3);
+    height: 100%;
+}
+
+.lobby {
+    color: black;
+}
+
+.logo {
+    color: #1D08A3;
+    font-family: "Gyparody", sans-serif;
+    font-weight: bolder;
+    font-size: 120px;
+    -webkit-text-stroke: 2px white;
+}
+
+.lobby-content {
+    margin-top: 150px;
+    width: 100%;
+}
+
+.room-code {
+    font-size: 40px;
+    font-weight: bolder;
+}
+
+.player-list {
+    min-width: 150px;
+}
+
+.card-header {
+    background-color: #1D08A3;
+    color: white;
+}
+
+.empty-list {
+    color: #555555;
+}
+
+.num-rounds {
+    margin: 0 30px;
+    padding: 5px 50px;
+}
+
+.daily-doubles {
+    margin: 0 20px;
+    padding: 5px 15px;
+}
+
+.final-jeopardye-switch {
+    padding-left: 3.5em;
+}

@@ -5,7 +5,6 @@ import {
   CORRECT_RESPONSES_KEEP_CONTROL,
   CORRECT_RESPONSES_TAKE_CONTROL,
   DAILY_DOUBLE_MINIMUM_WAGER,
-  DEFAULT_PLAYER_ID,
   INCORRECT_RESPONSES,
   PLAYER_PLACEHOLDER,
   Rounds,
@@ -32,17 +31,15 @@ class Game extends React.Component {
     };
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
     this.handleClueClick = this.handleClueClick.bind(this);
-    this.handleResponseTimerElapsed = this.handleResponseTimerElapsed.bind(this);
     this.revealAnswer = this.revealAnswer.bind(this);
     this.skipActiveClue = this.skipActiveClue.bind(this);
   }
 
   componentDidMount() {
-    if (!localStorage.getItem('playerID')) {
-      localStorage.setItem('playerID', DEFAULT_PLAYER_ID);
+    if (this.props.game && !this.props.connected) {
+      console.log('Opening websocket connection...');
+      this.props.websocketConnect();
     }
-    const playerID = localStorage.getItem('playerID');
-    this.props.fetchPlayer(playerID);
 
     document.addEventListener('keyup', function handleKeyUp(event) {
       const key = event.key.toLowerCase();
@@ -116,6 +113,15 @@ class Game extends React.Component {
     if (!prevProps.revealAnswer && this.props.revealAnswer) {
       this.revealAnswer();
     }
+    if (!prevProps.responseTimerElapsed && this.props.responseTimerElapsed) {
+      if (this.state.showDailyDoubleWager) {
+        this.props.submitWager(this.props.game.gameID, this.props.player.playerID,
+                               this.props.activeClue.categoryID, this.props.activeClue.clueID, DAILY_DOUBLE_MINIMUM_WAGER);
+      } else {
+        const dailyDouble = isDailyDouble(this.props.board, this.props.activeClue.clueID);
+        this.handleIncorrectAnswer(dailyDouble, 'Sorry, you didn\'t answer in time.');
+      }
+    }
   }
 
   getCurrentRoundName(props = null) {
@@ -134,7 +140,7 @@ class Game extends React.Component {
     }
     const round = this.getCurrentRoundName(props);
     const isNewGame = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
-    const playerToAct = (props.playerInControl === props.player.playerID);
+    const playerToAct = (props.playerInControl === props.player?.playerID);
     let status;
     if (isNewGame) {
       status = `Game started. Let's play the ${round} round.`;
@@ -286,17 +292,6 @@ class Game extends React.Component {
     this.props.skipActiveClue();
   }
 
-  handleResponseTimerElapsed() {
-    if (this.state.showDailyDoubleWager) {
-      this.props.submitWager(this.props.game.gameID, this.props.player.playerID,
-                             this.props.activeClue.categoryID, this.props.activeClue.clueID, DAILY_DOUBLE_MINIMUM_WAGER);
-    } else {
-      const dailyDouble = isDailyDouble(this.props.board, this.props.activeClue.clueID);
-      this.handleIncorrectAnswer(dailyDouble, 'Sorry, you didn\'t answer in time.');
-      this.props.resetPlayerAnswering();
-    }
-  }
-
   render() {
     const gameState = {
       gameID: this.props.game?.gameID,
@@ -310,8 +305,7 @@ class Game extends React.Component {
       <div id="game" className="game m-4">
         <CountdownTimer gameState={gameState}
                         ref={this.state.timerRef}
-                        activeClue={this.props.activeClue}
-                        onResponseTimeElapsed={this.handleResponseTimerElapsed} />
+                        activeClue={this.props.activeClue} />
         <Board gameState={gameState}
                activeClue={this.props.activeClue}
                allowAnswers={this.props.allowAnswers}

@@ -36,11 +36,13 @@ export const EventTypes = {
   PLAYER_SELECTED_CLUE: 'player_selected_clue',
   BUZZ_IN: 'buzz_in',
   PLAYER_BUZZED: 'player_buzzed',
-  BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
   SUBMIT_ANSWER: 'submit_answer',
   PLAYER_ANSWERED: 'player_answered',
   SUBMIT_WAGER: 'submit_wager',
   PLAYER_WAGERED: 'player_wagered',
+  /* server timing events */
+  BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
+  RESPONSE_PERIOD_ENDED: 'response_period_ended',
   WAITING_PERIOD_ENDED: 'waiting_period_ended',
 }
 

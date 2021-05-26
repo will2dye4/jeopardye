@@ -18,6 +18,7 @@ function newStoreData() {
     currentWager: null,
     allowAnswers: false,
     revealAnswer: false,
+    responseTimerElapsed: false,
   };
 }
 
@@ -46,13 +47,21 @@ function handlePlayerSelectedClue(storeData, event) {
   const newBoard = {...storeData.board};
   newBoard.categories[categoryID].clues[clueIndex] = clue;
   console.log(`Playing ${category.name} for $${clue.value}.`);
-  return {...storeData, board: newBoard, activeClue: clue, playersMarkingClueInvalid: [], prevAnswer: null, currentWager: null, revealAnswer: false};
+  return {
+    ...storeData,
+    activeClue: clue,
+    board: newBoard,
+    currentWager: null,
+    playersMarkingClueInvalid: [],
+    prevAnswer: null,
+    revealAnswer: false,
+  };
 }
 
 function handlePlayerBuzzed(storeData, event) {
   console.log(`${event.payload.playerID} buzzed in.`);
   const activeClue = {...storeData.activeClue, playersAttempted: storeData.activeClue.playersAttempted.concat(event.payload.playerID)};
-  return {...storeData, activeClue: activeClue, playerAnswering: event.payload.playerID, prevAnswer: null};
+  return {...storeData, activeClue: activeClue, playerAnswering: event.payload.playerID, prevAnswer: null, responseTimerElapsed: false};
 }
 
 function handlePlayerAnswered(storeData, event) {
@@ -76,13 +85,27 @@ function handlePlayerAnswered(storeData, event) {
 function handlePlayerWagered(storeData, event) {
   const { playerID, wager } = event.payload;
   console.log(`${playerID} wagered $${wager}.`);
-  return {...storeData, currentWager: wager, playerAnswering: playerID};
+  return {...storeData, currentWager: wager, playerAnswering: playerID, responseTimerElapsed: false};
 }
 
 function handleBuzzingPeriodEnded(storeData, event) {
   const { categoryID, clueID } = event.payload;
   console.log(`Time expired for clue ${clueID} (category ${categoryID}).`);
   return {...storeData, playerAnswering: null, allowAnswers: false, revealAnswer: true};
+}
+
+function handleResponsePeriodEnded(storeData, event) {
+  const { answerDelayMillis, clueID, playerID, score, wagering } = event.payload;
+  const dailyDouble = isDailyDouble(storeData.board, clueID);
+  const revealAnswer = (dailyDouble && !wagering);
+  console.log(`${wagering ? 'Wagering' : 'Response'} time expired for ${playerID}.`);
+  let newStoreData = {...storeData, responseTimerElapsed: true, revealAnswer: revealAnswer, answerDelayMillis: answerDelayMillis};
+  if (!wagering) {
+    const newPlayer = {...storeData.players[playerID], score: score};
+    newStoreData.players = {...storeData.players, [playerID]: newPlayer};
+    newStoreData.playerAnswering = null;
+  }
+  return newStoreData;
 }
 
 function handleWaitingPeriodEnded(storeData, event) {
@@ -99,6 +122,7 @@ const eventHandlers = {
   [EventTypes.PLAYER_ANSWERED]: handlePlayerAnswered,
   [EventTypes.PLAYER_WAGERED]: handlePlayerWagered,
   [EventTypes.BUZZING_PERIOD_ENDED]: handleBuzzingPeriodEnded,
+  [EventTypes.RESPONSE_PERIOD_ENDED]: handleResponsePeriodEnded,
   [EventTypes.WAITING_PERIOD_ENDED]: handleWaitingPeriodEnded,
 }
 
@@ -118,8 +142,12 @@ function handleWebsocketEvent(storeData, event) {
 
 export function GameReducer(storeData, action) {
   switch (action.type) {
+    case ActionTypes.FETCH_CURRENT_GAME:
     case ActionTypes.FETCH_GAME:
       const newGame = action.payload;
+      if (!newGame) {
+        return storeData;
+      }
       const newBoard = newGame.rounds[newGame.currentRound];
       localStorage.setItem('gameID', newGame.gameID);
       return {
@@ -133,9 +161,11 @@ export function GameReducer(storeData, action) {
         prevAnswer: null,
       };
     case ActionTypes.FETCH_PLAYER:
-      return {...storeData, player: action.payload};
+      const player = action.payload;
+      const newPlayers = {...storeData.players, [player.playerID]: player};
+      return {...storeData, player: player, players: newPlayers};
     case ActionTypes.DISMISS_CLUE:
-      return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false};
+      return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
     case ActionTypes.MARK_CLUE_AS_INVALID:
       const { gameID, playerID, categoryID, clueID } = action.payload;
       if (storeData.game?.gameID === gameID && storeData.activeClue?.categoryID === categoryID &&
@@ -144,8 +174,6 @@ export function GameReducer(storeData, action) {
       } else {
         return storeData;
       }
-    case ActionTypes.RESET_PLAYER_ANSWERING:
-      return {...storeData, playerAnswering: null};
     case ActionTypes.SKIP_ACTIVE_CLUE:
       return {...storeData, allowAnswers: false, revealAnswer: true};
     case ActionTypes.REDUX_WEBSOCKET_OPEN:
