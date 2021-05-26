@@ -24,8 +24,6 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      allowAnswers: false,
-      revealAnswer: false,
       showActiveClue: !!props.activeClue,
       showClueAnimation: !!props.activeClue,
       showDailyDoubleWager: false,
@@ -35,7 +33,6 @@ class Game extends React.Component {
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
     this.handleClueClick = this.handleClueClick.bind(this);
     this.handleResponseTimerElapsed = this.handleResponseTimerElapsed.bind(this);
-    this.handleTimerStarted = this.handleTimerStarted.bind(this);
     this.revealAnswer = this.revealAnswer.bind(this);
     this.skipActiveClue = this.skipActiveClue.bind(this);
   }
@@ -43,27 +40,25 @@ class Game extends React.Component {
   componentDidMount() {
     if (!localStorage.getItem('playerID')) {
       localStorage.setItem('playerID', DEFAULT_PLAYER_ID);
-      localStorage.setItem('playerName', DEFAULT_PLAYER_ID);
     }
     const playerID = localStorage.getItem('playerID');
-    const playerName = localStorage.getItem('playerName') || playerID;
-    this.props.setPlayer({playerID: playerID, name: playerName});
+    this.props.fetchPlayer(playerID);
 
     document.addEventListener('keyup', function handleKeyUp(event) {
       const key = event.key.toLowerCase();
       if ((key === ' ' || key === 'enter') && this.state.showActiveClue) {
-        if (this.state.allowAnswers && !this.props.playerAnswering) {
+        if (this.props.allowAnswers && !this.props.playerAnswering) {
           event.preventDefault();
           this.props.buzzIn(this.props.game.gameID, this.props.player.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
-        } else if (this.state.revealAnswer) {
+        } else if (this.props.revealAnswer) {
           event.preventDefault();
           this.dismissActiveClue();
         }
-      } else if (this.state.showActiveClue && !this.state.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
+      } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
         if (key === 's') {
           console.log('Skipping the current clue...');
           event.preventDefault();
-          this.revealAnswer();
+          this.skipActiveClue();
         } else if (key === 'i' && this.props.playersMarkingClueInvalid.indexOf(this.props.player?.playerID) === -1) {
           event.preventDefault();
           markClueAsInvalid(this.props.activeClue.clueID).then(response => {
@@ -99,7 +94,7 @@ class Game extends React.Component {
     if (!prevProps.currentWager && this.props.currentWager) {
       this.setState({showDailyDoubleWager: false});
       this.state.timerRef.current.resetResponseTimer();
-      this.state.timerRef.current.start();
+      this.state.timerRef.current.startCountdown();
       speakClue(this.props.activeClue);
     }
     if (!prevProps.playerAnswering && this.props.playerAnswering && !isDailyDouble(this.props.board, this.props.activeClue.clueID)) {
@@ -107,6 +102,19 @@ class Game extends React.Component {
       if (this.props.playerAnswering === this.props.player.playerID) {
         this.state.timerRef.current.startResponseTimer();
       }
+    }
+    if (!prevProps.allowAnswers && this.props.allowAnswers) {
+      this.setState({
+        status: {
+          appearance: 'action',
+          emoji: 'bell',
+          text: `Buzz in if you know the answer in ${this.props.activeClue.category}!`,
+        },
+      });
+      this.state.timerRef.current.startCountdown();
+    }
+    if (!prevProps.revealAnswer && this.props.revealAnswer) {
+      this.revealAnswer();
     }
   }
 
@@ -146,8 +154,6 @@ class Game extends React.Component {
     const responses = (tookControl ? CORRECT_RESPONSES_TAKE_CONTROL : CORRECT_RESPONSES_KEEP_CONTROL);
     const response = randomChoice(responses).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
     this.setState({
-      allowAnswers: false,
-      revealAnswer: false,
       showActiveClue: false,
       showClueAnimation: false,
       showDailyDoubleWager: false,
@@ -165,7 +171,6 @@ class Game extends React.Component {
       response = randomChoice(INCORRECT_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, this.props.player.name);
     }
     this.setState({
-      allowAnswers: false,  /* TODO - only set this to false for the player who answered incorrectly */
       showClueAnimation: false,
       showDailyDoubleWager: false,
       status: {
@@ -177,7 +182,7 @@ class Game extends React.Component {
       this.state.timerRef.current.reset();
       this.revealAnswer(false, false);
     } else {
-      this.state.timerRef.current.resume();
+      this.state.timerRef.current.resume(this.props.answerDelayMillis);
     }
   }
 
@@ -220,8 +225,6 @@ class Game extends React.Component {
       }
     }
     let newState = {
-      allowAnswers: false,
-      revealAnswer: true,
       showClueAnimation: false,
       showDailyDoubleWager: false,
     };
@@ -229,13 +232,10 @@ class Game extends React.Component {
       newState.status = status;
     }
     this.setState(newState);
-    this.props.revealAnswer();
   }
 
   dismissActiveClue() {
     this.setState({
-      allowAnswers: false,
-      revealAnswer: false,
       showActiveClue: false,
       showClueAnimation: false,
       showDailyDoubleWager: false,
@@ -269,7 +269,7 @@ class Game extends React.Component {
       if (dailyDouble) {
         this.state.timerRef.current.startResponseTimer(true);  /* start wager timer */
       } else {
-        this.state.timerRef.current.start();
+        this.state.timerRef.current.startWaitingPeriod();
         speakClue(this.props.activeClue);
       }
     }.bind(this), SHOW_CLUE_DELAY_MILLIS);
@@ -280,21 +280,10 @@ class Game extends React.Component {
   }
 
   skipActiveClue(event) {
-    event.stopPropagation();
-    this.revealAnswer();
-  }
-
-  handleTimerStarted() {
-    const dailyDouble = isDailyDouble(this.props.board, this.props.activeClue.clueID);
-    let newState = {allowAnswers: !dailyDouble};
-    if (!dailyDouble) {
-      newState.status = {
-        appearance: 'action',
-        emoji: 'bell',
-        text: `Buzz in if you know the answer in ${this.props.activeClue.category}!`,
-      };
+    if (event) {
+      event.stopPropagation();
     }
-    this.setState(newState);
+    this.props.skipActiveClue();
   }
 
   handleResponseTimerElapsed() {
@@ -322,11 +311,11 @@ class Game extends React.Component {
         <CountdownTimer gameState={gameState}
                         ref={this.state.timerRef}
                         activeClue={this.props.activeClue}
-                        onTimeStarted={this.handleTimerStarted}
-                        onTimeElapsed={this.revealAnswer}
                         onResponseTimeElapsed={this.handleResponseTimerElapsed} />
         <Board gameState={gameState}
                activeClue={this.props.activeClue}
+               allowAnswers={this.props.allowAnswers}
+               revealAnswer={this.props.revealAnswer}
                buzzIn={this.props.buzzIn}
                markClueAsInvalid={this.props.markClueAsInvalid}
                playersMarkingClueInvalid={this.props.playersMarkingClueInvalid}

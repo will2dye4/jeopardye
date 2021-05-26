@@ -1,4 +1,4 @@
-export const DEFAULT_PLAYER_ID = 'William';
+export const DEFAULT_PLAYER_ID = '2ea15eb6-aa1e-4616-a836-cbf39f92f0bb';
 
 export const JSERVICE_API_BASE = 'http://jservice.io/api';
 
@@ -8,6 +8,19 @@ export const ROUNDS_PER_GAME = 2;
 
 export const SINGLE_ROUND_VALUE_INCREMENT = 200;
 export const DOUBLE_ROUND_VALUE_INCREMENT = 2 * SINGLE_ROUND_VALUE_INCREMENT;
+
+export const MIN_PLAYER_NAME_LENGTH = 1;
+export const MAX_PLAYER_NAME_LENGTH = 10;
+
+export const MIN_CLUE_READING_DELAY_SECONDS = 5;
+export const MAX_CLUE_READING_DELAY_SECONDS = 15;
+
+export const READING_SPEED_WORDS_PER_MINUTE = 130;
+export const READING_SPEED_SECONDS_PER_WORD = 60 / READING_SPEED_WORDS_PER_MINUTE;
+
+export const DEFAULT_COUNTDOWN_SECONDS = 10;
+export const DAILY_DOUBLE_COUNTDOWN_SECONDS = 25;
+export const WAGER_COUNTDOWN_SECONDS = 15;
 
 export const Rounds = {
   SINGLE: 'single',
@@ -23,10 +36,12 @@ export const EventTypes = {
   PLAYER_SELECTED_CLUE: 'player_selected_clue',
   BUZZ_IN: 'buzz_in',
   PLAYER_BUZZED: 'player_buzzed',
+  BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
   SUBMIT_ANSWER: 'submit_answer',
   PLAYER_ANSWERED: 'player_answered',
   SUBMIT_WAGER: 'submit_wager',
   PLAYER_WAGERED: 'player_wagered',
+  WAITING_PERIOD_ENDED: 'waiting_period_ended',
 }
 
 export const DAILY_DOUBLE_MINIMUM_WAGER = 5;

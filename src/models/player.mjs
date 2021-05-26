@@ -1,6 +1,13 @@
+import uuid from 'uuid';
+import { MAX_PLAYER_NAME_LENGTH, MIN_PLAYER_NAME_LENGTH } from '../constants.mjs';
+
+export function validatePlayerName(name) {
+  return (!!name && name?.length >= MIN_PLAYER_NAME_LENGTH && name?.length <= MAX_PLAYER_NAME_LENGTH);
+}
+
 export class Player {
-  constructor(playerID, name) {
-    this.playerID = playerID;
+  constructor(name) {
+    this.playerID = uuid.v4();
     this.name = name;
     this.overallScore = 0;
     this.gamesPlayed = 0;

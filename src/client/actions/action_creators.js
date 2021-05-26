@@ -1,15 +1,15 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
 import { WebsocketEvent } from '../../utils.mjs';
 import { EventTypes } from '../../constants.mjs';
-import {getUnplayedClues} from "../utils";
+import { getUnplayedClues } from '../utils';
 
 export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
+  FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   MARK_CLUE_AS_INVALID: 'JEOPARDYE::MARK_CLUE_AS_INVALID',
   RESET_PLAYER_ANSWERING: 'JEOPARDYE::RESET_PLAYER_ANSWERING',
-  REVEAL_ANSWER: 'JEOPARDYE::REVEAL_ANSWER',
-  SET_PLAYER: 'JEOPARDYE::SET_PLAYER',
+  SKIP_ACTIVE_CLUE: 'JEOPARDYE::SKIP_ACTIVE_CLUE',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -19,6 +19,7 @@ export const ActionTypes = {
 const API_BASE = 'http://localhost:3333/api';
 const WS_BASE = 'ws://localhost:3333/api/ws';
 const GAME_URL = `${API_BASE}/game`;
+const PLAYER_URL = `${API_BASE}/player`;
 
 function getGameByID(gameID) {
   return fetch(`${GAME_URL}/${gameID}`).then(response => response.json());
@@ -26,6 +27,10 @@ function getGameByID(gameID) {
 
 function createNewGame() {
  return fetch(GAME_URL, {method: 'POST'}).then(response => response.json());
+}
+
+function getPlayerByID(playerID) {
+  return fetch(`${PLAYER_URL}/${playerID}`).then(response => response.json());
 }
 
 export function fetchGame() {
@@ -50,8 +55,15 @@ export function fetchGame() {
   };
 }
 
+export function fetchPlayer(playerID) {
+  return {
+    type: ActionTypes.FETCH_PLAYER,
+    payload: getPlayerByID(playerID),
+  }
+}
+
 export function joinGame(gameID, player) {
-  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID: gameID, playerID: player.playerID, playerName: player.name}));
+  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID: gameID, playerID: player.playerID}));
 }
 
 export function selectClue(gameID, playerID, categoryID, clueID) {
@@ -77,20 +89,6 @@ export function dismissActiveClue() {
   }
 }
 
-export function setPlayer(player) {
-  return {
-    type: ActionTypes.SET_PLAYER,
-    payload: player,
-  }
-}
-
-export function revealAnswer() {
-  return {
-    type: ActionTypes.REVEAL_ANSWER,
-    payload: {},
-  }
-}
-
 export function resetPlayerAnswering() {
   return {
     type: ActionTypes.RESET_PLAYER_ANSWERING,
@@ -103,6 +101,13 @@ export function markClueAsInvalid(gameID, playerID, categoryID, clueID) {
   return {
     type: ActionTypes.MARK_CLUE_AS_INVALID,
     payload: {gameID, playerID, categoryID, clueID},
+  }
+}
+
+export function skipActiveClue() {
+  return {
+    type: ActionTypes.SKIP_ACTIVE_CLUE,
+    payload: {},
   }
 }
 

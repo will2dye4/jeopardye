@@ -1,14 +1,6 @@
 import React from 'react';
-
-const DEFAULT_COUNTDOWN_SECONDS = 10;
-const DAILY_DOUBLE_COUNTDOWN_SECONDS = 25;
-const WAGER_COUNTDOWN_SECONDS = 15;
-
-const MIN_CLUE_READING_DELAY_SECONDS = 5;
-const MAX_CLUE_READING_DELAY_SECONDS = 15;
-
-const READING_SPEED_WORDS_PER_MINUTE = 130;
-const READING_SPEED_SECONDS_PER_WORD = 60 / READING_SPEED_WORDS_PER_MINUTE;
+import { getCountdownTimeInMillis } from '../../../utils.mjs';
+import { DEFAULT_COUNTDOWN_SECONDS, WAGER_COUNTDOWN_SECONDS } from '../../../constants.mjs';
 
 function newTimerState() {
   return {
@@ -34,15 +26,7 @@ class CountdownTimer extends React.Component {
   }
 
   getCountdownTimeInSeconds() {
-    return (this.props.gameState.isDailyDouble ? DAILY_DOUBLE_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS);
-  }
-
-  getClueReadingDelay() {
-    const question = this.props.activeClue?.question || '';
-    const words = question.split(/[-\s]/);
-    const readingSpeed = words.length * READING_SPEED_SECONDS_PER_WORD;
-    const seconds = Math.ceil(Math.min(Math.max(readingSpeed, MIN_CLUE_READING_DELAY_SECONDS), MAX_CLUE_READING_DELAY_SECONDS));
-    return (seconds + Math.random()) * 1000;
+    return getCountdownTimeInMillis(this.props.gameState.isDailyDouble) / 1000;
   }
 
   getUpdater() {
@@ -53,9 +37,6 @@ class CountdownTimer extends React.Component {
       this.setState({finished: finished, running: !finished, value: newValue});
       if (finished) {
         this.cancelUpdater();
-        if (this.props.onTimeElapsed) {
-          this.props.onTimeElapsed();
-        }
       }
     }.bind(this), interval);
   }
@@ -83,25 +64,19 @@ class CountdownTimer extends React.Component {
   }
 
   startCountdown() {
-    this.setState({
-      seconds: this.getCountdownTimeInSeconds(),
-      running: true,
-      waiting: false,
-      updater: this.getUpdater(),
-    });
-    if (this.props.onTimeStarted) {
-      this.props.onTimeStarted();
+    if (!this.state.finished) {
+      this.setState({
+        seconds: this.getCountdownTimeInSeconds(),
+        running: true,
+        waiting: false,
+        updater: this.getUpdater(),
+      });
     }
   }
 
-  start() {
+  startWaitingPeriod() {
     if (!this.state.finished) {
-      if (this.props.gameState.isDailyDouble) {
-        this.startCountdown();
-      } else {
-        this.setState({waiting: true});
-        setTimeout(this.startCountdown, this.getClueReadingDelay());
-      }
+      this.setState({waiting: true});
     }
   }
 
@@ -131,13 +106,15 @@ class CountdownTimer extends React.Component {
     }
   }
 
-  resume() {
+  resume(remainingDelayMillis) {
     if (!this.state.waiting && !this.state.finished && this.state.paused) {
+      const newValue = (remainingDelayMillis / (this.getCountdownTimeInSeconds() * 1000)) * 100;
       this.resetResponseTimer();
       this.setState({
         running: true,
         paused: false,
         updater: this.getUpdater(),
+        value: newValue,
       });
     }
   }

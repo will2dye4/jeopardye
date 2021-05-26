@@ -1,11 +1,11 @@
 import express from 'express';
 import log from 'log';
-import { CATEGORIES_PER_ROUND, Rounds } from '../constants.mjs';
-import { Category, Game, Round } from '../models/game.mjs';
-import { createGame, getGame } from './db.mjs';
-import { fetchRandomCategories } from './jservice.mjs';
+import { CATEGORIES_PER_ROUND, Rounds } from '../../constants.mjs';
+import { Category, Game, Round } from '../../models/game.mjs';
+import { createGame, getGame } from '../db.mjs';
+import { fetchRandomCategories } from '../jservice.mjs';
 
-const logger = log.get('api');
+const logger = log.get('api:game');
 
 async function createRound(round) {
   const numCategories = CATEGORIES_PER_ROUND * 3;

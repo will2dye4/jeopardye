@@ -1,12 +1,44 @@
 import langEn from '@nlpjs/lang-en';
 import similarity from '@nlpjs/similarity';
 import '@gouch/to-title-case';
-import { DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS, DAILY_DOUBLE_MINIMUM_WAGER } from './constants.mjs';
+import {
+  DAILY_DOUBLE_COUNTDOWN_SECONDS,
+  DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS,
+  DAILY_DOUBLE_MINIMUM_WAGER,
+  DEFAULT_COUNTDOWN_SECONDS,
+  MAX_CLUE_READING_DELAY_SECONDS,
+  MIN_CLUE_READING_DELAY_SECONDS,
+  READING_SPEED_SECONDS_PER_WORD,
+} from './constants.mjs';
 
 const { StemmerEn, StopwordsEn } = langEn;
 const { leven } = similarity;
 
 const MIN_ANSWER_SIMILARITY_RATIO = 0.8;
+
+const NUMERALS_TO_WORDS = {
+  0: 'zero',
+  1: 'one',
+  2: 'two',
+  3: 'three',
+  4: 'four',
+  5: 'five',
+  6: 'six',
+  7: 'seven',
+  8: 'eight',
+  9: 'nine',
+  10: 'ten',
+  11: 'eleven',
+  12: 'twelve',
+  13: 'thirteen',
+  14: 'fourteen',
+  15: 'fifteen',
+  16: 'sixteen',
+  17: 'seventeen',
+  18: 'eighteen',
+  19: 'nineteen',
+  20: 'twenty',
+};
 
 const stemmer = new StemmerEn();
 stemmer.stopwords = new StopwordsEn();
@@ -30,6 +62,18 @@ export function getWagerRange(currentRound, playerScore) {
   const defaultMax = DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS[currentRound];
   const maxWager = Math.max(playerScore, defaultMax);
   return [DAILY_DOUBLE_MINIMUM_WAGER, maxWager];
+}
+
+export function getClueReadingDelayInMillis(clue) {
+  const question = clue?.question || '';
+  const words = question.split(/[-\s]/);
+  const readingSpeed = words.length * READING_SPEED_SECONDS_PER_WORD;
+  const seconds = Math.ceil(Math.min(Math.max(readingSpeed, MIN_CLUE_READING_DELAY_SECONDS), MAX_CLUE_READING_DELAY_SECONDS));
+  return (seconds + Math.random()) * 1000;
+}
+
+export function getCountdownTimeInMillis(dailyDouble = false) {
+  return (dailyDouble ? DAILY_DOUBLE_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS) * 1000;
 }
 
 export function isDailyDouble(round, clueID) {
@@ -123,6 +167,11 @@ export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
         return true;
       }
     }
+  }
+  /* Try replacing a numeral with the corresponding word or vice versa, e.g., '6' vs. 'six' */
+  if (NUMERALS_TO_WORDS[normalizedCorrectAnswer] === normalizedSubmittedAnswer ||
+      NUMERALS_TO_WORDS[normalizedSubmittedAnswer] === normalizedCorrectAnswer) {
+    return true;
   }
   /* Try checking if the correct answer is a substring of the submitted answer, e.g., 'salinger' vs. 'j.d. salinger' */
   return (removeWhitespace(normalizedSubmittedAnswer).indexOf(removeWhitespace(normalizedCorrectAnswer)) !== -1);
