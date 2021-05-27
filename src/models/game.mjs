@@ -1,5 +1,12 @@
 import uuid from 'uuid';
-import { CLUES_PER_CATEGORY, DOUBLE_ROUND_VALUE_INCREMENT, Rounds, SINGLE_ROUND_VALUE_INCREMENT } from '../constants.mjs';
+import {
+  CLUES_PER_CATEGORY,
+  DAILY_DOUBLE_MULTIPLIERS,
+  DailyDoubleSettings,
+  NUM_DAILY_DOUBLES,
+  Rounds,
+  VALUE_INCREMENTS,
+} from '../constants.mjs';
 import { randomChoice, sanitizeQuestionText, titleizeCategoryName } from '../utils.mjs';
 
 const DAILY_DOUBLE_CLUES_TO_SKIP = 2;
@@ -23,20 +30,21 @@ export class Clue {
 
 export class Category {
   static fromJService(category, round) {
-    const valueIncrement = (round === Rounds.SINGLE ? SINGLE_ROUND_VALUE_INCREMENT : DOUBLE_ROUND_VALUE_INCREMENT);
+    const valueIncrement = VALUE_INCREMENTS[round];
+    const numClues = (round === Rounds.FINAL ? 1 : CLUES_PER_CATEGORY);
 
     let i = 1;
     let clues = [];
     let usedClues = new Set();
     category.clues.forEach(clue => {
-      if (clues.length < CLUES_PER_CATEGORY && !!clue.question && !!clue.answer && !usedClues.has(clue.question)) {
+      if (clues.length < numClues && !!clue.question && !!clue.answer && !usedClues.has(clue.question)) {
         clues.push(Clue.fromJService(clue, valueIncrement * i));
         usedClues.add(clue.question);
         i += 1;
       }
     });
 
-    if (clues.length < CLUES_PER_CATEGORY) {
+    if (clues.length < numClues) {
       return null;
     }
     return new Category(category.id, category.title, clues);
@@ -50,21 +58,26 @@ export class Category {
 }
 
 export class Round {
-  static chooseDailyDoubles(categories, round) {
-    const numDailyDoubles = (round === Rounds.SINGLE ? 1 : 2);
+  static chooseDailyDoubles(categories, round, dailyDoubleSetting) {
+    const numDailyDoubles = NUM_DAILY_DOUBLES[round] * DAILY_DOUBLE_MULTIPLIERS[dailyDoubleSetting];
     let dailyDoubles = [];
     let usedCategories = new Set();
+    let usedClues = new Set();
     let categoryIDs = Object.keys(categories);
     let dailyDoubleRange = CLUES_PER_CATEGORY - DAILY_DOUBLE_CLUES_TO_SKIP;
 
     while (dailyDoubles.length < numDailyDoubles) {
       let categoryID = randomChoice(categoryIDs);
       let category = categories[categoryID];
-      if (!usedCategories.has(categoryID)) {
+      if (!usedCategories.has(categoryID) || numDailyDoubles > categoryIDs.length) {
         let clueIndex = Math.floor(Math.random() * dailyDoubleRange) + DAILY_DOUBLE_CLUES_TO_SKIP;
         if (category.clues.length >= clueIndex) {
-          dailyDoubles.push(category.clues[clueIndex].clueID);
-          usedCategories.add(categoryID);
+          let clueID = category.clues[clueIndex].clueID;
+          if (!usedClues.has(clueID)) {
+            dailyDoubles.push(clueID);
+            usedCategories.add(categoryID);
+            usedClues.add(clueID);
+          }
         }
       }
     }
@@ -72,19 +85,17 @@ export class Round {
     return dailyDoubles;
   }
 
-  constructor(categories, round) {
+  constructor(categories, round, dailyDoubleSetting) {
     this.categories = categories;
-    this.dailyDoubles = Round.chooseDailyDoubles(categories, round || Rounds.SINGLE);
+    this.dailyDoubles = Round.chooseDailyDoubles(categories, round || Rounds.SINGLE, dailyDoubleSetting || DailyDoubleSettings.NORMAL);
   }
 }
 
 export class Game {
-  constructor(singleRound, doubleRound, currentRound, players, activeClue, playerAnswering, playerInControl, currentWager) {
+  constructor(rounds, currentRound, players, activeClue, playerAnswering, playerInControl, currentWager) {
     this.gameID = uuid.v4();
-    this.rounds = {
-      [Rounds.SINGLE]: singleRound,
-      [Rounds.DOUBLE]: doubleRound,
-    };
+    this.rounds = rounds;
+    this.numRounds = Object.keys(rounds).length - (rounds.hasOwnProperty(Rounds.FINAL) ? 1 : 0);
     this.currentRound = currentRound || Rounds.SINGLE;
     this.players = players || {};
     this.activeClue = activeClue || null;

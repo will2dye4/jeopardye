@@ -1,27 +1,21 @@
 import React from 'react';
+import {
+  DailyDoubleSettings,
+  DEFAULT_DAILY_DOUBLE_SETTING,
+  DEFAULT_FINAL_JEOPARDYE,
+  DEFAULT_NUM_ROUNDS,
+  MAX_NUM_ROUNDS
+} from '../../../../constants.mjs';
 import { range } from '../../../../utils.mjs';
 import GameSetting from './GameSetting';
 import RadioToggleButton from './RadioToggleButton';
 import ToggleSwitch from './ToggleSwitch';
 
-const DEFAULT_NUM_ROUNDS = 2;
-const MAX_NUM_ROUNDS = 3;
-
-const DAILY_DOUBLE_CHOICES = {
-  NONE: 'None',
-  NORMAL: 'Normal',
-  DOUBLE: 'Double',
-  QUADRUPLE: 'Quadruple',
-}
-const DEFAULT_DAILY_DOUBLES = DAILY_DOUBLE_CHOICES.NORMAL;
-
-const DEFAULT_FINAL_JEOPARDYE = true;
-
 class GameSettings extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      dailyDoubles: DEFAULT_DAILY_DOUBLES,
+      dailyDoubles: DEFAULT_DAILY_DOUBLE_SETTING,
       finalJeopardye: DEFAULT_FINAL_JEOPARDYE,
       numRounds: DEFAULT_NUM_ROUNDS,
     };
@@ -54,7 +48,7 @@ class GameSettings extends React.Component {
             )}
           </GameSetting>
           <GameSetting label="Daily Doubles">
-            {Object.entries(DAILY_DOUBLE_CHOICES).map(([key, label]) =>
+            {Object.entries(DailyDoubleSettings).map(([key, label]) =>
               <RadioToggleButton itemKey={key} value={label} currentValue={this.state.dailyDoubles}
                                  name="daily-doubles" label={label} onChange={this.onDailyDoublesChanged} />
             )}

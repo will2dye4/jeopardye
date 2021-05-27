@@ -23,7 +23,7 @@ async function handleCreatePlayer(req, res, next) {
   try {
     await createPlayer(player);
   } catch (e) {
-    handleError(e, 500);
+    handleError(`Failed to save player to database: ${e}`, 500);
     return;
   }
 

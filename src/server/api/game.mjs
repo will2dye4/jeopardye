@@ -1,20 +1,31 @@
 import express from 'express';
 import log from 'log';
-import { CATEGORIES_PER_ROUND, Rounds } from '../../constants.mjs';
+import {
+  CATEGORIES_PER_ROUND,
+  DailyDoubleSettings,
+  DEFAULT_DAILY_DOUBLE_SETTING,
+  DEFAULT_FINAL_JEOPARDYE,
+  DEFAULT_NUM_ROUNDS,
+  MAX_NUM_ROUNDS,
+  MIN_NUM_ROUNDS,
+  Rounds,
+} from '../../constants.mjs';
 import { Category, Game, Round } from '../../models/game.mjs';
+import { range } from '../../utils.mjs';
 import { createGame, getGame } from '../db.mjs';
 import { fetchRandomCategories } from '../jservice.mjs';
 
 const logger = log.get('api:game');
 
-async function createRound(round) {
-  const numCategories = CATEGORIES_PER_ROUND * 3;
-  let categories = await fetchRandomCategories(numCategories);
+async function createRound(round, dailyDoubles = DailyDoubleSettings.NORMAL) {
+  const numCategories = (round === Rounds.FINAL ? 1 : CATEGORIES_PER_ROUND);
+  const numCategoriesToFetch = numCategories * 3;
+  let categories = await fetchRandomCategories(numCategoriesToFetch);
   let categoryNames = new Set();
   let roundCategories = {};
   let i = 0;
 
-  while (Object.keys(roundCategories).length < CATEGORIES_PER_ROUND) {
+  while (Object.keys(roundCategories).length < numCategories) {
     const category = categories[i];
     if (category) {
       const name = category.title;
@@ -28,33 +39,71 @@ async function createRound(round) {
     }
     i += 1;
     if (i >= categories.length) {
-      categories = await fetchRandomCategories(numCategories);
+      categories = await fetchRandomCategories(numCategoriesToFetch);
       i = 0;
     }
   }
 
-  return new Round(roundCategories, round);
+  return new Round(roundCategories, round, dailyDoubles);
 }
 
 async function handleCreateGame(req, res, next) {
   logger.info('Creating a new game.');
 
-  const handleError = (message, e) => next(new Error(`${message}: ${e}`));
-
-  let singleRound, doubleRound;
-  try {
-    singleRound = await createRound(Rounds.SINGLE);
-    doubleRound = await createRound(Rounds.DOUBLE);
-  } catch (e) {
-    handleError('Failed to fetch categories from JService', e);
-    return;
+  const handleError = (message, status) => {
+    const error = new Error(message);
+    error.status = status;
+    next(error);
   }
 
-  const game = new Game(singleRound, doubleRound);
+  let numRounds = DEFAULT_NUM_ROUNDS;
+  if (req.body.hasOwnProperty('numRounds')) {
+    numRounds = parseInt(req.body.numRounds);
+    if (isNaN(numRounds) || numRounds < MIN_NUM_ROUNDS || numRounds > MAX_NUM_ROUNDS) {
+      handleError(`Invalid number of rounds "${req.body.numRounds}"`, 400);
+      return;
+    }
+  }
+
+  let dailyDoubles = DEFAULT_DAILY_DOUBLE_SETTING;
+  if (req.body.hasOwnProperty('dailyDoubles')) {
+    dailyDoubles = req.body.dailyDoubles;
+    if (!DailyDoubleSettings.hasOwnProperty(dailyDoubles)) {
+      handleError(`Invalid daily double setting "${dailyDoubles}"`, 400);
+      return;
+    }
+    dailyDoubles = DailyDoubleSettings[dailyDoubles];
+  }
+
+  let finalJeopardye = DEFAULT_FINAL_JEOPARDYE;
+  if (req.body.hasOwnProperty('finalJeopardye')) {
+    finalJeopardye = req.body.finalJeopardye;
+    if (typeof finalJeopardye !== 'boolean') {
+      handleError(`Invalid final Jeopardye setting "${finalJeopardye}"`, 400);
+      return;
+    }
+  }
+
+  let rounds = {};
+  for (const i of range(numRounds)) {
+    const round = Object.values(Rounds)[i];
+    try {
+      rounds[round] = await createRound(round, dailyDoubles);
+    } catch (e) {
+      handleError(`Failed to fetch ${round} round categories from JService: ${e}`, 500);
+      return;
+    }
+  }
+
+  if (finalJeopardye) {
+    rounds[Rounds.FINAL] = await createRound(Rounds.FINAL);
+  }
+
+  const game = new Game(rounds);
   try {
     await createGame(game);
   } catch (e) {
-    handleError('Failed to save game to database', e);
+    handleError(`Failed to save game to database: ${e}`, 500);
     return;
   }
 

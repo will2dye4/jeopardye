@@ -7,7 +7,6 @@ import {
   DAILY_DOUBLE_MINIMUM_WAGER,
   INCORRECT_RESPONSES,
   PLAYER_PLACEHOLDER,
-  Rounds,
 } from '../../../constants.mjs';
 import { isDailyDouble, randomChoice } from '../../../utils.mjs';
 import { getUnplayedClues, markClueAsInvalid, playSound, speakClue } from '../../utils';
@@ -124,13 +123,6 @@ class Game extends React.Component {
     }
   }
 
-  getCurrentRoundName(props = null) {
-    if (!props) {
-      props = this.props;
-    }
-    return (props.game.currentRound === Rounds.SINGLE ? 'first' : 'second');
-  }
-
   getInitialStatus(props = null) {
     if (!props) {
       props = this.props;
@@ -138,14 +130,13 @@ class Game extends React.Component {
     if (!props.game) {
       return 'Creating a new game, please wait ...';
     }
-    const round = this.getCurrentRoundName(props);
     const isNewGame = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
     const playerToAct = (props.playerInControl === props.player?.playerID);
     let status;
     if (isNewGame) {
-      status = `Game started. Let's play the ${round} round.`;
+      status = `Game started. Let's play the ${props.game.currentRound} Jeopardye round.`;
     } else {
-      status = `Joined existing game in the ${round} round.`;
+      status = `Joined existing game in the ${props.game.currentRound} Jeopardye round.`;
     }
     if (playerToAct) {
       status += ` It's your turn!`;
@@ -195,8 +186,7 @@ class Game extends React.Component {
   checkForLastClue(prevAnswerCorrect = false) {
     let unplayedClues = getUnplayedClues(this.props.board, 2);
     if (unplayedClues.length === 0) {
-      const round = this.getCurrentRoundName();
-      this.setState({status: `That's the end of the ${round} round.`});
+      this.setState({status: `That's the end of the ${this.props.game.currentRound} Jeopardye round.`});
     } else if (unplayedClues.length === 1) {
       let clue = {...unplayedClues[0]};
       clue.category = this.props.board.categories[clue.categoryID].name;

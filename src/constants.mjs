@@ -4,10 +4,67 @@ export const JSERVICE_API_BASE = 'http://jservice.io/api';
 
 export const CATEGORIES_PER_ROUND = 6;
 export const CLUES_PER_CATEGORY = 5;
-export const ROUNDS_PER_GAME = 2;
 
+export const DAILY_DOUBLE_MINIMUM_WAGER = 5;
+
+export const SINGLE_ROUND_NUM_DAILY_DOUBLES = 1;
 export const SINGLE_ROUND_VALUE_INCREMENT = 200;
-export const DOUBLE_ROUND_VALUE_INCREMENT = 2 * SINGLE_ROUND_VALUE_INCREMENT;
+
+export const Rounds = {
+  SINGLE: 'single',
+  DOUBLE: 'double',
+  QUADRUPLE: 'quadruple',
+  FINAL: 'final',
+};
+
+export const ROUND_MULTIPLIERS = {
+  [Rounds.SINGLE]: 1,
+  [Rounds.DOUBLE]: 2,
+  [Rounds.QUADRUPLE]: 4,
+  [Rounds.FINAL]: 0,
+};
+
+export const VALUE_INCREMENTS = {
+  [Rounds.SINGLE]: ROUND_MULTIPLIERS[Rounds.SINGLE] * SINGLE_ROUND_VALUE_INCREMENT,
+  [Rounds.DOUBLE]: ROUND_MULTIPLIERS[Rounds.DOUBLE] * SINGLE_ROUND_VALUE_INCREMENT,
+  [Rounds.QUADRUPLE]: ROUND_MULTIPLIERS[Rounds.QUADRUPLE] * SINGLE_ROUND_VALUE_INCREMENT,
+  [Rounds.FINAL]: ROUND_MULTIPLIERS[Rounds.FINAL] * SINGLE_ROUND_VALUE_INCREMENT,
+}
+
+export const NUM_DAILY_DOUBLES = {
+  [Rounds.SINGLE]: ROUND_MULTIPLIERS[Rounds.SINGLE] * SINGLE_ROUND_NUM_DAILY_DOUBLES,
+  [Rounds.DOUBLE]: ROUND_MULTIPLIERS[Rounds.DOUBLE] * SINGLE_ROUND_NUM_DAILY_DOUBLES,
+  [Rounds.QUADRUPLE]: ROUND_MULTIPLIERS[Rounds.QUADRUPLE] * SINGLE_ROUND_NUM_DAILY_DOUBLES,
+  [Rounds.FINAL]: ROUND_MULTIPLIERS[Rounds.FINAL] * SINGLE_ROUND_NUM_DAILY_DOUBLES,
+};
+
+export const DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS = {
+  [Rounds.SINGLE]: VALUE_INCREMENTS[Rounds.SINGLE] * CLUES_PER_CATEGORY,
+  [Rounds.DOUBLE]: VALUE_INCREMENTS[Rounds.DOUBLE] * CLUES_PER_CATEGORY,
+  [Rounds.QUADRUPLE]: VALUE_INCREMENTS[Rounds.QUADRUPLE] * CLUES_PER_CATEGORY,
+  [Rounds.FINAL]: VALUE_INCREMENTS[Rounds.FINAL] * CLUES_PER_CATEGORY,
+};
+
+export const DEFAULT_NUM_ROUNDS = 2;
+export const MIN_NUM_ROUNDS = 1;
+export const MAX_NUM_ROUNDS = Object.keys(Rounds).length - 1;
+
+export const DailyDoubleSettings = {
+  NONE: 'None',
+  NORMAL: 'Normal',
+  DOUBLE: 'Double',
+  QUADRUPLE: 'Quadruple',
+}
+export const DEFAULT_DAILY_DOUBLE_SETTING = DailyDoubleSettings.NORMAL;
+
+export const DAILY_DOUBLE_MULTIPLIERS = {
+  [DailyDoubleSettings.NONE]: 0,
+  [DailyDoubleSettings.NORMAL]: 1,
+  [DailyDoubleSettings.DOUBLE]: 2,
+  [DailyDoubleSettings.QUADRUPLE]: 4,
+};
+
+export const DEFAULT_FINAL_JEOPARDYE = true;
 
 export const MIN_PLAYER_NAME_LENGTH = 1;
 export const MAX_PLAYER_NAME_LENGTH = 10;
@@ -21,12 +78,6 @@ export const READING_SPEED_SECONDS_PER_WORD = 60 / READING_SPEED_WORDS_PER_MINUT
 export const DEFAULT_COUNTDOWN_SECONDS = 10;
 export const DAILY_DOUBLE_COUNTDOWN_SECONDS = 25;
 export const WAGER_COUNTDOWN_SECONDS = 15;
-
-export const Rounds = {
-  SINGLE: 'single',
-  DOUBLE: 'double',
-  FINAL: 'final',
-};
 
 export const EventTypes = {
   ERROR: 'error',
@@ -45,12 +96,6 @@ export const EventTypes = {
   RESPONSE_PERIOD_ENDED: 'response_period_ended',
   WAITING_PERIOD_ENDED: 'waiting_period_ended',
 }
-
-export const DAILY_DOUBLE_MINIMUM_WAGER = 5;
-export const DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS = {
-  [Rounds.SINGLE]: SINGLE_ROUND_VALUE_INCREMENT * CLUES_PER_CATEGORY,
-  [Rounds.DOUBLE]: DOUBLE_ROUND_VALUE_INCREMENT * CLUES_PER_CATEGORY,
-};
 
 export const PLAYER_PLACEHOLDER = '{{PLAYER}}';
 
