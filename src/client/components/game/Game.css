@@ -33,6 +33,15 @@
     src: url("../../fonts/Swiss_911_Extra_Compressed.woff");
 }
 
+html, body {
+    height: 100%;
+}
+
+#root {
+    background-image: linear-gradient(to bottom right, #FFCC00, #1D08A3);
+    height: 100%;
+}
+
 body {
     font: 24px Helvetica, sans-serif;
 }

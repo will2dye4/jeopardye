@@ -78,6 +78,9 @@ function handlePlayerAnswered(storeData, event) {
     newStoreData.revealAnswer = false;
   } else {
     newStoreData.answerDelayMillis = answerDelayMillis;
+    if (dailyDouble) {
+      newStoreData.revealAnswer = true;
+    }
   }
   return newStoreData;
 }
@@ -90,8 +93,11 @@ function handlePlayerWagered(storeData, event) {
 
 function handleBuzzingPeriodEnded(storeData, event) {
   const { categoryID, clueID } = event.payload;
-  console.log(`Time expired for clue ${clueID} (category ${categoryID}).`);
-  return {...storeData, playerAnswering: null, allowAnswers: false, revealAnswer: true};
+  if (storeData.activeClue?.clueID === clueID) {
+    console.log(`Time expired for clue ${clueID} (category ${categoryID}).`);
+    return {...storeData, playerAnswering: null, allowAnswers: false, revealAnswer: true};
+  }
+  return storeData;
 }
 
 function handleResponsePeriodEnded(storeData, event) {
@@ -144,6 +150,7 @@ export function GameReducer(storeData, action) {
   switch (action.type) {
     case ActionTypes.FETCH_CURRENT_GAME:
     case ActionTypes.FETCH_GAME:
+    case ActionTypes.FETCH_NEW_GAME:
       const newGame = action.payload;
       if (!newGame) {
         return storeData;

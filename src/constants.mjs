@@ -55,7 +55,7 @@ export const DailyDoubleSettings = {
   DOUBLE: 'Double',
   QUADRUPLE: 'Quadruple',
 }
-export const DEFAULT_DAILY_DOUBLE_SETTING = DailyDoubleSettings.NORMAL;
+export const DEFAULT_DAILY_DOUBLE_SETTING = 'NORMAL';
 
 export const DAILY_DOUBLE_MULTIPLIERS = {
   [DailyDoubleSettings.NONE]: 0,

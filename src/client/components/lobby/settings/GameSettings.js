@@ -6,6 +6,7 @@ import {
   DEFAULT_NUM_ROUNDS,
   MAX_NUM_ROUNDS
 } from '../../../../constants.mjs';
+import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { range } from '../../../../utils.mjs';
 import GameSetting from './GameSetting';
 import RadioToggleButton from './RadioToggleButton';
@@ -19,6 +20,7 @@ class GameSettings extends React.Component {
       finalJeopardye: DEFAULT_FINAL_JEOPARDYE,
       numRounds: DEFAULT_NUM_ROUNDS,
     };
+    this.createNewGame = this.createNewGame.bind(this);
     this.onDailyDoublesChanged = this.onDailyDoublesChanged.bind(this);
     this.onFinalJeopardyeChanged = this.onFinalJeopardyeChanged.bind(this);
     this.onNumRoundsChanged = this.onNumRoundsChanged.bind(this);
@@ -36,6 +38,11 @@ class GameSettings extends React.Component {
     this.setState({numRounds: parseInt(event.target.value)});
   }
 
+  createNewGame() {
+    const gameSettings = new Settings(this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye);
+    this.props.fetchNewGame(gameSettings);
+  }
+
   render() {
     return (
       <div className="card game-settings">
@@ -43,13 +50,13 @@ class GameSettings extends React.Component {
           <h1 className="fw-bold text-center">Game Settings</h1>
           <GameSetting label="Number of Rounds">
             {range(MAX_NUM_ROUNDS).map(i => i + 1).map(numRounds =>
-              <RadioToggleButton itemKey={numRounds} value={numRounds} currentValue={this.state.numRounds}
+              <RadioToggleButton key={numRounds} itemKey={numRounds} value={numRounds} currentValue={this.state.numRounds}
                                  name="num-rounds" label={numRounds} onChange={this.onNumRoundsChanged} />
             )}
           </GameSetting>
           <GameSetting label="Daily Doubles">
             {Object.entries(DailyDoubleSettings).map(([key, label]) =>
-              <RadioToggleButton itemKey={key} value={label} currentValue={this.state.dailyDoubles}
+              <RadioToggleButton key={key} itemKey={key} value={key} currentValue={this.state.dailyDoubles}
                                  name="daily-doubles" label={label} onChange={this.onDailyDoublesChanged} />
             )}
           </GameSetting>
@@ -58,7 +65,7 @@ class GameSettings extends React.Component {
           </GameSetting>
           <div className="d-flex justify-content-center mt-5 mb-3">
             {/* TODO: give feedback that a game is being created when the button is clicked */}
-            <button type="button" className="btn btn-primary btn-lg" onClick={this.props.fetchGame}>Start New Game</button>
+            <button type="button" className="btn btn-primary btn-lg" onClick={this.createNewGame}>Start New Game</button>
           </div>
         </div>
       </div>

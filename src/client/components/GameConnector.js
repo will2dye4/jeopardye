@@ -5,6 +5,7 @@ import {
   dismissActiveClue,
   fetchCurrentGame,
   fetchGame,
+  fetchNewGame,
   fetchPlayer,
   joinGame,
   markClueAsInvalid,
@@ -28,6 +29,7 @@ const actionCreators = {
   dismissActiveClue,
   fetchCurrentGame,
   fetchGame,
+  fetchNewGame,
   fetchPlayer,
   joinGame,
   markClueAsInvalid,
@@ -41,7 +43,7 @@ const actionCreators = {
 
 class Connector extends React.Component {
   render() {
-    return (this.props.game && false ? <Game {...this.props} /> : <Lobby {...this.props} />);
+    return (this.props.game ? <Game {...this.props} /> : <Lobby {...this.props} />);
   }
 
   componentDidMount() {

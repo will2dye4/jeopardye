@@ -6,6 +6,7 @@ import { getUnplayedClues } from '../utils';
 export const ActionTypes = {
   FETCH_CURRENT_GAME: 'JEOPARDYE::FETCH_CURRENT_GAME',
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
+  FETCH_NEW_GAME: 'JEOPARDYE::FETCH_NEW_GAME',
   FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   MARK_CLUE_AS_INVALID: 'JEOPARDYE::MARK_CLUE_AS_INVALID',
@@ -25,8 +26,15 @@ function getGameByID(gameID) {
   return fetch(`${GAME_URL}/${gameID}`).then(response => response.json());
 }
 
-function createNewGame() {
- return fetch(GAME_URL, {method: 'POST'}).then(response => response.json());
+function createNewGame(gameSettings = null) {
+  const opts = {
+    body: JSON.stringify(gameSettings || {}),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  }
+ return fetch(GAME_URL, opts).then(response => response.json());
 }
 
 function getPlayerByID(playerID) {
@@ -45,6 +53,13 @@ export function fetchCurrentGame() {
     type: ActionTypes.FETCH_CURRENT_GAME,
     payload: payload,
   };
+}
+
+export function fetchNewGame(gameSettings) {
+  return {
+    type: ActionTypes.FETCH_NEW_GAME,
+    payload: createNewGame(gameSettings),
+  }
 }
 
 export function fetchGame() {

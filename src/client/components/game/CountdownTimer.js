@@ -165,7 +165,7 @@ class CountdownTimer extends React.Component {
     let secondsRemaining, value;
     let classes = 'fs-5 progress-bar';
     if (timer.waiting) {
-      classes += ' bg-warning text-dark progress-bar-striped progress-bar-animated';
+      classes += ' bg-success fw-bold progress-bar-striped progress-bar-animated';
       secondsRemaining = 'Waiting...'
       value = 100;
     } else {

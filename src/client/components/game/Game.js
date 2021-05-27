@@ -72,11 +72,13 @@ class Game extends React.Component {
       console.log('Game loaded. Opening websocket connection...');
       this.props.websocketConnect();
     }
+
     if (!prevProps.connected && this.props.connected && this.props.game) {
       console.log('Websocket connection successful. Joining game...');
       this.props.joinGame(this.props.game.gameID, this.props.player);
       this.setState({status: this.getInitialStatus()});
     }
+
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
       this.state.timerRef.current.resetResponseTimer();
       if (this.props.prevAnswer.correct) {
@@ -86,19 +88,24 @@ class Game extends React.Component {
         const dailyDouble = isDailyDouble(this.props.board, this.props.prevAnswer.clueID);
         this.handleIncorrectAnswer(dailyDouble);
       }
+    } else if (!prevProps.revealAnswer && this.props.revealAnswer) {
+      this.revealAnswer();
     }
+
     if (!prevProps.currentWager && this.props.currentWager) {
       this.setState({showDailyDoubleWager: false});
       this.state.timerRef.current.resetResponseTimer();
       this.state.timerRef.current.startCountdown();
       speakClue(this.props.activeClue);
     }
+
     if (!prevProps.playerAnswering && this.props.playerAnswering && !isDailyDouble(this.props.board, this.props.activeClue.clueID)) {
       this.state.timerRef.current.pause();
       if (this.props.playerAnswering === this.props.player.playerID) {
         this.state.timerRef.current.startResponseTimer();
       }
     }
+
     if (!prevProps.allowAnswers && this.props.allowAnswers) {
       this.setState({
         status: {
@@ -109,9 +116,7 @@ class Game extends React.Component {
       });
       this.state.timerRef.current.startCountdown();
     }
-    if (!prevProps.revealAnswer && this.props.revealAnswer) {
-      this.revealAnswer();
-    }
+
     if (!prevProps.responseTimerElapsed && this.props.responseTimerElapsed) {
       if (this.state.showDailyDoubleWager) {
         this.props.submitWager(this.props.game.gameID, this.props.player.playerID,
@@ -292,7 +297,7 @@ class Game extends React.Component {
       playerScore: this.props.players[this.props.player?.playerID]?.score,
     };
     return (
-      <div id="game" className="game m-4">
+      <div id="game" className="game p-4">
         <CountdownTimer gameState={gameState}
                         ref={this.state.timerRef}
                         activeClue={this.props.activeClue} />

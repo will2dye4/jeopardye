@@ -43,7 +43,9 @@ class ActiveClue extends React.Component {
     }
 
     const board = document.getElementById('board');
-    const style = {width: board.offsetWidth * 1.02, height: board.offsetHeight};
+    const width = (board ? board.offsetWidth * 1.02 : '100%');
+    const height = (board ? board.offsetHeight : '100%');
+    const style = {width: width, height: height};
 
     let content;
     if (this.props.showDailyDoubleWager) {
