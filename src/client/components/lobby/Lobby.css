@@ -64,3 +64,11 @@ html, body {
 .toggle-switch {
     padding-left: 3.5em;
 }
+
+.toggle-switch-disabled {
+    color: #888888;
+}
+
+.game-starting {
+    padding: 100px 30px;
+}

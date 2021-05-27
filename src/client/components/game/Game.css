@@ -131,7 +131,8 @@ body {
 }
 
 .countdown-timer {
-    height: 25px;
+    height: 30px;
+    border: 2px solid white;
 }
 
 .podium-container {

@@ -16,6 +16,7 @@ class GameSettings extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      creatingGame: false,
       dailyDoubles: DEFAULT_DAILY_DOUBLE_SETTING,
       finalJeopardye: DEFAULT_FINAL_JEOPARDYE,
       numRounds: DEFAULT_NUM_ROUNDS,
@@ -39,11 +40,25 @@ class GameSettings extends React.Component {
   }
 
   createNewGame() {
+    this.setState({creatingGame: true});
     const gameSettings = new Settings(this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye);
     this.props.fetchNewGame(gameSettings);
   }
 
   render() {
+    if (this.state.creatingGame) {
+      return (
+        <div className="card game-settings">
+          <div className="card-body game-starting text-center">
+            <h1>A new game is starting, please wait...</h1>
+            <div className="progress mt-5 mx-5">
+              <div className="progress-bar progress-bar-striped progress-bar-animated" style={{width: '100%'}}
+                   role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" />
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="card game-settings">
         <div className="card-body px-5 py-4">
@@ -64,7 +79,6 @@ class GameSettings extends React.Component {
             <ToggleSwitch name="final-jeopardye" checked={this.state.finalJeopardye} onChange={this.onFinalJeopardyeChanged} />
           </GameSetting>
           <div className="d-flex justify-content-center mt-5 mb-3">
-            {/* TODO: give feedback that a game is being created when the button is clicked */}
             <button type="button" className="btn btn-primary btn-lg" onClick={this.createNewGame}>Start New Game</button>
           </div>
         </div>
