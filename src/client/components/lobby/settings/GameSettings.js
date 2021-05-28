@@ -41,7 +41,8 @@ class GameSettings extends React.Component {
 
   createNewGame() {
     this.setState({creatingGame: true});
-    const gameSettings = new Settings(this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye);
+    const playerIDs = Object.keys(this.props.players);
+    const gameSettings = new Settings(this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye, playerIDs);
     this.props.fetchNewGame(gameSettings);
   }
 

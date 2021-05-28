@@ -92,25 +92,32 @@ export class Round {
 }
 
 export class Game {
-  constructor(rounds, currentRound, players, activeClue, playerAnswering, playerInControl, currentWager) {
+  constructor(rounds, players, playerInControl, playerAnswering, currentRound,  activeClue, currentWager) {
     this.gameID = uuid.v4();
     this.rounds = rounds;
     this.numRounds = Object.keys(rounds).length - (rounds.hasOwnProperty(Rounds.FINAL) ? 1 : 0);
-    this.currentRound = currentRound || Rounds.SINGLE;
     this.players = players || {};
-    this.activeClue = activeClue || null;
-    this.playerAnswering = playerAnswering || null;
     this.playerInControl = playerInControl || null;
+    this.playerAnswering = playerAnswering || null;
+    this.currentRound = currentRound || Rounds.SINGLE;
+    this.activeClue = activeClue || null;
     this.currentWager = currentWager || null;
     this.createdTime = new Date();
     this.finishedTime = null;
+
+    if (this.playerInControl === null && Object.keys(this.players).length) {
+      /* Randomly pick a player to start in control of the game */
+      this.playerInControl = randomChoice(Object.keys(this.players));
+    }
   }
 }
 
 export class GameSettings {
-  constructor(numRounds, dailyDoubles, finalJeopardye) {
+  constructor(numRounds, dailyDoubles, finalJeopardye, playerIDs, playerInControl) {
     this.numRounds = numRounds;
     this.dailyDoubles = dailyDoubles;
     this.finalJeopardye = finalJeopardye;
+    this.playerIDs = playerIDs || [];
+    this.playerInControl = playerInControl || null;
   }
 }

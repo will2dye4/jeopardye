@@ -41,6 +41,22 @@ function handleError(ws, event, message, status) {
   ws.send(JSON.stringify(new WebsocketEvent(EventTypes.ERROR, {eventType: event.eventType, error: message, status: status})));
 }
 
+async function handleClientConnect(ws,event) {
+  const { playerID } = event.payload;
+  if (!playerID) {
+    handleError(ws, event, 'missing player ID', 400);
+    return;
+  }
+  const player = await getPlayer(playerID);
+  if (!player) {
+    handleError(ws, event, 'player not found', 404);
+    return;
+  }
+  logger.info(`${player.name} connected.`);
+  connectedClients[playerID] = ws;
+  /* TODO - emit event? mark player active? */
+}
+
 async function handleJoinGame(ws, event) {
   const { gameID, playerID } = event.payload;
   if (!gameID) {
@@ -323,6 +339,7 @@ async function handleSubmitWager(ws, event) {
 }
 
 const eventHandlers = {
+  [EventTypes.CLIENT_CONNECT]: handleClientConnect,
   [EventTypes.JOIN_GAME]: handleJoinGame,
   [EventTypes.SELECT_CLUE]: handleSelectClue,
   [EventTypes.BUZZ_IN]: handleBuzzIn,

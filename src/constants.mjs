@@ -95,6 +95,8 @@ export const EventTypes = {
   BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
   RESPONSE_PERIOD_ENDED: 'response_period_ended',
   WAITING_PERIOD_ENDED: 'waiting_period_ended',
+  /* connection events */
+  CLIENT_CONNECT: 'client_connect',
 }
 
 export const PLAYER_PLACEHOLDER = '{{PLAYER}}';

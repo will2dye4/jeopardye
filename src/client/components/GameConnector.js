@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import {
   buzzIn,
+  clientConnect,
   dismissActiveClue,
   fetchCurrentGame,
   fetchGame,
@@ -26,6 +27,7 @@ function mapStateToProps(state) {
 
 const actionCreators = {
   buzzIn,
+  clientConnect,
   dismissActiveClue,
   fetchCurrentGame,
   fetchGame,

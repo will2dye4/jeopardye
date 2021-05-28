@@ -90,6 +90,15 @@ export async function getPlayer(playerID) {
   return await playersCollection.findOne({_id: playerID});
 }
 
+export async function getPlayers(playerIDs) {
+  const cursor = await playersCollection.find({_id: {$in: playerIDs}});
+  const players = cursor.toArray();
+  if (players.length < playerIDs.length) {
+    throw new Error('Failed to find all players!');
+  }
+  return players;
+}
+
 export async function updatePlayer(playerID, newFields) {
   await playersCollection.updateOne({_id: playerID}, {$set: newFields});
 }

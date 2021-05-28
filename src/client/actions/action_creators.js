@@ -111,6 +111,10 @@ export function submitWager(gameID, playerID, categoryID, clueID, wager) {
   return send(new WebsocketEvent(EventTypes.SUBMIT_WAGER, {gameID, playerID, categoryID, clueID, wager}));
 }
 
+export function clientConnect(playerID) {
+  return send(new WebsocketEvent(EventTypes.CLIENT_CONNECT, {playerID}));
+}
+
 export function dismissActiveClue() {
   return {
     type: ActionTypes.DISMISS_CLUE,

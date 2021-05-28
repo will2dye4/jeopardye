@@ -74,8 +74,15 @@ class Game extends React.Component {
     }
 
     if (!prevProps.connected && this.props.connected && this.props.game) {
-      console.log('Websocket connection successful. Joining game...');
-      this.props.joinGame(this.props.game.gameID, this.props.player);
+      if (this.props.player) {
+        if (this.props.players.hasOwnProperty(this.props.player.playerID)) {
+          console.log('Establishing connection to server...');
+          this.props.clientConnect(this.props.player.playerID);
+        } else {
+          console.log('Joining game...');
+          this.props.joinGame(this.props.game.gameID, this.props.player);
+        }
+      }
       this.setState({status: this.getInitialStatus()});
     }
 
