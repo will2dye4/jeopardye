@@ -1,0 +1,156 @@
+/* Jeopardy logo font face */
+@font-face {
+    font-family: "Gyparody";
+    src: url("../../fonts/gyparody.woff");
+}
+
+/* Clue value font face */
+@font-face {
+    font-family: "Swiss 911";
+    src: url("../../fonts/Swiss_911_Compressed.ttf");
+}
+
+@font-face {
+    font-family: "Swiss 911 Extra";
+    src: url("../../fonts/Swiss_911_Extra_Compressed.woff");
+}
+
+/* Fonts for displaying clues
+ * Korinna is what is used on Jeopardy, and Newsreader is a fallback from Google Fonts. */
+@font-face {
+    font-family: "Korinna";
+    src: url("../../fonts/Korinna-Regular.otf");
+}
+
+@font-face {
+    font-family: "Korinna Bold";
+    src: url("../../fonts/Korinna_Bold_BT.ttf");
+}
+
+@font-face {
+    font-family: "Newsreader";
+    src: url("../../fonts/Newsreader-VariableFont_opsz,wght.ttf");
+}
+
+/* Fonts for displaying player names */
+@font-face {
+    font-family: "Beth Ellen";
+    src: url("../../fonts/BethEllen-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Caveat Brush";
+    src: url("../../fonts/CaveatBrush-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Gloria Hallelujah";
+    src: url("../../fonts/GloriaHallelujah-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Homemade Apple";
+    src: url("../../fonts/HomemadeApple-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Rock Salt";
+    src: url("../../fonts/RockSalt-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Sacramento";
+    src: url("../../fonts/Sacramento-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Dancing Script";
+    src: url("../../fonts/DancingScript-VariableFont_wght.ttf");
+}
+
+@font-face {
+    font-family: "Patrick Hand";
+    src: url("../../fonts/PatrickHand-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Satisfy";
+    src: url("../../fonts/Satisfy-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Shadows Into Light";
+    src: url("../../fonts/ShadowsIntoLight-Regular.ttf");
+}
+
+/* Miscellaneous font faces */
+@font-face {
+    font-family: "Square 721";
+    src: url("../../fonts/Square_721_Bold_BT.woff");
+}
+
+html, body {
+    height: 100%;
+}
+
+#root {
+    background-image: linear-gradient(to bottom right, #FFCC00, #1D08A3);
+    height: 100%;
+}
+
+.font-style-beth-ellen {
+    font-family: "Beth Ellen", sans-serif;
+}
+
+.font-style-caveat-brush {
+    font-family: "Caveat Brush", sans-serif;
+}
+
+.font-style-gloria-hallelujah {
+    font-family: "Gloria Hallelujah", sans-serif;
+}
+
+.font-style-homemade-apple {
+    font-family: "Homemade Apple", sans-serif;
+}
+
+.font-style-rock-salt {
+    font-family: "Rock Salt", sans-serif;
+}
+
+.font-style-sacramento {
+    font-family: "Sacramento", sans-serif;
+}
+
+.font-style-dancing-script {
+    font-family: "Dancing Script", sans-serif;
+}
+
+.font-style-patrick-hand {
+    font-family: "Patrick Hand", sans-serif;
+}
+
+.font-style-satisfy {
+    font-family: "Satisfy", sans-serif;
+}
+
+.font-style-shadows-into-light {
+    font-family: "Shadows Into Light", sans-serif;
+}
+
+.logo-page {
+    color: black;
+}
+
+.logo-page-content {
+    margin-top: 150px;
+    width: 100%;
+}
+
+.logo {
+    color: #1D08A3;
+    font-family: "Gyparody", sans-serif;
+    font-weight: bolder;
+    font-size: 120px;
+    -webkit-text-stroke: 2px white;
+}

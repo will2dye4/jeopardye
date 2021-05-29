@@ -27,6 +27,18 @@ function handleError(storeData, event) {
   return storeData;  // TODO - should this set an error to display to the user?
 }
 
+function handlePlayerChangedName(storeData, event) {
+  const { playerID, name } = event.payload;
+  if (!storeData.players.hasOwnProperty(playerID)) {
+    console.log(`Cannot change name of unknown player "${playerID}".`);
+    return storeData;
+  }
+  console.log(`Player ${playerID} has changed name to "${name}".`);
+  const newPlayer = {...storeData.players[playerID], name: name};
+  const newPlayers = {...storeData.players, [playerID]: newPlayer};
+  return {...storeData, players: newPlayers};
+}
+
 function handlePlayerJoined(storeData, event) {
   const player = event.payload.player;
   console.log(`${player.name} has joined the game.`);
@@ -122,6 +134,7 @@ function handleWaitingPeriodEnded(storeData, event) {
 
 const eventHandlers = {
   [EventTypes.ERROR]: handleError,
+  [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
   [EventTypes.PLAYER_BUZZED]: handlePlayerBuzzed,

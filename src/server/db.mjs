@@ -103,4 +103,8 @@ export async function updatePlayer(playerID, newFields) {
   await playersCollection.updateOne({_id: playerID}, {$set: newFields});
 }
 
+export async function updatePlayerName(playerID, name) {
+  await updatePlayer(playerID, {name: name});
+}
+
 export default db;

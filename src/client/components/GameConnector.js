@@ -19,7 +19,7 @@ import {
 } from '../actions/action_creators';
 import Game from './game/Game';
 import Lobby from './lobby/Lobby';
-import {DEFAULT_PLAYER_ID} from "../../constants.mjs";
+import PlayerEditor from './player/PlayerEditor';
 
 function mapStateToProps(state) {
   return {...state};
@@ -45,15 +45,20 @@ const actionCreators = {
 
 class Connector extends React.Component {
   render() {
-    return (this.props.game ? <Game {...this.props} /> : <Lobby {...this.props} />);
+    if (!this.props.player) {
+      return <PlayerEditor {...this.props} />;
+    }
+    if (!this.props.game) {
+      return <Lobby {...this.props} />;
+    }
+    return <Game {...this.props} />;
   }
 
   componentDidMount() {
-    if (!localStorage.getItem('playerID')) {
-      localStorage.setItem('playerID', DEFAULT_PLAYER_ID);
-    }
     const playerID = localStorage.getItem('playerID');
-    this.props.fetchPlayer(playerID);
+    if (playerID) {
+      this.props.fetchPlayer(playerID);
+    }
 
     this.props.fetchCurrentGame();
   }
