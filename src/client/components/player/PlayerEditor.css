@@ -1,3 +1,17 @@
-.font-sample:hover {
-    border: 2px solid #1D08A3 !important;
+.font-sample {
+    border: 1px solid #CED4DA;
+    font-size: 30px;
+    height: 70px;
+    line-height: 70px;
+    text-align: center;
+}
+
+.font-sample:hover, .font-sample-selected {
+    border: 2px solid #1D08A3;
+    color: #1D08A3;
+}
+
+.font-sample-text {
+    display: inline-block;
+    line-height: normal;
 }

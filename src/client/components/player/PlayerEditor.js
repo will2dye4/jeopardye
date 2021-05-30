@@ -1,4 +1,5 @@
 import React from 'react';
+import './PlayerEditor.css';
 import LogoPage from '../common/LogoPage';
 import PlayerSettings from './settings/PlayerSettings';
 

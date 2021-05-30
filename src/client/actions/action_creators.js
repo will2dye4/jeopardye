@@ -1,6 +1,6 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
 import { WebsocketEvent } from '../../utils.mjs';
-import { EventTypes } from '../../constants.mjs';
+import { EventTypes, GAME_ID_KEY } from '../../constants.mjs';
 import { getUnplayedClues } from '../utils';
 
 export const ActionTypes = {
@@ -8,6 +8,7 @@ export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   FETCH_NEW_GAME: 'JEOPARDYE::FETCH_NEW_GAME',
   FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
+  CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   MARK_CLUE_AS_INVALID: 'JEOPARDYE::MARK_CLUE_AS_INVALID',
   SKIP_ACTIVE_CLUE: 'JEOPARDYE::SKIP_ACTIVE_CLUE',
@@ -41,8 +42,18 @@ function getPlayerByID(playerID) {
   return fetch(`${PLAYER_URL}/${playerID}`).then(response => response.json());
 }
 
+function updatePlayerName(playerID, name) {
+  return fetch(`${PLAYER_URL}/${playerID}`, {
+    body: JSON.stringify({name: name}),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'PATCH',
+  });
+}
+
 export function fetchCurrentGame() {
-  const gameID = localStorage.getItem('gameID');
+  const gameID = localStorage.getItem(GAME_ID_KEY);
   let payload = null;
   if (gameID) {
     payload = getGameByID(gameID).then(game => {
@@ -63,7 +74,7 @@ export function fetchNewGame(gameSettings) {
 }
 
 export function fetchGame() {
-  const gameID = localStorage.getItem('gameID');
+  const gameID = localStorage.getItem(GAME_ID_KEY);
   let promise;
   if (gameID) {
     promise = getGameByID(gameID).then(game => {
@@ -88,6 +99,13 @@ export function fetchPlayer(playerID) {
   return {
     type: ActionTypes.FETCH_PLAYER,
     payload: getPlayerByID(playerID),
+  }
+}
+
+export function changePlayerName(playerID, name) {
+  return {
+    type: ActionTypes.CHANGE_PLAYER_NAME,
+    payload: updatePlayerName(playerID, name),
   }
 }
 

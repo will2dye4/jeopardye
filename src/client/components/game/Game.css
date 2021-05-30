@@ -153,7 +153,7 @@ body {
 }
 
 .podium-name {
-    font: 30px "Dancing Script", "Brush Script MT", Helvetica, sans-serif;
+    font-size: 30px;
 }
 
 .podium-name-active {

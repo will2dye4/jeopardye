@@ -49,7 +49,13 @@ export const DEFAULT_NUM_ROUNDS = 2;
 export const MIN_NUM_ROUNDS = 1;
 export const MAX_NUM_ROUNDS = Object.keys(Rounds).length - 1;
 
+export const DEFAULT_FONT_STYLE = 'Dancing Script';
+
 export const PLACEHOLDER_PLAYER_NAME = 'Alex';
+
+export const GAME_ID_KEY = 'gameID';
+export const PLAYER_ID_KEY = 'playerID';
+export const PREFERRED_FONT_STYLE_KEY = 'preferredFontStyle';
 
 export const PlayerEditorModes = {
   CREATE: 'create',

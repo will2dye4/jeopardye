@@ -1,5 +1,5 @@
 import { ActionTypes } from '../actions/action_creators';
-import { EventTypes } from '../../constants.mjs';
+import { EventTypes, GAME_ID_KEY } from '../../constants.mjs';
 import { isDailyDouble } from '../../utils.mjs';
 
 function newStoreData() {
@@ -169,7 +169,7 @@ export function GameReducer(storeData, action) {
         return storeData;
       }
       const newBoard = newGame.rounds[newGame.currentRound];
-      localStorage.setItem('gameID', newGame.gameID);
+      localStorage.setItem(GAME_ID_KEY, newGame.gameID);
       return {
         ...storeData,
         game: newGame,

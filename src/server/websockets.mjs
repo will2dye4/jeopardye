@@ -31,7 +31,11 @@ export function broadcast(event, originatingPlayerID) {
       if (!jsonEvent) {
         jsonEvent = JSON.stringify(event);
       }
-      ws.send(jsonEvent);
+      try {
+        ws.send(jsonEvent);
+      } catch (e) {
+        logger.error(`Failed to send ${event.eventType} event to player ${playerID}: ${e}`);
+      }
     }
   });
 }

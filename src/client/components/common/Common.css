@@ -44,6 +44,11 @@
 }
 
 @font-face {
+    font-family: "Dancing Script";
+    src: url("../../fonts/DancingScript-VariableFont_wght.ttf");
+}
+
+@font-face {
     font-family: "Gloria Hallelujah";
     src: url("../../fonts/GloriaHallelujah-Regular.ttf");
 }
@@ -54,23 +59,28 @@
 }
 
 @font-face {
+    font-family: "Kaushan Script";
+    src: url("../../fonts/KaushanScript-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Rancho";
+    src: url("../../fonts/Rancho-Regular.ttf");
+}
+
+@font-face {
     font-family: "Rock Salt";
     src: url("../../fonts/RockSalt-Regular.ttf");
 }
 
 @font-face {
+    font-family: "Rouge Script";
+    src: url("../../fonts/RougeScript-Regular.ttf");
+}
+
+@font-face {
     font-family: "Sacramento";
     src: url("../../fonts/Sacramento-Regular.ttf");
-}
-
-@font-face {
-    font-family: "Dancing Script";
-    src: url("../../fonts/DancingScript-VariableFont_wght.ttf");
-}
-
-@font-face {
-    font-family: "Patrick Hand";
-    src: url("../../fonts/PatrickHand-Regular.ttf");
 }
 
 @font-face {
@@ -96,46 +106,6 @@ html, body {
 #root {
     background-image: linear-gradient(to bottom right, #FFCC00, #1D08A3);
     height: 100%;
-}
-
-.font-style-beth-ellen {
-    font-family: "Beth Ellen", sans-serif;
-}
-
-.font-style-caveat-brush {
-    font-family: "Caveat Brush", sans-serif;
-}
-
-.font-style-gloria-hallelujah {
-    font-family: "Gloria Hallelujah", sans-serif;
-}
-
-.font-style-homemade-apple {
-    font-family: "Homemade Apple", sans-serif;
-}
-
-.font-style-rock-salt {
-    font-family: "Rock Salt", sans-serif;
-}
-
-.font-style-sacramento {
-    font-family: "Sacramento", sans-serif;
-}
-
-.font-style-dancing-script {
-    font-family: "Dancing Script", sans-serif;
-}
-
-.font-style-patrick-hand {
-    font-family: "Patrick Hand", sans-serif;
-}
-
-.font-style-satisfy {
-    font-family: "Satisfy", sans-serif;
-}
-
-.font-style-shadows-into-light {
-    font-family: "Shadows Into Light", sans-serif;
 }
 
 .logo-page {
