@@ -11,8 +11,10 @@ class Lobby extends React.Component {
       <LogoPage id="lobby">
         <div className="col col-3 mx-4 my-2">
           <RoomCode code="YYZ" />
-          <PlayerList listType="Players" players={this.props.players} />
-          <PlayerList listType="Spectators" players={this.props.spectators} />
+          <PlayerList listType="Players" players={this.props.players} currentPlayerID={this.props.player?.playerID}
+                      edit={this.props.showPlayerEditor} />
+          <PlayerList listType="Spectators" players={this.props.spectators} currentPlayerID={this.props.player?.playerID}
+                      edit={this.props.showPlayerEditor} />
         </div>
         <div className="col mx-4 my-2">
           <GameSettings {...this.props} />

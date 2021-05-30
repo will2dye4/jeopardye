@@ -76,6 +76,9 @@ class Connector extends React.Component {
       console.log('Establishing connection to server...');
       this.props.clientConnect(this.props.player.playerID);
     }
+    if (!prevProps.player && this.props.player) {
+      this.closePlayerEditor();
+    }
   }
 
   showPlayerEditor() {
@@ -88,10 +91,10 @@ class Connector extends React.Component {
 
   render() {
     if (!this.props.player || this.state.showPlayerEditor) {
-      return <PlayerEditor {...this.props} onSubmit={this.closePlayerEditor} />;
+      return <PlayerEditor onSubmit={this.closePlayerEditor} {...this.props} />;
     }
-    if (!this.props.game || true) {
-      return <Lobby {...this.props} />;
+    if (!this.props.game) {
+      return <Lobby showPlayerEditor={this.showPlayerEditor} {...this.props} />;
     }
     return <Game {...this.props} />;
   }

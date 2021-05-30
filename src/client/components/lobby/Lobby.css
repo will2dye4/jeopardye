@@ -41,3 +41,7 @@
 .game-starting {
     padding: 100px 30px;
 }
+
+.hover-blue:hover {
+    color: #1D08A3;
+}
