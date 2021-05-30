@@ -1,15 +1,16 @@
 import React from 'react';
+import { Box, Flex } from '@chakra-ui/react';
 import './Common.css';
 import Logo from './Logo';
 
 function LogoPage(props) {
   return (
-    <div id={props.id} className="d-flex flex-fill logo-page">
+    <Flex id={props.id} className="logo-page">
       <Logo />
-      <div className="row logo-page-content">
+      <Box className="logo-page-content">
         {props.children}
-      </div>
-    </div>
+      </Box>
+    </Flex>
   );
 }
 

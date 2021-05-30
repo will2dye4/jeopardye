@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button, Flex, Heading } from '@chakra-ui/react';
 import {
   DEFAULT_FONT_STYLE,
   MAX_PLAYER_NAME_LENGTH,
@@ -7,6 +8,7 @@ import {
   PREFERRED_FONT_STYLE_KEY,
 } from '../../../../constants.mjs';
 import { validatePlayerName } from '../../../../models/player.mjs';
+import Card from '../../common/Card';
 import PlayerFontStyleSetting from './PlayerFontStyleSetting';
 import PlayerNameInput from './PlayerNameInput';
 
@@ -65,16 +67,16 @@ class PlayerSettings extends React.Component {
     const heading = (mode === PlayerEditorModes.CREATE ? 'Create New Player' : 'Edit Player Settings');
     const buttonLabel = (mode === PlayerEditorModes.CREATE ? 'Create' : 'Save');
     return (
-      <div className="card game-settings">
-        <div className="card-body px-5 py-4">
-          <h1 className="fw-bold text-center">{heading}</h1>
-          <PlayerNameInput name={this.state.name} invalid={this.state.invalid} onChange={this.handleNameChanged} />
-          <PlayerFontStyleSetting name={name} selectedStyle={this.state.fontStyle} onChange={this.handleFontStyleChanged} />
-          <div className="d-flex justify-content-center mt-5 mb-3">
-            <button type="button" className="btn btn-primary btn-lg w-25" onClick={this.handleSubmit}>{buttonLabel}</button>
-          </div>
-        </div>
-      </div>
+      <Card className="game-settings" px={8} py={6}>
+        <Heading textAlign="center">{heading}</Heading>
+        <PlayerNameInput name={this.state.name} invalid={this.state.invalid} onChange={this.handleNameChanged} />
+        <PlayerFontStyleSetting name={name} selectedStyle={this.state.fontStyle} onChange={this.handleFontStyleChanged} />
+        <Flex justify="center" mt={5} mb={3}>
+          <Button colorScheme="jeopardyBlue" size="lg" w="25%" isDisabled={this.state.invalid} onClick={this.handleSubmit}>
+            {buttonLabel}
+          </Button>
+        </Flex>
+      </Card>
     );
   }
 }

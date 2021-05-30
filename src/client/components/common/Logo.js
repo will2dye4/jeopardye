@@ -1,10 +1,9 @@
 import React from 'react';
+import { Heading } from '@chakra-ui/react';
 
 function Logo() {
   return (
-    <div className="logo-container">
-      <h1 className="logo position-absolute top-0 start-50 translate-middle-x user-select-none">Jeopardye!</h1>
-    </div>
+    <Heading as="h1" className="logo user-select-none">Jeopardye!</Heading>
   );
 }
 

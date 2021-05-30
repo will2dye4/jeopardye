@@ -1,4 +1,5 @@
 import React from 'react';
+import { Box, Grid, GridItem, SimpleGrid, Text } from '@chakra-ui/react';
 import { range } from '../../../../utils.mjs';
 import { DEFAULT_FONT_STYLE } from '../../../../constants.mjs';
 
@@ -25,28 +26,28 @@ function PlayerFontStyleSetting(props) {
     const choices = range(STYLES_PER_ROW).map(j => {
       const index = (i * STYLES_PER_ROW) + j;
       const font = FONT_STYLES[index];
-      const style = {fontFamily: `"${font}", sans-serif`};
-      let classes = 'col col-3 font-sample mx-3 mb-3 text-center';
+      let classes = 'hover-pointer font-sample';
       if (font === props.selectedStyle) {
         classes += ' font-sample-selected';
       }
       return (
-        <div key={j} className={classes} style={style} title={font} onClick={() => props.onChange(font)}>
-          <span className="font-sample-text">{props.name}</span>
-        </div>
+        <Box key={j} className={classes} fontFamily={font} borderRadius="md" mb={3} mx={3} textAlign="center" title={font}
+                  onClick={() => props.onChange(font)}>
+          <Text className="font-sample-text">{props.name}</Text>
+        </Box>
       );
     });
-    return <div key={i} className="row">{choices}</div>;
+    return <SimpleGrid key={i} columns={STYLES_PER_ROW}>{choices}</SimpleGrid>;
   });
   return (
-    <div className="row my-5">
-      <div className="col col-2 my-1">
-        <div className="form-label fw-bold mb-0">Font Style</div>
-      </div>
-      <div className="col">
+    <Grid my={5} templateColumns="repeat(6, 1fr)" templateRows="repeat(1, 1fr)">
+      <GridItem my={1}>
+        <Text fontWeight="bold">Font Style</Text>
+      </GridItem>
+      <GridItem colSpan={4}>
         {rows}
-      </div>
-    </div>
+      </GridItem>
+    </Grid>
   );
 }
 

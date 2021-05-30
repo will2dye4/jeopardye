@@ -108,6 +108,11 @@ html, body {
     height: 100%;
 }
 
+.user-select-none {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
 .logo-page {
     color: black;
 }
@@ -119,8 +124,12 @@ html, body {
 
 .logo {
     color: #1D08A3;
-    font-family: "Gyparody", sans-serif;
-    font-weight: bolder;
-    font-size: 120px;
+    font-family: "Gyparody", sans-serif !important;
+    font-weight: bolder !important;
+    font-size: 120px !important;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
     -webkit-text-stroke: 2px white;
 }
