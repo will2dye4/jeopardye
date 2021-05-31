@@ -4,7 +4,7 @@ import { Flex } from '@chakra-ui/react';
 function shouldReduceSize(name) {
   const words = name.split(' ');
   const meanLength = words.reduce((sum, word) => sum + word.length, 0) / words.length;
-  return (name.length > 30 || meanLength > 7 || (words.length >= 3 && meanLength > 4));
+  return (name.length > 30 || meanLength > 7 || words.length > 5 || (words.length >= 3 && meanLength > 4));
 }
 
 function CategoryHeading(props) {

@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import './index.css';
-import 'bootstrap/dist/css/bootstrap.css';
 import { GameConnector } from './client/components/GameConnector';
 import { store } from './client/store/data_store';
 import reportWebVitals from './reportWebVitals';
