@@ -52,7 +52,7 @@ class ActiveClue extends React.Component {
     const height = (board ? board.offsetHeight : '100%');
 
     let content;
-    if (this.props.showDailyDoubleWager) {
+    if (this.props.gameState.isDailyDouble && !this.props.currentWager && !this.props.revealAnswer) {
       content = <Image src="/images/daily_double.jpg" alt="Daily Double" w={width} h={height} objectFit="cover" />;
     } else {
       content = (

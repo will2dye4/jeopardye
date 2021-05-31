@@ -1,9 +1,10 @@
 import log from 'log';
+import WebSocket from 'ws';
 import {
   DAILY_DOUBLE_COUNTDOWN_SECONDS,
   DEFAULT_COUNTDOWN_SECONDS,
   EventTypes,
-  WAGER_COUNTDOWN_SECONDS
+  WAGER_COUNTDOWN_SECONDS,
 } from '../constants.mjs';
 import { GamePlayer } from '../models/player.mjs';
 import {
@@ -43,7 +44,9 @@ export function broadcast(event, originatingPlayerID) {
         jsonEvent = JSON.stringify(event);
       }
       try {
-        ws.send(jsonEvent);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(jsonEvent);
+        }
       } catch (e) {
         logger.error(`Failed to send ${event.eventType} event to player ${playerID}: ${e}`);
       }
@@ -53,7 +56,9 @@ export function broadcast(event, originatingPlayerID) {
 
 function handleError(ws, event, message, status) {
   logger.error(`Error handling ${event.eventType} event: ${message} (${status})`);
-  ws.send(JSON.stringify(new WebsocketEvent(EventTypes.ERROR, {eventType: event.eventType, error: message, status: status})));
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(new WebsocketEvent(EventTypes.ERROR, {eventType: event.eventType, error: message, status: status})));
+  }
 }
 
 async function handleClientConnect(ws, event) {
@@ -69,11 +74,17 @@ async function handleClientConnect(ws, event) {
   }
   updatePlayer(playerID, {active: true}).then(() => {
     logger.info(`${player.name} connected.`);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {playerID}));
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {player: new GamePlayer(playerID, player.name)}));
     connectedClients[playerID] = ws;
     pingHandlers[ws] = setInterval(function() {
       logger.debug(`Pinging websocket for ${playerID}...`);
-      ws.ping('jeopardye');
+      try {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.ping('jeopardye');
+        }
+      } catch (e) {
+        logger.error(`Unexpected error while pinging websocket: ${e}`);
+      }
     }, PING_INTERVAL_MILLIS);
   });
 }
@@ -170,6 +181,10 @@ function setResponseTimerForClue(game, clue, playerID, wagering = false) {
           newScore -= value;
           newFields[`players.${playerID}.score`] = newScore;
           newFields.playerAnswering = null;
+          if (dailyDouble) {
+            newFields.activeClue = null;
+            newFields.currentWager = null;
+          }
         }
         updateGame(game.gameID, newFields).then(() => {
           const answerDelayMillis = (dailyDouble || wagering ? 0 : buzzTimers[game.gameID]?.delayMillis);
@@ -223,8 +238,17 @@ async function handleSelectClue(ws, event) {
   if (!game) {
     return;
   }
+  if (game.activeClue) {
+    handleError(ws, event, 'invalid select clue attempt - there is already an active clue', 400);
+    return;
+  }
 
   const { categoryID, clueID, playerID } = event.payload;
+  if (playerID !== game.playerInControl) {
+    handleError(ws, event, 'invalid select clue attempt - not in control', 400);
+    return;
+  }
+
   const category = game.rounds[game.currentRound].categories[categoryID];
   const clues = category.clues;
   const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
@@ -233,7 +257,6 @@ async function handleSelectClue(ws, event) {
     handleError(ws, event, `invalid clue ${clueID} (category ${categoryID}) - already played`, 400);
     return;
   }
-  /* TODO - ensure there isn't already an active clue? */
 
   setActiveClue(game, clue).then(() => {
     logger.info(`Playing ${category.name} for $${clue.value}.`);
@@ -260,12 +283,11 @@ async function handleBuzzIn(ws, event) {
     handleError(ws, event, `invalid buzz attempt - player ${playerID} has already buzzed in`, 400);
     return;
   }
-  /* TODO - uncomment this once playerAnswering is being reset to null
   if (game.playerAnswering) {
     handleError(ws, event, `invalid buzz attempt - another player is already answering`, 400);
     return;
   }
-  */
+
   setPlayerAnswering(gameID, playerID).then(() => {
     logger.info(`${playerID} buzzed in.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
@@ -307,13 +329,15 @@ async function handleSubmitAnswer(ws, event) {
   let score = game.players[playerID].score;
   let newScore = (correct ? score + value : score - value);
   let newFields = {playerAnswering: null, currentWager: null, [`players.${playerID}.score`]: newScore};
-  if (correct) {
+  const dailyDouble = isDailyDouble(game.rounds[game.currentRound], clue.clueID);
+  if (correct || dailyDouble) {
     newFields.activeClue = null;
-    newFields.playerInControl = playerID;
+    if (correct) {
+      newFields.playerInControl = playerID;
+    }
   }
   updateGame(gameID, newFields).then(() => {
     logger.info(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
-    const dailyDouble = isDailyDouble(game.rounds[game.currentRound], clue.clueID);
     const delayMillis = (dailyDouble || correct ? 0 : buzzTimers[gameID]?.delayMillis);
     const payload = {...event.payload, correct: correct, score: newScore, answerDelayMillis: delayMillis};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
@@ -387,7 +411,9 @@ export function handleWebsocket(ws, req) {
   ws.on('ping', function(data) {
     logger.debug(`Received ping from client: ${data}`);
     try {
-      ws.pong(data);
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.pong(data);
+      }
     } catch (e) {
       logger.error(`Caught unexpected error while sending pong to client: ${e}`);
     }
@@ -400,15 +426,18 @@ export function handleWebsocket(ws, req) {
   ws.on('close', function(code, reason) {
     logger.info(`Websocket closed: ${reason} (${code})`);
     if (pingHandlers.hasOwnProperty(ws)) {
+      logger.info('Removing ping handler.');
       const interval = pingHandlers[ws];
       clearInterval(interval);
       delete pingHandlers[ws];
+    } else {
+      logger.info('Ping handler not found; skipping.');
     }
     Object.entries(connectedClients).forEach(([playerID, socket]) => {
       if (socket === ws) {
         updatePlayer(playerID, {active: false}).then(() => {
           logger.info(`${playerID} went inactive.`);
-          broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_INACTIVE, {playerID}));
+          broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_INACTIVE, {player: new GamePlayer(playerID, null)}));
           delete connectedClients[playerID];
         });
       }

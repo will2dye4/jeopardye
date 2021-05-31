@@ -51,7 +51,9 @@ class PlayerSettings extends React.Component {
     if (!validatePlayerName(this.state.name.trim())) {
       this.setState({invalid: true});
     } else {
-      if (this.state.name !== this.props.player.name) {
+      if (!this.props.player) {
+        this.props.createNewPlayer(this.state.name);
+      } else if (this.state.name !== this.props.player.name) {
         this.props.changePlayerName(this.props.player.playerID, this.state.name);
       }
       localStorage.setItem(PREFERRED_FONT_STYLE_KEY, this.state.fontStyle);

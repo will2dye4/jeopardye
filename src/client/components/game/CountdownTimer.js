@@ -30,12 +30,16 @@ class CountdownTimer extends React.Component {
     return getCountdownTimeInMillis(this.props.gameState.isDailyDouble) / 1000;
   }
 
-  getUpdater() {
+  getUpdater(startingValue) {
     const interval = this.getCountdownTimeInSeconds() * 10;
+    if (!startingValue) {
+      startingValue = this.state.value;
+    }
+    let value = startingValue;
     return setInterval(function() {
-      const newValue = this.state.value - 1;
-      const finished = (newValue <= 0);
-      this.setState({finished: finished, running: !finished, value: newValue});
+      value -= 1;
+      const finished = (value <= 0);
+      this.setState({finished: finished, running: !finished, value: value});
       if (finished) {
         this.cancelUpdater();
       }
@@ -111,7 +115,7 @@ class CountdownTimer extends React.Component {
       this.setState({
         running: true,
         paused: false,
-        updater: this.getUpdater(),
+        updater: this.getUpdater(newValue),
         value: newValue,
       });
     }

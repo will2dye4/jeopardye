@@ -16,7 +16,7 @@ class StatusBar extends React.Component {
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (!prevProps.currentWager && this.props.currentWager) {
-      document.getElementById('answer-input').focus();
+      document.getElementById('answer-input')?.focus();
     }
   }
 

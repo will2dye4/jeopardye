@@ -33,11 +33,6 @@ class Game extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.game && !this.props.connected) {
-      console.log('Opening websocket connection...');
-      this.props.websocketConnect();
-    }
-
     document.addEventListener('keyup', function handleKeyUp(event) {
       const key = event.key.toLowerCase();
       if ((key === ' ' || key === 'enter') && this.state.showActiveClue) {
@@ -97,9 +92,9 @@ class Game extends React.Component {
       setTimeout(function() {
         this.setState({showActiveClue: true});
         if (showWager) {
-          this.state.timerRef.current.startResponseTimer(true);  /* start wager timer */
+          this.state.timerRef.current?.startResponseTimer(true);  /* start wager timer */
         } else if (!dailyDouble) {
-          this.state.timerRef.current.startWaitingPeriod();
+          this.state.timerRef.current?.startWaitingPeriod();
           speakClue(this.props.activeClue);
         }
       }.bind(this), SHOW_CLUE_DELAY_MILLIS);
@@ -110,7 +105,7 @@ class Game extends React.Component {
     }
 
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
-      this.state.timerRef.current.resetResponseTimer();
+      this.state.timerRef.current?.resetResponseTimer();
       const isCurrentPlayer = (this.props.prevAnswer.playerID === this.props.player.playerID);
       const playerName = this.getPlayerName(this.props.prevAnswer.playerID);
       if (this.props.prevAnswer.correct) {
@@ -127,8 +122,8 @@ class Game extends React.Component {
     if (!prevProps.currentWager && this.props.currentWager) {
       if (this.playerHasControl()) {
         this.setState({showDailyDoubleWager: false});
-        this.state.timerRef.current.resetResponseTimer();
-        this.state.timerRef.current.startCountdown();
+        this.state.timerRef.current?.resetResponseTimer();
+        this.state.timerRef.current?.startCountdown();
       } else {
         this.setStatus(`Waiting for ${this.getPlayerName(this.props.playerAnswering)} to answer for $${this.props.currentWager.toLocaleString()}...`);
       }
@@ -136,9 +131,9 @@ class Game extends React.Component {
     }
 
     if (!prevProps.playerAnswering && this.props.playerAnswering && !this.isActiveDailyDouble()) {
-      this.state.timerRef.current.pause();
+      this.state.timerRef.current?.pause();
       if (this.playerHasControl()) {
-        this.state.timerRef.current.startResponseTimer();
+        this.state.timerRef.current?.startResponseTimer();
       } else {
         this.setStatus(`Waiting for ${this.getPlayerName(this.props.playerAnswering)} to answer...`);
       }
@@ -150,7 +145,7 @@ class Game extends React.Component {
         emoji: 'bell',
         text: `Buzz in if you know the answer in ${this.props.activeClue.category}!`,
       });
-      this.state.timerRef.current.startCountdown();
+      this.state.timerRef.current?.startCountdown();
     }
 
     if (!prevProps.responseTimerElapsed && this.props.responseTimerElapsed) {
@@ -227,28 +222,45 @@ class Game extends React.Component {
         text: response,
       },
     });
-    this.state.timerRef.current.reset();
+    this.state.timerRef.current?.reset();
     this.checkForLastClue(isCurrentPlayer);
   }
 
   handleIncorrectAnswer(isCurrentPlayer, timeElapsed, playerName) {
-    let newState = {
-      showClueAnimation: false,
-      showDailyDoubleWager: false,
-    };
+    const dailyDouble = this.isActiveDailyDouble();
+    let status;
     if (isCurrentPlayer) {
       const response = (timeElapsed ? getTimeElapsedMessage(playerName) : getIncorrectAnswerMessage(playerName));
-      newState.status = {
+      status = {
         appearance: 'incorrect',
         text: response,
       };
+    } else if (this.props.activeClue.playersAttempted.indexOf(this.props.player.playerID) === -1) {
+      if (dailyDouble) {
+        status = {
+          appearance: 'incorrect',
+          text: `${playerName} answered incorrectly.`,
+        };
+      } else {
+        status = {
+          appearance: 'action',
+          emoji: 'bell',
+          text: `Buzz in if you know the answer in ${this.props.activeClue.category}!`,
+        };
+      }
+    } else {
+      status = 'Waiting for other players to buzz in.';
     }
-    this.setState(newState);
-    if (this.isActiveDailyDouble()) {
-      this.state.timerRef.current.reset();
+    this.setState({
+      showClueAnimation: false,
+      showDailyDoubleWager: false,
+      status: status,
+    });
+    if (dailyDouble) {
+      this.state.timerRef.current?.reset();
       this.revealAnswer(isCurrentPlayer, false, false);
     } else {
-      this.state.timerRef.current.resume(this.props.answerDelayMillis);
+      this.state.timerRef.current?.resume(this.props.answerDelayMillis);
     }
   }
 
@@ -315,13 +327,15 @@ class Game extends React.Component {
       showDailyDoubleWager: false,
       status: status,
     });
-    this.state.timerRef.current.reset();
+    this.state.timerRef.current?.reset();
     this.props.dismissActiveClue();
     this.checkForLastClue();
   }
 
   handleClueClick(clue) {
-    this.props.selectClue(this.props.game.gameID, this.props.player.playerID, clue.categoryID, clue.clueID);
+    if (this.playerHasControl()) {
+      this.props.selectClue(this.props.game.gameID, this.props.player.playerID, clue.categoryID, clue.clueID);
+    }
   }
 
   skipActiveClue(event) {
@@ -348,6 +362,7 @@ class Game extends React.Component {
                         activeClue={this.props.activeClue} />
         <Board gameState={gameState}
                activeClue={this.props.activeClue}
+               currentWager={this.props.currentWager}
                allowAnswers={this.props.allowAnswers}
                revealAnswer={this.props.revealAnswer}
                buzzIn={this.props.buzzIn}

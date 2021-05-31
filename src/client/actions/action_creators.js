@@ -8,6 +8,7 @@ export const ActionTypes = {
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   FETCH_NEW_GAME: 'JEOPARDYE::FETCH_NEW_GAME',
   FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
+  CREATE_NEW_PLAYER: 'JEOPARDYE::CREATE_NEW_PLAYER',
   CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   MARK_CLUE_AS_INVALID: 'JEOPARDYE::MARK_CLUE_AS_INVALID',
@@ -40,6 +41,17 @@ function createNewGame(gameSettings = null) {
 
 function getPlayerByID(playerID) {
   return fetch(`${PLAYER_URL}/${playerID}`).then(response => response.json());
+}
+
+function createPlayer(name) {
+  const opts = {
+    body: JSON.stringify({name: name}),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  }
+  return fetch(PLAYER_URL, opts).then(response => response.json());
 }
 
 function updatePlayerName(playerID, name) {
@@ -99,6 +111,13 @@ export function fetchPlayer(playerID) {
   return {
     type: ActionTypes.FETCH_PLAYER,
     payload: getPlayerByID(playerID),
+  }
+}
+
+export function createNewPlayer(name) {
+  return {
+    type: ActionTypes.CREATE_NEW_PLAYER,
+    payload: createPlayer(name),
   }
 }
 

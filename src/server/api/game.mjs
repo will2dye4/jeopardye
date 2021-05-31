@@ -6,15 +6,17 @@ import {
   DEFAULT_DAILY_DOUBLE_SETTING,
   DEFAULT_FINAL_JEOPARDYE,
   DEFAULT_NUM_ROUNDS,
+  EventTypes,
   MAX_NUM_ROUNDS,
   MIN_NUM_ROUNDS,
   Rounds,
 } from '../../constants.mjs';
 import { Category, Game, Round } from '../../models/game.mjs';
 import { GamePlayer } from '../../models/player.mjs';
-import { range } from '../../utils.mjs';
+import { range, WebsocketEvent } from '../../utils.mjs';
 import { createGame, getGame, getPlayers } from '../db.mjs';
 import { fetchRandomCategories } from '../jservice.mjs';
+import { broadcast } from '../websockets.mjs';
 
 const logger = log.get('api:game');
 
@@ -130,6 +132,7 @@ async function handleCreateGame(req, res, next) {
   }
 
   res.json(game);
+  broadcast(new WebsocketEvent(EventTypes.GAME_STARTED, {game}));
   logger.info(`Created game ${game.gameID}.`);
 }
 

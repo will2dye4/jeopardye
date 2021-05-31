@@ -1,5 +1,5 @@
 import { ActionTypes } from '../actions/action_creators';
-import { EventTypes, GAME_ID_KEY } from '../../constants.mjs';
+import { EventTypes, GAME_ID_KEY, PLAYER_ID_KEY } from '../../constants.mjs';
 import { isDailyDouble } from '../../utils.mjs';
 
 function newStoreData() {
@@ -27,6 +27,30 @@ function handleError(storeData, event) {
   return storeData;  // TODO - should this set an error to display to the user?
 }
 
+function handleNewGame(storeData, newGame) {
+  if (!newGame || newGame.gameID === storeData.game?.gameID) {
+    return storeData;
+  }
+  const newBoard = newGame.rounds[newGame.currentRound];
+  localStorage.setItem(GAME_ID_KEY, newGame.gameID);
+  return {
+    ...storeData,
+    game: newGame,
+    board: newBoard,
+    players: newGame.players,
+    activeClue: newGame.activeClue,
+    playerAnswering: newGame.playerAnswering,
+    playerInControl: newGame.playerInControl,
+    prevAnswer: null,
+  };
+}
+
+function handleGameStarted(storeData, event) {
+  const { game } = event.payload;
+  console.log(`New game started: ${game.gameID}`);
+  return handleNewGame(storeData, game);
+}
+
 function handlePlayerChangedName(storeData, event) {
   const { playerID, name } = event.payload;
   if (!storeData.players.hasOwnProperty(playerID)) {
@@ -40,7 +64,7 @@ function handlePlayerChangedName(storeData, event) {
 }
 
 function handlePlayerJoined(storeData, event) {
-  const player = event.payload.player;
+  const { player } = event.payload;
   console.log(`${player.name} has joined the game.`);
   let newPlayers = {...storeData.players, [player.playerID]: player};
   return {...storeData, players: newPlayers};
@@ -83,13 +107,20 @@ function handlePlayerAnswered(storeData, event) {
   console.log(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
   const newPlayer = {...storeData.players[playerID], score: score};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
-  let newStoreData = {...storeData, players: newPlayers, playerAnswering: null, prevAnswer: event.payload, currentWager: null, allowAnswers: allowAnswers};
+  let newStoreData = {
+    ...storeData,
+    players: newPlayers,
+    playerAnswering: null,
+    prevAnswer: event.payload,
+    currentWager: null,
+    allowAnswers: allowAnswers,
+    answerDelayMillis: answerDelayMillis,
+  };
   if (correct) {
     newStoreData.activeClue = null;
     newStoreData.playerInControl = playerID;
     newStoreData.revealAnswer = false;
   } else {
-    newStoreData.answerDelayMillis = answerDelayMillis;
     if (dailyDouble) {
       newStoreData.revealAnswer = true;
     }
@@ -105,15 +136,21 @@ function handlePlayerWagered(storeData, event) {
 
 function handlePlayerActiveStatusChanged(status) {
   return function handleStatusChanged(storeData, event) {
-    const { playerID } = event.payload;
-    if (!storeData.players.hasOwnProperty(playerID)) {
-      console.log(`Ignoring status change for unknown player ${playerID}.`);
-      return storeData;
+    const { player } = event.payload;
+    const playerID = player.playerID;
+    if (storeData.players.hasOwnProperty(playerID)) {
+      console.log(`${playerID} went ${status ? 'active' : 'inactive'}.`);
+      const newPlayer = {...storeData.players[playerID], active: status};
+      const newPlayers = {...storeData.players, [playerID]: newPlayer};
+      return {...storeData, players: newPlayers};
     }
-    console.log(`${playerID} went ${status ? 'active' : 'inactive'}.`);
-    const newPlayer = {...storeData.players[playerID], active: status};
-    const newPlayers = {...storeData.players, [playerID]: newPlayer};
-    return {...storeData, players: newPlayers};
+    if (status) {
+      console.log(`${playerID} joined.`);
+      const newPlayers = {...storeData.players, [playerID]: player};
+      return {...storeData, players: newPlayers};
+    }
+    console.log(`Ignoring status change for unknown player ${playerID}.`);
+    return storeData;
   };
 }
 
@@ -148,6 +185,7 @@ function handleWaitingPeriodEnded(storeData, event) {
 
 const eventHandlers = {
   [EventTypes.ERROR]: handleError,
+  [EventTypes.GAME_STARTED]: handleGameStarted,
   [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
@@ -181,24 +219,12 @@ export function GameReducer(storeData, action) {
     case ActionTypes.FETCH_GAME:
     case ActionTypes.FETCH_NEW_GAME:
       const newGame = action.payload;
-      if (!newGame) {
-        return storeData;
-      }
-      const newBoard = newGame.rounds[newGame.currentRound];
-      localStorage.setItem(GAME_ID_KEY, newGame.gameID);
-      return {
-        ...storeData,
-        game: newGame,
-        board: newBoard,
-        players: newGame.players,
-        activeClue: newGame.activeClue,
-        playerAnswering: newGame.playerAnswering,
-        playerInControl: newGame.playerInControl,
-        prevAnswer: null,
-      };
+      return handleNewGame(storeData, newGame);
+    case ActionTypes.CREATE_NEW_PLAYER:
     case ActionTypes.FETCH_PLAYER:
       const player = action.payload;
       const newPlayers = {...storeData.players, [player.playerID]: player};
+      localStorage.setItem(PLAYER_ID_KEY, player.playerID);
       return {...storeData, player: player, players: newPlayers};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};

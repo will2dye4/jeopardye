@@ -31,6 +31,7 @@ async function handleCreatePlayer(req, res, next) {
   }
 
   res.json(player);
+  broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player}));
   logger.info(`Created player ${player.playerID}.`);
 }
 
