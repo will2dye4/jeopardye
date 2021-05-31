@@ -14,11 +14,22 @@ import {
   getWagerRange,
   WebsocketEvent,
 } from '../utils.mjs';
-import { addPlayerToGame, getGame, getPlayer, setActiveClue, setPlayerAnswering, updateGame } from './db.mjs';
+import {
+  addPlayerToGame,
+  getGame,
+  getPlayer,
+  setActiveClue,
+  setPlayerAnswering,
+  updateGame,
+  updatePlayer,
+} from './db.mjs';
+
+const PING_INTERVAL_MILLIS = 30_000;
 
 const logger = log.get('ws');
 
 export let connectedClients = {};
+let pingHandlers = {};
 
 let buzzTimers = {};
 let responseTimers = {};
@@ -45,7 +56,7 @@ function handleError(ws, event, message, status) {
   ws.send(JSON.stringify(new WebsocketEvent(EventTypes.ERROR, {eventType: event.eventType, error: message, status: status})));
 }
 
-async function handleClientConnect(ws,event) {
+async function handleClientConnect(ws, event) {
   const { playerID } = event.payload;
   if (!playerID) {
     handleError(ws, event, 'missing player ID', 400);
@@ -56,9 +67,15 @@ async function handleClientConnect(ws,event) {
     handleError(ws, event, 'player not found', 404);
     return;
   }
-  logger.info(`${player.name} connected.`);
-  connectedClients[playerID] = ws;
-  /* TODO - emit event? mark player active? */
+  updatePlayer(playerID, {active: true}).then(() => {
+    logger.info(`${player.name} connected.`);
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {playerID}));
+    connectedClients[playerID] = ws;
+    pingHandlers[ws] = setInterval(function() {
+      logger.debug(`Pinging websocket for ${playerID}...`);
+      ws.ping('jeopardye');
+    }, PING_INTERVAL_MILLIS);
+  });
 }
 
 async function handleJoinGame(ws, event) {
@@ -365,5 +382,36 @@ export function handleWebsocket(ws, req) {
     } else {
       logger.info(`Ignoring event with unknown type: ${eventType} (${msg})`);
     }
+  });
+
+  ws.on('ping', function(data) {
+    logger.debug(`Received ping from client: ${data}`);
+    try {
+      ws.pong(data);
+    } catch (e) {
+      logger.error(`Caught unexpected error while sending pong to client: ${e}`);
+    }
+  });
+
+  ws.on('pong', function(data) {
+    logger.debug(`Received pong from client: ${data}`);
+  });
+
+  ws.on('close', function(code, reason) {
+    logger.info(`Websocket closed: ${reason} (${code})`);
+    if (pingHandlers.hasOwnProperty(ws)) {
+      const interval = pingHandlers[ws];
+      clearInterval(interval);
+      delete pingHandlers[ws];
+    }
+    Object.entries(connectedClients).forEach(([playerID, socket]) => {
+      if (socket === ws) {
+        updatePlayer(playerID, {active: false}).then(() => {
+          logger.info(`${playerID} went inactive.`);
+          broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_INACTIVE, {playerID}));
+          delete connectedClients[playerID];
+        });
+      }
+    });
   });
 }

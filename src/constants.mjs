@@ -97,6 +97,8 @@ export const EventTypes = {
   JOIN_GAME: 'join_game',
   PLAYER_CHANGED_NAME: 'player_changed_name',
   PLAYER_JOINED: 'player_joined',
+  PLAYER_WENT_ACTIVE: 'player_went_active',
+  PLAYER_WENT_INACTIVE: 'player_went_inactive',
   SELECT_CLUE: 'select_clue',
   PLAYER_SELECTED_CLUE: 'player_selected_clue',
   BUZZ_IN: 'buzz_in',

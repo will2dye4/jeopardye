@@ -18,6 +18,10 @@ class ActiveClue extends React.Component {
     }
   }
 
+  allowBuzz() {
+    return (this.props.allowAnswers && this.props.activeClue.playersAttempted.indexOf(this.props.gameState.playerID) === -1);
+  }
+
   handleClick(event) {
     const invalidIcon = document.getElementById('invalid-icon');
     const skipIcon = document.getElementById('skip-icon');
@@ -28,7 +32,7 @@ class ActiveClue extends React.Component {
       this.props.skipActiveClue(event);
     } else if (this.props.revealAnswer) {
       this.props.dismissActiveClue();
-    } else if (this.props.allowAnswers) {
+    } else if (this.allowBuzz()) {
       this.props.buzzIn(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
       this.props.timerRef.current.pause();
     }
@@ -39,7 +43,7 @@ class ActiveClue extends React.Component {
     if (this.props.showClueAnimation) {
       containerClasses += ' animate__animated animate__zoomIn';
     }
-    if (this.props.allowAnswers || this.props.revealAnswer) {
+    if (this.allowBuzz() || this.props.revealAnswer) {
       containerClasses += ' hover-pointer';
     }
 

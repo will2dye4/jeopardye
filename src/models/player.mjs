@@ -14,6 +14,7 @@ export class Player {
     this.gamesWon = 0;
     this.highestGameScore = 0;
     this.createdTime = new Date();
+    this.active = true;
   }
 }
 

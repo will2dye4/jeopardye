@@ -16,7 +16,6 @@ import {
   submitAnswer,
   submitWager,
   websocketConnect,
-  websocketDisconnect,
 } from '../actions/action_creators';
 import Game from './game/Game';
 import Lobby from './lobby/Lobby';
@@ -43,7 +42,6 @@ const actionCreators = {
   submitAnswer,
   submitWager,
   websocketConnect,
-  websocketDisconnect,
 };
 
 class Connector extends React.Component {
@@ -74,6 +72,11 @@ class Connector extends React.Component {
     if ((!prevProps.connected && this.props.connected && this.props.player) ||
         (!prevProps.player && this.props.player && this.props.connected)) {
       console.log('Establishing connection to server...');
+      this.props.clientConnect(this.props.player.playerID);
+    }
+    if (prevProps.connected && !this.props.connected && this.props.player) {
+      /* TODO - show message to user? */
+      console.log('Websocket connection lost. Attempting to reconnect...');
       this.props.clientConnect(this.props.player.playerID);
     }
     if (!prevProps.player && this.props.player) {

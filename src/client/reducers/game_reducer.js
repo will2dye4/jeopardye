@@ -103,6 +103,20 @@ function handlePlayerWagered(storeData, event) {
   return {...storeData, currentWager: wager, playerAnswering: playerID, responseTimerElapsed: false};
 }
 
+function handlePlayerActiveStatusChanged(status) {
+  return function handleStatusChanged(storeData, event) {
+    const { playerID } = event.payload;
+    if (!storeData.players.hasOwnProperty(playerID)) {
+      console.log(`Ignoring status change for unknown player ${playerID}.`);
+      return storeData;
+    }
+    console.log(`${playerID} went ${status ? 'active' : 'inactive'}.`);
+    const newPlayer = {...storeData.players[playerID], active: status};
+    const newPlayers = {...storeData.players, [playerID]: newPlayer};
+    return {...storeData, players: newPlayers};
+  };
+}
+
 function handleBuzzingPeriodEnded(storeData, event) {
   const { categoryID, clueID } = event.payload;
   if (storeData.activeClue?.clueID === clueID) {
@@ -140,6 +154,8 @@ const eventHandlers = {
   [EventTypes.PLAYER_BUZZED]: handlePlayerBuzzed,
   [EventTypes.PLAYER_ANSWERED]: handlePlayerAnswered,
   [EventTypes.PLAYER_WAGERED]: handlePlayerWagered,
+  [EventTypes.PLAYER_WENT_ACTIVE]: handlePlayerActiveStatusChanged(true),
+  [EventTypes.PLAYER_WENT_INACTIVE]: handlePlayerActiveStatusChanged(false),
   [EventTypes.BUZZING_PERIOD_ENDED]: handleBuzzingPeriodEnded,
   [EventTypes.RESPONSE_PERIOD_ENDED]: handleResponsePeriodEnded,
   [EventTypes.WAITING_PERIOD_ENDED]: handleWaitingPeriodEnded,
