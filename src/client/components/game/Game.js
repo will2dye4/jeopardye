@@ -1,4 +1,5 @@
 import React from 'react';
+import { Box } from '@chakra-ui/react';
 import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
@@ -341,7 +342,7 @@ class Game extends React.Component {
       playerHasControl: this.playerHasControl(),
     };
     return (
-      <div id="game" className="game p-4">
+      <Box id="game" className="game" p={6}>
         <CountdownTimer gameState={gameState}
                         ref={this.state.timerRef}
                         activeClue={this.props.activeClue} />
@@ -358,7 +359,7 @@ class Game extends React.Component {
                {...this.state} />
         <StatusBar gameState={gameState} {...this.props} {...this.state} />
         <Podiums {...this.props} />
-      </div>
+      </Box>
     );
   }
 }

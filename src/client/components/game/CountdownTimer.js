@@ -1,6 +1,7 @@
 import React from 'react';
 import { getCountdownTimeInMillis } from '../../../utils.mjs';
 import { DEFAULT_COUNTDOWN_SECONDS, WAGER_COUNTDOWN_SECONDS } from '../../../constants.mjs';
+import { Progress, ProgressLabel } from '@chakra-ui/react';
 
 function newTimerState() {
   return {
@@ -162,38 +163,38 @@ class CountdownTimer extends React.Component {
 
   render() {
     const timer = (this.state.showResponseTimer ? this.state.responseTimer : this.state);
-    let secondsRemaining, value;
-    let classes = 'fs-5 progress-bar';
+    let label, value;
+    let color = 'green';
+    let fontColor = 'white';
+    let animated = false;
     if (timer.waiting) {
-      classes += ' bg-success fw-bold progress-bar-striped progress-bar-animated';
-      secondsRemaining = 'Waiting...'
+      animated = true;
+      label = 'Waiting...'
       value = 100;
     } else {
       const answering = (this.state.showResponseTimer || this.props.gameState.isDailyDouble);
-      classes += ' bg-' + (answering ? 'danger' : 'purple');
+      color = (answering ? 'red' : 'purple');
       if (timer.running || timer.paused) {
-        classes += ' fw-bold';
-        secondsRemaining = Math.ceil(timer.value * timer.seconds / 100);
-        if (secondsRemaining > 1) {
-          let verb = 'Buzz';
-          if (timer.wagering) {
-            verb = 'Wager';
-          } else if (answering) {
-            verb = 'Answer';
-          }
-          secondsRemaining = `${verb} in ${secondsRemaining}`;
+        let verb = 'Buzz';
+        if (timer.wagering) {
+          verb = 'Wager';
+        } else if (answering) {
+          verb = 'Answer';
         }
+        const secondsRemaining = Math.ceil(timer.value * timer.seconds / 100);
+        label = `${verb} in ${secondsRemaining}`;
         value = timer.value;
+        if (value < 52) {
+          fontColor = 'black';
+        }
       } else {
         value = 0;
       }
     }
     return (
-      <div className="countdown-timer progress mb-3 user-select-none">
-        <div className={classes} style={{width: `${value}%`}} role="progressbar" aria-valuenow={value} aria-valuemin="0" aria-valuemax="100">
-          {secondsRemaining}
-        </div>
-      </div>
+      <Progress hasStripe={animated} isAnimated={animated} borderRadius="md" colorScheme={color} mb={3} height={30} value={value}>
+        <ProgressLabel className="user-select-none" color={fontColor} fontSize="md" fontWeight="extrabold">{label}</ProgressLabel>
+      </Progress>
     );
   }
 }

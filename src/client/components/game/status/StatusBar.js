@@ -1,5 +1,7 @@
 import React from 'react';
+import { Flex, Text } from '@chakra-ui/react';
 import { getWagerRange } from '../../../../utils.mjs';
+import Card from '../../common/card/Card';
 import StatusBarInput from './StatusBarInput';
 import StatusBarText from './StatusBarText';
 
@@ -25,18 +27,18 @@ class StatusBar extends React.Component {
     return null;
   }
 
-  getColorClasses() {
+  getColor() {
     switch (this.getAppearance()) {
       case 'action':
-        return 'alert-primary';
+        return 'blue.100';
       case 'attention':
-        return 'alert-warning';
+        return 'yellow.200';
       case 'correct':
-        return 'alert-success';
+        return 'green.200';
       case 'incorrect':
-        return 'alert-danger';
+        return 'red.200';
       default:
-        return 'alert-secondary text-dark';
+        return 'gray.200';
     }
   }
 
@@ -79,11 +81,8 @@ class StatusBar extends React.Component {
   }
 
   render() {
-    const classes = 'card mt-3 rounded-pill status-bar user-select-none ' + this.getColorClasses();
-    let bodyClasses = 'card-body text-center';
     let content;
     if (this.shouldShowAnswerInput() || this.shouldShowWagerInput()) {
-      bodyClasses += ' d-flex justify-content-center';
       if (this.shouldShowAnswerInput()) {
         content = <StatusBarInput id="answer-input"
                                   label="What is ..."
@@ -94,7 +93,7 @@ class StatusBar extends React.Component {
         const [minWager, maxWager] = this.getWagerRange().map(value => value.toLocaleString());
         const label = (
           <React.Fragment>
-            Enter your wager in the category <span className="fw-bold">{category}</span> (${minWager} &ndash; ${maxWager}):
+            Enter your wager in the category <Text as="span" fontWeight="bold">{category}</Text> (${minWager} &ndash; ${maxWager}):
           </React.Fragment>
         );
         content = <StatusBarInput id="wager-input"
@@ -108,9 +107,9 @@ class StatusBar extends React.Component {
       content = <StatusBarText {...this.props} />;
     }
     return (
-      <div className={classes}>
-        <div className={bodyClasses}>{content}</div>
-      </div>
+      <Card borderRadius="full" className="user-select-none" bg={this.getColor()} color="black" mt={5} py={2}>
+        <Flex justify="center">{content}</Flex>
+      </Card>
     );
   }
 }

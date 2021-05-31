@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button, Flex, Input, Text } from '@chakra-ui/react';
 
 class StatusBarInput extends React.Component {
   constructor(props) {
@@ -38,30 +39,17 @@ class StatusBarInput extends React.Component {
 
   render() {
     const largeLabel = this.props.largeLabel || false;
-    const rowClasses = 'row ' + (largeLabel ? 'w-100' : 'w-75');
-    const labelColumnClasses = 'p-2 ' + (largeLabel ? 'col-8' : 'col');
-    const inputColumnClasses = (largeLabel ? 'col' : 'col-8');
-
-    let inputClasses = 'form-control form-control-lg w-100';
-    if (this.state.invalid) {
-      inputClasses += ' is-invalid';
-    }
-
+    const width = (largeLabel ? '100%' : '75%');
+    const inputWidth = (largeLabel ? '10%' : '100%');
     return (
-      <div className={rowClasses}>
-        <div className={labelColumnClasses}>
-          <label htmlFor={this.props.id} className="form-label">{this.props.label}</label>
-        </div>
-        <div className={inputColumnClasses}>
-          <input id={this.props.id} type="text" value={this.state.value} className={inputClasses}
-                 autoFocus={true} onChange={this.handleChange} onKeyUp={this.handleKeyUp} />
-        </div>
-        <div className="col p-1">
-          <button type="submit" className="btn btn-primary" onClick={this.handleSubmit}>
-            {this.props.submitText || 'Submit'}
-          </button>
-        </div>
-      </div>
+      <Flex align="center" justify="center" px={4} w={width}>
+        <Text as="label" htmlFor={this.props.id} minWidth={120} mr={5}>{this.props.label}</Text>
+        <Input id={this.props.id} value={this.state.value} isInvalid={this.state.invalid} size="lg" bg="white" mr={8} w={inputWidth}
+               focusBorderColor="jeopardyBlue.500" autoFocus={true} onChange={this.handleChange} onKeyUp={this.handleKeyUp} />
+        <Button colorScheme="jeopardyBlue" size="lg" type="submit" onClick={this.handleSubmit}>
+          {this.props.submitText || 'Submit'}
+        </Button>
+      </Flex>
     );
   }
 }

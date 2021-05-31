@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Flex, Heading, Progress, SimpleGrid } from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, Progress } from '@chakra-ui/react';
 import {
   DailyDoubleSettings,
   DEFAULT_DAILY_DOUBLE_SETTING,
@@ -11,7 +11,6 @@ import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { range } from '../../../../utils.mjs';
 import Card from '../../common/card/Card';
 import GameSetting from './GameSetting';
-import RadioToggleButton from './RadioToggleButton';
 import RadioToggleGroup from './RadioToggleGroup';
 import ToggleSwitch from './ToggleSwitch';
 
@@ -59,10 +58,6 @@ class GameSettings extends React.Component {
           <Box className="game-starting" textAlign="center">
             <Heading>A new game is starting, please wait...</Heading>
             <Progress hasStripe isAnimated borderRadius="md" colorScheme="jeopardyBlue" size="lg" mx={8} mt={10} value={100} />
-            <div className="progress mt-5 mx-5">
-              <div className="progress-bar progress-bar-striped progress-bar-animated" style={{width: '100%'}}
-                   role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" />
-            </div>
           </Box>
         </Card>
       );

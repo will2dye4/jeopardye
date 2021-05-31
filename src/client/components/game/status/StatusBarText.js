@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from '@chakra-ui/react';
 
 const BELL_EMOJI = '\uD83D\uDD14';
 const CHECK_MARK_EMOJI = '\u2705';
@@ -46,12 +47,16 @@ class StatusBarText extends React.Component {
   }
 
   render() {
-    let text = (this.getAppearance() === null ? this.props.status : this.props.status.text);
+    const appearance = this.getAppearance();
+    const animate = (appearance === 'action' || appearance === 'attention' || appearance === 'correct');
+    const fontWeight = (animate ? 'bold' : 'normal');
+    const classes = (animate ? 'animate__animated animate__pulse animate__infinite' : '');
+    let text = (appearance === null ? this.props.status : this.props.status.text);
     const emoji = this.getEmoji();
     if (emoji) {
       text = `${emoji} ${text}`;
     }
-    return <div className={this.getTextClasses() + ' fs-2'}>{text}</div>;
+    return <Text className={classes} fontSize="3xl" fontWeight={fontWeight}>{text}</Text>;
   }
 }
 
