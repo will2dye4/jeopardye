@@ -1,17 +1,18 @@
 import React from 'react';
+import { Box } from '@chakra-ui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFastForward, faFlag } from '@fortawesome/free-solid-svg-icons';
 
 function getButtonElement(id, icon, title) {
-  return <FontAwesomeIcon id={id} icon={icon} title={title} className="hover-pointer current-clue-button" />;
+  return <FontAwesomeIcon id={id} icon={icon} title={title} className="hover-pointer active-clue-button" />;
 }
 
 function ActiveClueButtons(props) {
   return (
-    <div className="current-clue-buttons mb-2 position-absolute">
+    <Box className="active-clue-buttons" mb={2} position="absolute">
       {props.allowAnswers && getButtonElement('invalid-icon', faFlag, 'Mark this clue invalid')}
       {props.allowAnswers && getButtonElement('skip-icon', faFastForward, 'Skip this clue')}
-    </div>
+    </Box>
   );
 }
 

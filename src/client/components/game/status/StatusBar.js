@@ -107,7 +107,7 @@ class StatusBar extends React.Component {
       content = <StatusBarText {...this.props} />;
     }
     return (
-      <Card borderRadius="full" className="user-select-none" bg={this.getColor()} color="black" mt={5} py={2}>
+      <Card borderRadius="full" bg={this.getColor()} color="black" mt={5} py={2} userSelect="none">
         <Flex justify="center">{content}</Flex>
       </Card>
     );

@@ -1,4 +1,5 @@
 import React from 'react';
+import { SimpleGrid } from '@chakra-ui/react';
 import { CATEGORIES_PER_ROUND, CLUES_PER_CATEGORY } from '../../../../../constants.mjs';
 import { range } from '../../../../../utils.mjs';
 import Clue from './Clue';
@@ -14,7 +15,7 @@ function ClueGrid(props) {
     } else {
       cells = range(CATEGORIES_PER_ROUND).map(j => <Clue key={`${i},${j}`} clue={{}} />)
     }
-    return <div key={i} className="row row-cols-6">{cells}</div>;
+    return <SimpleGrid columns={CATEGORIES_PER_ROUND} key={i}>{cells}</SimpleGrid>;
   });
 }
 

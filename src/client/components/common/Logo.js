@@ -3,7 +3,7 @@ import { Heading } from '@chakra-ui/react';
 
 function Logo() {
   return (
-    <Heading as="h1" className="logo user-select-none">Jeopardye!</Heading>
+    <Heading as="h1" className="logo" userSelect="none">Jeopardye!</Heading>
   );
 }
 

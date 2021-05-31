@@ -19,12 +19,15 @@ body {
 
 .category-heading {
     background-color: #1D08A3;
+    border: 2px solid white;
     color: white;
     font-family: Helvetica, sans-serif;
     font-weight: bold;
     min-height: 90px;
     min-width: 200px;
+    text-align: center;
     text-shadow: 3px 3px 1px black;
+    text-transform: uppercase;
 }
 
 .small-heading {
@@ -33,11 +36,14 @@ body {
 
 .clue {
     background-color: #1D08A3;
+    border: 2px solid white;
     color: #FFCC00;
     font-family: "Swiss 911", Helvetica, sans-serif;
     font-size: 48px;
+    font-weight: bold;
     min-width: 200px;
     padding: 0;
+    text-align: center;
     text-shadow: 5px 5px black;
 }
 
@@ -45,11 +51,11 @@ body {
     border: 10px solid #1D08A3;
 }
 
-.clue-border.active-clue:hover {
+.clue-border.selectable-clue:hover {
     border: 10px solid #FFCC00;
 }
 
-.current-clue-container {
+.active-clue-container {
     background-color: #1D08A3;
     position: absolute;
     top: 0;
@@ -58,32 +64,26 @@ body {
     z-index: 100;
 }
 
-.current-clue {
+.active-clue {
     font: 70px "Korinna", "Korinna Bold", "Newsreader", "Times", serif;
     font-weight: bold;
+    text-align: center;
     text-shadow: 5px 5px 2px black;
+    text-transform: uppercase;
     word-spacing: 0.2em;
 }
 
-.current-clue-buttons {
+.active-clue-buttons {
     bottom: 0 !important;
     left: 93% !important;
 }
 
-.current-clue-button {
+.active-clue-button {
     margin: 5px;
 }
 
-.current-clue-button:hover {
+.active-clue-button:hover {
     font-size: 125%;
-}
-
-.progress-no-transition {
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -ms-transition: none !important;
-    -o-transition: none !important;
-    transition: none !important;
 }
 
 .countdown-timer {
@@ -102,7 +102,7 @@ body {
 .podium {
     border: 5px solid white;
     border-radius: 1.25rem;
-    min-width: 310px;
+    min-width: 300px;
 }
 
 .podium-center {
@@ -110,12 +110,14 @@ body {
     font-weight: bold;
     min-width: 200px;
     min-height: 50px;
+    width: 70%;
 }
 
 .podium-side {
     background-color: #8A482D;
     min-height: 50px;
     padding: 0;
+    width: 15%;
 }
 
 .podium-left-side {
@@ -130,7 +132,7 @@ body {
 
 .podium-stripe {
     background-color: white;
-    margin-top: 16px;
+    margin-top: 18px;
     margin-left: 3px;
     margin-right: 3px;
     height: 5%;

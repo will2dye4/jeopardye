@@ -1,4 +1,5 @@
 import React from 'react';
+import { Flex } from '@chakra-ui/react';
 import Podium from './Podium';
 
 function Podiums(props) {
@@ -7,9 +8,9 @@ function Podiums(props) {
     return <Podium key={player.playerID} name={player.name} score={player.score || 0} active={active} />
   });
   return (
-    <div className="d-flex justify-content-center podium-container">
+    <Flex className="podium-container" justify="center">
       {podiums}
-    </div>
+    </Flex>
   );
 }
 

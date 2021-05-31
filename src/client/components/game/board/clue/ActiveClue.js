@@ -1,4 +1,5 @@
 import React from 'react';
+import { Box, Flex, Image } from '@chakra-ui/react';
 import ActiveClueButtons from './ActiveClueButtons';
 
 class ActiveClue extends React.Component {
@@ -34,7 +35,7 @@ class ActiveClue extends React.Component {
   }
 
   render() {
-    let containerClasses = 'align-items-center current-clue-container row user-select-none';
+    let containerClasses = 'active-clue-container';
     if (this.props.showClueAnimation) {
       containerClasses += ' animate__animated animate__zoomIn';
     }
@@ -43,26 +44,26 @@ class ActiveClue extends React.Component {
     }
 
     const board = document.getElementById('board');
-    const width = (board ? board.offsetWidth * 1.02 : '100%');
+    const width = (board ? board.offsetWidth : '100%');
     const height = (board ? board.offsetHeight : '100%');
-    const style = {width: width, height: height};
 
     let content;
     if (this.props.showDailyDoubleWager) {
-      content = <img src="/images/daily_double.jpg" alt="Daily Double" style={{...style, objectFit: 'cover'}} />;
+      content = <Image src="/images/daily_double.jpg" alt="Daily Double" w={width} h={height} objectFit="cover" />;
     } else {
       content = (
         <React.Fragment>
-          <div className="col-12 current-clue p-5 text-center text-uppercase">{this.state.text}</div>
+          <Box className="active-clue" p={5}>{this.state.text}</Box>
           <ActiveClueButtons {...this.props} />
         </React.Fragment>
       );
     }
 
     return (
-      <div className={containerClasses} style={style} onClick={this.handleClick}>
+      <Flex align="center" justify="center" className={containerClasses} w={width} h={height} userSelect="none"
+            onClick={this.handleClick}>
         {content}
-      </div>
+      </Flex>
     );
   }
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Box } from '@chakra-ui/react';
 
 class Clue extends React.Component {
   constructor(props) {
@@ -13,18 +14,18 @@ class Clue extends React.Component {
   }
 
   render() {
-    let classes = 'clue-border p-2';
+    let classes = 'clue-border';
     let text = <br />;
     if (!this.props.clue.played && this.props.clue.value) {
       if (this.props.gameState.playerHasControl) {
-        classes += ' active-clue hover-pointer';
+        classes += ' selectable-clue hover-pointer';
       }
       text = `$${this.props.clue.value}`;
     }
     return (
-      <div className="border border-2 clue col fw-bold text-center user-select-none" onClick={this.handleClick}>
-        <div className={classes}>{text}</div>
-      </div>
+      <Box className="clue" userSelect="none" onClick={this.handleClick}>
+        <Box className={classes} py={1}>{text}</Box>
+      </Box>
     );
   }
 }

@@ -193,7 +193,7 @@ class CountdownTimer extends React.Component {
     }
     return (
       <Progress hasStripe={animated} isAnimated={animated} borderRadius="md" colorScheme={color} mb={3} height={30} value={value}>
-        <ProgressLabel className="user-select-none" color={fontColor} fontSize="md" fontWeight="extrabold">{label}</ProgressLabel>
+        <ProgressLabel color={fontColor} fontSize="md" fontWeight="extrabold" userSelect="none">{label}</ProgressLabel>
       </Progress>
     );
   }
