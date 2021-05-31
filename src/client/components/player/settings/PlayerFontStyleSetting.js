@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Grid, GridItem, SimpleGrid, Text } from '@chakra-ui/react';
+import { Box, GridItem, SimpleGrid, Text } from '@chakra-ui/react';
 import { range } from '../../../../utils.mjs';
 import { DEFAULT_FONT_STYLE } from '../../../../constants.mjs';
+import GridRow from '../../common/GridRow';
 
 const FONT_STYLES = [
   DEFAULT_FONT_STYLE,
@@ -40,14 +41,14 @@ function PlayerFontStyleSetting(props) {
     return <SimpleGrid key={i} columns={STYLES_PER_ROW}>{choices}</SimpleGrid>;
   });
   return (
-    <Grid my={5} templateColumns="repeat(6, 1fr)" templateRows="repeat(1, 1fr)">
+    <GridRow cols={6} my={5}>
       <GridItem my={1}>
         <Text fontWeight="bold">Font Style</Text>
       </GridItem>
       <GridItem colSpan={4}>
         {rows}
       </GridItem>
-    </Grid>
+    </GridRow>
   );
 }
 

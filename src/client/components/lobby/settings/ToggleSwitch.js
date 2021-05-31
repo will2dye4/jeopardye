@@ -1,12 +1,12 @@
 import React from 'react';
+import { Flex, Switch, Text } from '@chakra-ui/react';
 
 function ToggleSwitch(props) {
   return (
-    <div className="toggle-switch form-check form-switch">
-      <input type="checkbox" className="form-check-input" name={props.name} id={props.name}
-             checked={props.checked} onChange={props.onChange} />
-      <div className="px-2 pt-1">{props.checked ? 'On' : 'Off'}</div>
-    </div>
+    <Flex align="center" ml={5}>
+      <Switch colorScheme="jeopardyBlue" name={props.name} id={props.name} isChecked={props.checked} onChange={props.onChange} />
+      <Text px={4}>{props.checked ? 'On' : 'Off'}</Text>
+    </Flex>
   );
 }
 

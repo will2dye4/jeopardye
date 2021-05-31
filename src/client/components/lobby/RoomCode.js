@@ -1,11 +1,14 @@
 import React from 'react';
+import { Text } from '@chakra-ui/react';
+import Card from '../common/card/Card';
+import CardHeader from '../common/card/CardHeader';
 
 function RoomCode(props) {
   return (
-    <div className="card mb-3 text-center">
-      <div className="card-header fw-bold text-center">Room Code</div>
-      <div className="card-body room-code">{props.code}</div>
-    </div>
+    <Card mb={5} textAlign="center">
+      <CardHeader>Room Code</CardHeader>
+      <Text className="room-code" py={3}>{props.code}</Text>
+    </Card>
   );
 }
 

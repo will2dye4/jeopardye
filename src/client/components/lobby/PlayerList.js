@@ -1,4 +1,6 @@
 import React from 'react';
+import Card from '../common/card/Card';
+import CardHeader from '../common/card/CardHeader';
 import PlayerListItem from './PlayerListItem';
 
 function PlayerList(props) {
@@ -11,12 +13,12 @@ function PlayerList(props) {
     players = <li key="empty" className="list-group-item empty-list">No {props.listType}</li>;
   }
   return (
-    <div className="card player-list mb-3">
-      <div className="card-header fw-bold text-center">{props.listType}</div>
-      <ul className="list-group list-group-flush">
+    <Card className="player-list" mb={5}>
+      <CardHeader>{props.listType}</CardHeader>
+      <ul className="list-group">
         {players}
       </ul>
-    </div>
+    </Card>
   );
 }
 

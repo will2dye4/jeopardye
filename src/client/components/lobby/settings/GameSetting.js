@@ -1,15 +1,17 @@
 import React from 'react';
+import { GridItem, Text } from '@chakra-ui/react';
+import GridRow from '../../common/GridRow';
 
 function GameSetting(props) {
   return (
-    <div className="row my-5">
-      <div className="col col-4 my-1">
-        <div className="form-label fw-bold">{props.label}</div>
-      </div>
-      <div className="col">
+    <GridRow cols={3} my={8}>
+      <GridItem my={1}>
+        <Text fontWeight="bold">{props.label}</Text>
+      </GridItem>
+      <GridItem colSpan={2} d="flex" alignItems="center">
         {props.children}
-      </div>
-    </div>
+      </GridItem>
+    </GridRow>
   );
 }
 

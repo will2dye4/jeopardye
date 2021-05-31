@@ -113,6 +113,21 @@ html, body {
     user-select: none !important;
 }
 
+.list-group {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.list-group-item {
+    position: relative;
+    display: block;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
 .logo-page {
     color: black;
 }

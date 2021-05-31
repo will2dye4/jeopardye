@@ -8,7 +8,7 @@ import {
   PREFERRED_FONT_STYLE_KEY,
 } from '../../../../constants.mjs';
 import { validatePlayerName } from '../../../../models/player.mjs';
-import Card from '../../common/Card';
+import Card from '../../common/card/Card';
 import PlayerFontStyleSetting from './PlayerFontStyleSetting';
 import PlayerNameInput from './PlayerNameInput';
 
@@ -67,8 +67,8 @@ class PlayerSettings extends React.Component {
     const heading = (mode === PlayerEditorModes.CREATE ? 'Create New Player' : 'Edit Player Settings');
     const buttonLabel = (mode === PlayerEditorModes.CREATE ? 'Create' : 'Save');
     return (
-      <Card className="game-settings" px={8} py={6}>
-        <Heading textAlign="center">{heading}</Heading>
+      <Card className="game-settings" px={10} py={6}>
+        <Heading mb={5} textAlign="center">{heading}</Heading>
         <PlayerNameInput name={this.state.name} invalid={this.state.invalid} onChange={this.handleNameChanged} />
         <PlayerFontStyleSetting name={name} selectedStyle={this.state.fontStyle} onChange={this.handleFontStyleChanged} />
         <Flex justify="center" mt={5} mb={3}>

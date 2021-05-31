@@ -1,4 +1,5 @@
 import React from 'react';
+import { Box, Button, Flex, Heading, Progress, SimpleGrid } from '@chakra-ui/react';
 import {
   DailyDoubleSettings,
   DEFAULT_DAILY_DOUBLE_SETTING,
@@ -8,9 +9,14 @@ import {
 } from '../../../../constants.mjs';
 import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { range } from '../../../../utils.mjs';
+import Card from '../../common/card/Card';
 import GameSetting from './GameSetting';
 import RadioToggleButton from './RadioToggleButton';
+import RadioToggleGroup from './RadioToggleGroup';
 import ToggleSwitch from './ToggleSwitch';
+
+const NUM_ROUNDS_OPTIONS = range(MAX_NUM_ROUNDS).map(i => i + 1);
+const DAILY_DOUBLE_OPTIONS = Object.entries(DailyDoubleSettings).map(([value, label]) => { return {label, value}; });
 
 class GameSettings extends React.Component {
   constructor(props) {
@@ -49,41 +55,36 @@ class GameSettings extends React.Component {
   render() {
     if (this.state.creatingGame) {
       return (
-        <div className="card game-settings">
-          <div className="card-body game-starting text-center">
-            <h1>A new game is starting, please wait...</h1>
+        <Card className="game-settings">
+          <Box className="game-starting" textAlign="center">
+            <Heading>A new game is starting, please wait...</Heading>
+            <Progress hasStripe isAnimated borderRadius="md" colorScheme="jeopardyBlue" size="lg" mx={8} mt={10} value={100} />
             <div className="progress mt-5 mx-5">
               <div className="progress-bar progress-bar-striped progress-bar-animated" style={{width: '100%'}}
                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" />
             </div>
-          </div>
-        </div>
+          </Box>
+        </Card>
       );
     }
     return (
-      <div className="card game-settings">
-        <div className="card-body px-5 py-4">
-          <h1 className="fw-bold text-center">Game Settings</h1>
-          <GameSetting label="Number of Rounds">
-            {range(MAX_NUM_ROUNDS).map(i => i + 1).map(numRounds =>
-              <RadioToggleButton key={numRounds} itemKey={numRounds} value={numRounds} currentValue={this.state.numRounds}
-                                 name="num-rounds" label={numRounds} onChange={this.onNumRoundsChanged} />
-            )}
-          </GameSetting>
-          <GameSetting label="Daily Doubles">
-            {Object.entries(DailyDoubleSettings).map(([key, label]) =>
-              <RadioToggleButton key={key} itemKey={key} value={key} currentValue={this.state.dailyDoubles}
-                                 name="daily-doubles" label={label} onChange={this.onDailyDoublesChanged} />
-            )}
-          </GameSetting>
-          <GameSetting label="Final Jeopardye">
-            <ToggleSwitch name="final-jeopardye" checked={this.state.finalJeopardye} onChange={this.onFinalJeopardyeChanged} />
-          </GameSetting>
-          <div className="d-flex justify-content-center mt-5 mb-3">
-            <button type="button" className="btn btn-primary btn-lg" onClick={this.createNewGame}>Start New Game</button>
-          </div>
-        </div>
-      </div>
+      <Card className="game-settings" px={8} py={6}>
+        <Heading mb={5} textAlign="center">Game Settings</Heading>
+        <GameSetting label="Number of Rounds">
+          <RadioToggleGroup name="num-rounds" currentValue={this.state.numRounds} onChange={this.onNumRoundsChanged}
+                            options={NUM_ROUNDS_OPTIONS} />
+        </GameSetting>
+        <GameSetting label="Daily Doubles">
+          <RadioToggleGroup name="daily-doubles" currentValue={this.state.dailyDoubles} onChange={this.onDailyDoublesChanged}
+                            options={DAILY_DOUBLE_OPTIONS} />
+        </GameSetting>
+        <GameSetting label="Final Jeopardye">
+          <ToggleSwitch name="final-jeopardye" checked={this.state.finalJeopardye} onChange={this.onFinalJeopardyeChanged} />
+        </GameSetting>
+        <Flex justify="center" mt={5} mb={3}>
+          <Button colorScheme="jeopardyBlue" size="lg" onClick={this.createNewGame}>Start New Game</Button>
+        </Flex>
+      </Card>
     );
   }
 }

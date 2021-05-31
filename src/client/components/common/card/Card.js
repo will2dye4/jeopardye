@@ -3,7 +3,7 @@ import { Flex } from '@chakra-ui/react';
 
 function Card(props) {
   return (
-    <Flex direction="column" bg="white" borderRadius="md" {...props}>
+    <Flex direction="column" bg="white" borderColor="rgba(0, 0, 0, 0.125)" borderRadius="md" borderWidth={1} {...props}>
       {props.children}
     </Flex>
   );
