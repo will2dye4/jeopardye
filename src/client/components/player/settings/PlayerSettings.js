@@ -5,7 +5,6 @@ import {
   MAX_PLAYER_NAME_LENGTH,
   PLACEHOLDER_PLAYER_NAME,
   PlayerEditorModes,
-  PREFERRED_FONT_STYLE_KEY,
 } from '../../../../constants.mjs';
 import { validatePlayerName } from '../../../../models/player.mjs';
 import Card from '../../common/card/Card';
@@ -18,18 +17,11 @@ class PlayerSettings extends React.Component {
     this.state = {
       invalid: false,
       name: props.player?.name || '',
-      fontStyle: DEFAULT_FONT_STYLE,
+      fontStyle: props.player?.preferredFontStyle || DEFAULT_FONT_STYLE,
     };
     this.handleFontStyleChanged = this.handleFontStyleChanged.bind(this);
     this.handleNameChanged = this.handleNameChanged.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  componentDidMount() {
-    const fontStyle = localStorage.getItem(PREFERRED_FONT_STYLE_KEY);
-    if (fontStyle) {
-      this.setState({fontStyle: fontStyle});
-    }
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -52,11 +44,10 @@ class PlayerSettings extends React.Component {
       this.setState({invalid: true});
     } else {
       if (!this.props.player) {
-        this.props.createNewPlayer(this.state.name);
-      } else if (this.state.name !== this.props.player.name) {
-        this.props.changePlayerName(this.props.player.playerID, this.state.name);
+        this.props.createNewPlayer(this.state.name, this.state.fontStyle);
+      } else if (this.state.name !== this.props.player.name || this.state.fontStyle !== this.props.player.preferredFontStyle) {
+        this.props.changePlayerName(this.props.player.playerID, this.state.name, this.state.fontStyle);
       }
-      localStorage.setItem(PREFERRED_FONT_STYLE_KEY, this.state.fontStyle);
       if (this.props.onSubmit) {
         this.props.onSubmit();
       }

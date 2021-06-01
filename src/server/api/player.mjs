@@ -2,7 +2,7 @@ import express from 'express';
 import log from 'log';
 import { createPlayer, getPlayer, updatePlayerName } from '../db.mjs';
 import { broadcast } from '../websockets.mjs';
-import { EventTypes } from '../../constants.mjs';
+import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes } from '../../constants.mjs';
 import { Player, validatePlayerName } from '../../models/player.mjs';
 import { WebsocketEvent } from '../../utils.mjs';
 
@@ -22,7 +22,16 @@ async function handleCreatePlayer(req, res, next) {
     return;
   }
 
-  const player = new Player(name);
+  let preferredFontStyle = DEFAULT_FONT_STYLE;
+  if (req.body.hasOwnProperty('preferredFontStyle')) {
+    preferredFontStyle = req.body.preferredFontStyle;
+    if (ALL_FONT_STYLES.indexOf(preferredFontStyle) === -1) {
+      handleError(`Invalid font style "${preferredFontStyle}"`, 400);
+      return;
+    }
+  }
+
+  const player = new Player(name, preferredFontStyle);
   try {
     await createPlayer(player);
   } catch (e) {
@@ -62,21 +71,33 @@ async function handleUpdatePlayer(req, res, next) {
     return;
   }
 
-  const name = req.body.name?.toString().trim();
-  if (!validatePlayerName(name)) {
-    handleError(`Invalid name "${name}"`, 400);
-    return;
+  let name = player.name;
+  if (req.body.hasOwnProperty('name')) {
+    name = req.body.name.toString().trim();
+    if (!validatePlayerName(name)) {
+      handleError(`Invalid name "${name}"`, 400);
+      return;
+    }
+  }
+
+  let preferredFontStyle = player.preferredFontStyle;
+  if (req.body.hasOwnProperty('preferredFontStyle')) {
+    preferredFontStyle = req.body.preferredFontStyle;
+    if (ALL_FONT_STYLES.indexOf(preferredFontStyle) === -1) {
+      handleError(`Invalid font style "${preferredFontStyle}"`, 400);
+      return;
+    }
   }
 
   try {
-    await updatePlayerName(playerID, name);
+    await updatePlayerName(playerID, name, preferredFontStyle);
   } catch (e) {
     handleError(`Failed to update player name in database: ${e}`, 500);
     return;
   }
 
-  logger.info(`Updated player ${player.playerID}'s name to "${name}".`);
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME, {playerID, name}));
+  logger.info(`Updated player ${player.playerID}'s name to "${name}" (font: ${preferredFontStyle}).`);
+  broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME, {playerID, name, preferredFontStyle}));
   res.status(204).end();
 }
 

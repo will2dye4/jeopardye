@@ -92,7 +92,7 @@ async function handleCreateGame(req, res, next) {
     try {
       const players = await getPlayers(req.body.playerIDs);
       players.forEach(player => {
-        gamePlayers[player.playerID] = new GamePlayer(player.playerID, player.name);
+        gamePlayers[player.playerID] = new GamePlayer(player.playerID, player.name, player.preferredFontStyle);
       });
     } catch (e) {
       handleError(`Failed to get players: ${e}`, 404);

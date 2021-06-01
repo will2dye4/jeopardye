@@ -1,32 +1,17 @@
 import React from 'react';
 import { Box, GridItem, SimpleGrid, Text } from '@chakra-ui/react';
 import { range } from '../../../../utils.mjs';
-import { DEFAULT_FONT_STYLE } from '../../../../constants.mjs';
+import { ALL_FONT_STYLES } from '../../../../constants.mjs';
 import GridRow from '../../common/GridRow';
 
-const FONT_STYLES = [
-  DEFAULT_FONT_STYLE,
-  'Shadows Into Light',
-  'Caveat Brush',
-  'Beth Ellen',
-  'Homemade Apple',
-  'Gloria Hallelujah',
-  'Rock Salt',
-  'Satisfy',
-  'Sacramento',
-  'Rancho',
-  'Kaushan Script',
-  'Rouge Script',
-];
-
 const STYLES_PER_ROW = 3;
-const NUM_ROWS = FONT_STYLES.length / STYLES_PER_ROW;
+const NUM_ROWS = ALL_FONT_STYLES.length / STYLES_PER_ROW;
 
 function PlayerFontStyleSetting(props) {
   const rows = range(NUM_ROWS).map(i => {
     const choices = range(STYLES_PER_ROW).map(j => {
       const index = (i * STYLES_PER_ROW) + j;
-      const font = FONT_STYLES[index];
+      const font = ALL_FONT_STYLES[index];
       let classes = 'hover-pointer font-sample';
       if (font === props.selectedStyle) {
         classes += ' font-sample-selected';

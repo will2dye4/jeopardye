@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Flex } from '@chakra-ui/react';
-import { DEFAULT_FONT_STYLE, PREFERRED_FONT_STYLE_KEY } from '../../../../constants.mjs';
+import { DEFAULT_FONT_STYLE } from '../../../../constants.mjs';
 
 function Podium(props) {
   let score = props.score.toLocaleString();
@@ -15,7 +15,7 @@ function Podium(props) {
   if (props.active) {
     nameClasses += ' podium-name-active';
   }
-  const fontStyle = localStorage.getItem(PREFERRED_FONT_STYLE_KEY) || DEFAULT_FONT_STYLE;
+  const fontStyle = props.preferredFontStyle || DEFAULT_FONT_STYLE;
   return (
     <Flex className="podium" mb={2} mx={12} textAlign="center" userSelect="none">
       <Box className="podium-left-side podium-side">

@@ -45,9 +45,12 @@ function getPlayerByID(playerID) {
   return fetch(`${PLAYER_URL}/${playerID}`).then(response => response.json());
 }
 
-function createPlayer(name) {
+function createPlayer(name, preferredFontStyle) {
   const opts = {
-    body: JSON.stringify({name: name}),
+    body: JSON.stringify({
+      name: name,
+      preferredFontStyle: preferredFontStyle,
+    }),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -56,9 +59,12 @@ function createPlayer(name) {
   return fetch(PLAYER_URL, opts).then(response => response.json());
 }
 
-function updatePlayerName(playerID, name) {
+function updatePlayerName(playerID, name, preferredFontStyle) {
   return fetch(`${PLAYER_URL}/${playerID}`, {
-    body: JSON.stringify({name: name}),
+    body: JSON.stringify({
+      name: name,
+      preferredFontStyle: preferredFontStyle,
+    }),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -116,17 +122,17 @@ export function fetchPlayer(playerID) {
   }
 }
 
-export function createNewPlayer(name) {
+export function createNewPlayer(name, preferredFontStyle) {
   return {
     type: ActionTypes.CREATE_NEW_PLAYER,
-    payload: createPlayer(name),
+    payload: createPlayer(name, preferredFontStyle),
   }
 }
 
-export function changePlayerName(playerID, name) {
+export function changePlayerName(playerID, name, preferredFontStyle) {
   return {
     type: ActionTypes.CHANGE_PLAYER_NAME,
-    payload: updatePlayerName(playerID, name),
+    payload: updatePlayerName(playerID, name, preferredFontStyle),
   }
 }
 

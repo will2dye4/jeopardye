@@ -74,7 +74,7 @@ async function handleClientConnect(ws, event) {
   }
   updatePlayer(playerID, {active: true}).then(() => {
     logger.info(`${player.name} connected.`);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {player: new GamePlayer(playerID, player.name)}));
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {player: new GamePlayer(playerID, player.name, player.preferredFontStyle)}));
     connectedClients[playerID] = ws;
     pingHandlers[ws] = setInterval(function() {
       logger.debug(`Pinging websocket for ${playerID}...`);
@@ -114,7 +114,7 @@ async function handleJoinGame(ws, event) {
     handleError(ws, event, 'player not found', 404);
     return;
   }
-  const gamePlayer = new GamePlayer(playerID, player.name);
+  const gamePlayer = new GamePlayer(playerID, player.name, player.preferredFontStyle);
   addPlayerToGame(gameID, gamePlayer).then(() => {
     logger.info(`${player.name} joined game ${gameID}.`);
     connectedClients[playerID] = ws;

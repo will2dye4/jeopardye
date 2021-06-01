@@ -61,13 +61,13 @@ function handleGameSettingsChanged(storeData, event) {
 }
 
 function handlePlayerChangedName(storeData, event) {
-  const { playerID, name } = event.payload;
+  const { playerID, name, preferredFontStyle } = event.payload;
   if (!storeData.players.hasOwnProperty(playerID)) {
     console.log(`Cannot change name of unknown player "${playerID}".`);
     return storeData;
   }
-  console.log(`Player ${playerID} has changed name to "${name}".`);
-  const newPlayer = {...storeData.players[playerID], name: name};
+  console.log(`Player ${playerID} has changed name to "${name}" (font: ${preferredFontStyle}).`);
+  const newPlayer = {...storeData.players[playerID], name: name, preferredFontStyle: preferredFontStyle};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
   return {...storeData, players: newPlayers};
 }
