@@ -154,6 +154,10 @@ export function clientConnect(playerID) {
   return send(new WebsocketEvent(EventTypes.CLIENT_CONNECT, {playerID}));
 }
 
+export function updateGameSettings(settings) {
+  return send(new WebsocketEvent(EventTypes.GAME_SETTINGS_CHANGED, {settings}));
+}
+
 export function dismissActiveClue() {
   return {
     type: ActionTypes.DISMISS_CLUE,

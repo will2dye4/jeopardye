@@ -3,6 +3,9 @@ import {
   CLUES_PER_CATEGORY,
   DAILY_DOUBLE_MULTIPLIERS,
   DailyDoubleSettings,
+  DEFAULT_DAILY_DOUBLE_SETTING,
+  DEFAULT_FINAL_JEOPARDYE,
+  DEFAULT_NUM_ROUNDS,
   NUM_DAILY_DOUBLES,
   Rounds,
   VALUE_INCREMENTS,
@@ -114,9 +117,9 @@ export class Game {
 
 export class GameSettings {
   constructor(numRounds, dailyDoubles, finalJeopardye, playerIDs, playerInControl) {
-    this.numRounds = numRounds;
-    this.dailyDoubles = dailyDoubles;
-    this.finalJeopardye = finalJeopardye;
+    this.numRounds = numRounds || DEFAULT_NUM_ROUNDS;
+    this.dailyDoubles = dailyDoubles || DEFAULT_DAILY_DOUBLE_SETTING;
+    this.finalJeopardye = finalJeopardye ?? DEFAULT_FINAL_JEOPARDYE;
     this.playerIDs = playerIDs || [];
     this.playerInControl = playerInControl || null;
   }

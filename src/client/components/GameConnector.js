@@ -16,6 +16,7 @@ import {
   skipActiveClue,
   submitAnswer,
   submitWager,
+  updateGameSettings,
   websocketConnect,
 } from '../actions/action_creators';
 import Game from './game/Game';
@@ -43,6 +44,7 @@ const actionCreators = {
   skipActiveClue,
   submitAnswer,
   submitWager,
+  updateGameSettings,
   websocketConnect,
 };
 

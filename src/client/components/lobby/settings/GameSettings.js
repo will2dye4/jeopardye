@@ -1,12 +1,6 @@
 import React from 'react';
 import { Box, Button, Flex, Heading, Progress } from '@chakra-ui/react';
-import {
-  DailyDoubleSettings,
-  DEFAULT_DAILY_DOUBLE_SETTING,
-  DEFAULT_FINAL_JEOPARDYE,
-  DEFAULT_NUM_ROUNDS,
-  MAX_NUM_ROUNDS
-} from '../../../../constants.mjs';
+import { DailyDoubleSettings, MAX_NUM_ROUNDS } from '../../../../constants.mjs';
 import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { range } from '../../../../utils.mjs';
 import Card from '../../common/card/Card';
@@ -22,9 +16,9 @@ class GameSettings extends React.Component {
     super(props);
     this.state = {
       creatingGame: false,
-      dailyDoubles: DEFAULT_DAILY_DOUBLE_SETTING,
-      finalJeopardye: DEFAULT_FINAL_JEOPARDYE,
-      numRounds: DEFAULT_NUM_ROUNDS,
+      dailyDoubles: props.gameSettings.dailyDoubles,
+      finalJeopardye: props.gameSettings.finalJeopardye,
+      numRounds: props.gameSettings.numRounds,
     };
     this.createNewGame = this.createNewGame.bind(this);
     this.onDailyDoublesChanged = this.onDailyDoublesChanged.bind(this);
@@ -32,16 +26,36 @@ class GameSettings extends React.Component {
     this.onNumRoundsChanged = this.onNumRoundsChanged.bind(this);
   }
 
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevProps.gameSettings !== this.props.gameSettings) {
+      this.setState({
+        dailyDoubles: this.props.gameSettings.dailyDoubles,
+        finalJeopardye: this.props.gameSettings.finalJeopardye,
+        numRounds: this.props.gameSettings.numRounds,
+      });
+    }
+  }
+
+  updateGameSettings(numRounds, dailyDoubles, finalJeopardye) {
+    this.props.updateGameSettings(new Settings(numRounds, dailyDoubles, finalJeopardye));
+  }
+
   onDailyDoublesChanged(event) {
-    this.setState({dailyDoubles: event.target.value});
+    const dailyDoubles = event.target.value;
+    this.setState({dailyDoubles: dailyDoubles});
+    this.updateGameSettings(this.state.numRounds, dailyDoubles, this.state.finalJeopardye);
   }
 
   onFinalJeopardyeChanged() {
-    this.setState({finalJeopardye: !this.state.finalJeopardye});
+    const finalJeopardye = !this.state.finalJeopardye;
+    this.setState({finalJeopardye: finalJeopardye});
+    this.updateGameSettings(this.state.numRounds, this.state.dailyDoubles, finalJeopardye);
   }
 
   onNumRoundsChanged(event) {
-    this.setState({numRounds: parseInt(event.target.value)});
+    const numRounds = parseInt(event.target.value);
+    this.setState({numRounds: numRounds});
+    this.updateGameSettings(numRounds, this.state.dailyDoubles, this.state.finalJeopardye);
   }
 
   createNewGame() {

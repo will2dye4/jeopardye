@@ -89,6 +89,11 @@ async function handleClientConnect(ws, event) {
   });
 }
 
+async function handleGameSettingsChanged(ws, event) {
+  logger.info('Game settings changed.');
+  broadcast(event);
+}
+
 async function handleJoinGame(ws, event) {
   const { gameID, playerID } = event.payload;
   if (!gameID) {
@@ -385,6 +390,7 @@ async function handleSubmitWager(ws, event) {
 
 const eventHandlers = {
   [EventTypes.CLIENT_CONNECT]: handleClientConnect,
+  [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.JOIN_GAME]: handleJoinGame,
   [EventTypes.SELECT_CLUE]: handleSelectClue,
   [EventTypes.BUZZ_IN]: handleBuzzIn,

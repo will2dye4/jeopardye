@@ -95,6 +95,7 @@ export const WAGER_COUNTDOWN_SECONDS = 15;
 export const EventTypes = {
   ERROR: 'error',
   GAME_STARTED: 'game_started',
+  GAME_SETTINGS_CHANGED: 'game_settings_changed',
   JOIN_GAME: 'join_game',
   PLAYER_CHANGED_NAME: 'player_changed_name',
   PLAYER_JOINED: 'player_joined',

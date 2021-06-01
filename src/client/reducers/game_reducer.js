@@ -1,5 +1,6 @@
 import { ActionTypes } from '../actions/action_creators';
 import { DEFAULT_PLAYER_ID, EventTypes, GAME_ID_KEY, PLAYER_ID_KEY } from '../../constants.mjs';
+import { GameSettings } from '../../models/game.mjs';
 import { isDailyDouble } from '../../utils.mjs';
 
 function newStoreData() {
@@ -9,6 +10,7 @@ function newStoreData() {
     playerID: null,
     board: null,
     game: null,
+    gameSettings: new GameSettings(),
     players: {},
     answerDelayMillis: 0,
     activeClue: null,
@@ -50,6 +52,12 @@ function handleGameStarted(storeData, event) {
   const { game } = event.payload;
   console.log(`New game started: ${game.gameID}`);
   return handleNewGame(storeData, game);
+}
+
+function handleGameSettingsChanged(storeData, event) {
+  const { settings } = event.payload;
+  console.log('Game settings changed.');
+  return {...storeData, gameSettings: settings};
 }
 
 function handlePlayerChangedName(storeData, event) {
@@ -187,6 +195,7 @@ function handleWaitingPeriodEnded(storeData, event) {
 const eventHandlers = {
   [EventTypes.ERROR]: handleError,
   [EventTypes.GAME_STARTED]: handleGameStarted,
+  [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
