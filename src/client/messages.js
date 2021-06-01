@@ -29,18 +29,36 @@ const CORRECT_RESPONSES = {
   },
 }
 
-const INCORRECT_RESPONSES = [
-  `Sorry, no.`,
-  `No, ${PLAYER_PLACEHOLDER}, that's not it.`,
-  `I'm afraid we can't accept that.`,
-  `That's incorrect, ${PLAYER_PLACEHOLDER}.`,
-  `That is not what we were looking for.`,
-];
+const INCORRECT_RESPONSES = {
+  CURRENT_PLAYER: [
+    `Sorry, no.`,
+    `No, ${PLAYER_PLACEHOLDER}, that's not it.`,
+    `I'm afraid we can't accept that.`,
+    `That's incorrect, ${PLAYER_PLACEHOLDER}.`,
+    `That is not what we were looking for.`,
+  ],
+  OTHER_PLAYER: [
+    `${PLAYER_PLACEHOLDER} answered incorrectly.`,
+    // TODO
+  ],
+};
 
 const TIME_ELAPSED_RESPONSES = [
   `Sorry, you didn't answer in time.`,
   `Time's up, ${PLAYER_PLACEHOLDER}.`,
 ];
+
+export function getBuzzInMessage(categoryName) {
+  return `Buzz in if you know the answer in ${categoryName}!`;
+}
+
+export function getWaitingForBuzzMessage() {
+  return 'Waiting for other players to buzz in.';
+}
+
+export function getSelectClueMessage(playerName) {
+  return 'Choose another clue.';  // TODO - add other responses
+}
 
 export function getCorrectAnswerMessage(isCurrentPlayer, tookControl, playerName) {
   let responses = (isCurrentPlayer ? CORRECT_RESPONSES.CURRENT_PLAYER : CORRECT_RESPONSES.OTHER_PLAYER);
@@ -48,8 +66,9 @@ export function getCorrectAnswerMessage(isCurrentPlayer, tookControl, playerName
   return randomChoice(responses).replaceAll(PLAYER_PLACEHOLDER, playerName);
 }
 
-export function getIncorrectAnswerMessage(playerName) {
-  return randomChoice(INCORRECT_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, playerName);
+export function getIncorrectAnswerMessage(isCurrentPlayer, playerName) {
+  const responses = (isCurrentPlayer ? INCORRECT_RESPONSES.CURRENT_PLAYER : INCORRECT_RESPONSES.OTHER_PLAYER);
+  return randomChoice(responses).replaceAll(PLAYER_PLACEHOLDER, playerName);
 }
 
 export function getTimeElapsedMessage(playerName) {

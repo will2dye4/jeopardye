@@ -19,6 +19,8 @@ export const ActionTypes = {
   REDUX_WEBSOCKET_MESSAGE: 'REDUX_WEBSOCKET::MESSAGE',
 };
 
+// const API_BASE = 'http://192.168.1.246:3333/api';
+// const WS_BASE = 'ws://192.168.1.246:3333/api/ws';
 const API_BASE = 'http://localhost:3333/api';
 const WS_BASE = 'ws://localhost:3333/api/ws';
 const GAME_URL = `${API_BASE}/game`;

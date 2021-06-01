@@ -2,10 +2,6 @@ body {
     font: 24px Helvetica, sans-serif;
 }
 
-.hover-pointer:hover {
-    cursor: pointer;
-}
-
 .bg-purple {
     background-color: #8D2AB5;
 }
@@ -164,5 +160,5 @@ body {
 }
 
 .chakra-alert {
-    font-size: 20px !important;
+    font-size: 25px !important;
 }

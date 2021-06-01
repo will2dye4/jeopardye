@@ -32,8 +32,8 @@ function PlayerFontStyleSetting(props) {
         classes += ' font-sample-selected';
       }
       return (
-        <Box key={j} className={classes} fontFamily={font} borderRadius="md" mb={3} mx={3} textAlign="center" title={font}
-                  onClick={() => props.onChange(font)}>
+        <Box key={j} bg="white" className={classes} fontFamily={font} borderRadius="md" mb={3} mx={3} textAlign="center"
+             title={font} onClick={() => props.onChange(font)}>
           <Text className="font-sample-text">{props.name}</Text>
         </Box>
       );

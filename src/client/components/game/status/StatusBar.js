@@ -1,6 +1,7 @@
 import React from 'react';
-import { Flex, Text } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import { getWagerRange } from '../../../../utils.mjs';
+import Bold from '../../common/Bold';
 import Card from '../../common/card/Card';
 import StatusBarInput from './StatusBarInput';
 import StatusBarText from './StatusBarText';
@@ -28,7 +29,8 @@ class StatusBar extends React.Component {
   }
 
   getColor() {
-    switch (this.getAppearance()) {
+    const appearance = ((this.shouldShowAnswerInput() || this.shouldShowWagerInput()) ? 'action' : this.getAppearance());
+    switch (appearance) {
       case 'action':
         return 'blue.100';
       case 'attention':
@@ -93,7 +95,7 @@ class StatusBar extends React.Component {
         const [minWager, maxWager] = this.getWagerRange().map(value => value.toLocaleString());
         const label = (
           <React.Fragment>
-            Enter your wager in the category <Text as="span" fontWeight="bold">{category}</Text> (${minWager} &ndash; ${maxWager}):
+            Enter your wager in the category <Bold>{category}</Bold> (${minWager} &ndash; ${maxWager}):
           </React.Fragment>
         );
         content = <StatusBarInput id="wager-input"

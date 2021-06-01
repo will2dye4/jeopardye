@@ -11,7 +11,7 @@ function PlayerNameInput(props) {
         <Text fontSize="sm" fontStyle="italic">max {MAX_PLAYER_NAME_LENGTH} characters</Text>
       </GridItem>
       <GridItem colSpan={5} d="flex" alignItems="center">
-        <Input focusBorderColor="jeopardyBlue.500" size="lg" ml={2} w="75%" placeholder={PLACEHOLDER_PLAYER_NAME}
+        <Input bg="white" focusBorderColor="jeopardyBlue.500" size="lg" ml={2} w="75%" placeholder={PLACEHOLDER_PLAYER_NAME}
                value={props.name} onChange={props.onChange} isInvalid={props.invalid} autoFocus={true} aria-label="player-name" />
       </GridItem>
     </GridRow>

@@ -1,10 +1,11 @@
 import { ActionTypes } from '../actions/action_creators';
-import { EventTypes, GAME_ID_KEY, PLAYER_ID_KEY } from '../../constants.mjs';
+import { DEFAULT_PLAYER_ID, EventTypes, GAME_ID_KEY, PLAYER_ID_KEY } from '../../constants.mjs';
 import { isDailyDouble } from '../../utils.mjs';
 
 function newStoreData() {
   return {
     connected: false,
+    hostPlayerID: DEFAULT_PLAYER_ID,
     playerID: null,
     board: null,
     game: null,

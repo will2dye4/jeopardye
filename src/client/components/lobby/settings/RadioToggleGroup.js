@@ -8,7 +8,7 @@ function RadioToggleGroup(props) {
       {props.options.map(option => {
         const label = (typeof option === 'object' ? option.label : option);
         const value = (typeof option === 'object' ? option.value : option);
-        return <RadioToggleButton key={value} value={value} checked={props.currentValue === value}
+        return <RadioToggleButton key={value} value={value} checked={props.currentValue === value} disabled={props.disabled}
                                   name={props.name} label={label} onChange={props.onChange} />;
       })}
     </SimpleGrid>

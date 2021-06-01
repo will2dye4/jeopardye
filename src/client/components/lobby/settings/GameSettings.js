@@ -62,22 +62,27 @@ class GameSettings extends React.Component {
         </Card>
       );
     }
+    const disabled = (this.props.player.playerID !== this.props.hostPlayerID);
     return (
       <Card className="game-settings" px={8} py={6}>
         <Heading mb={5} textAlign="center">Game Settings</Heading>
         <GameSetting label="Number of Rounds">
           <RadioToggleGroup name="num-rounds" currentValue={this.state.numRounds} onChange={this.onNumRoundsChanged}
-                            options={NUM_ROUNDS_OPTIONS} />
+                            options={NUM_ROUNDS_OPTIONS} disabled={disabled} />
         </GameSetting>
         <GameSetting label="Daily Doubles">
           <RadioToggleGroup name="daily-doubles" currentValue={this.state.dailyDoubles} onChange={this.onDailyDoublesChanged}
-                            options={DAILY_DOUBLE_OPTIONS} />
+                            options={DAILY_DOUBLE_OPTIONS} disabled={disabled} />
         </GameSetting>
         <GameSetting label="Final Jeopardye">
-          <ToggleSwitch name="final-jeopardye" checked={this.state.finalJeopardye} onChange={this.onFinalJeopardyeChanged} />
+          <ToggleSwitch name="final-jeopardye" checked={this.state.finalJeopardye} disabled={disabled}
+                        onChange={this.onFinalJeopardyeChanged} />
         </GameSetting>
         <Flex justify="center" mt={5} mb={3}>
-          <Button colorScheme="jeopardyBlue" size="lg" onClick={this.createNewGame}>Start New Game</Button>
+          {disabled ?
+            <Heading size="lg">Waiting for host to start a new game...</Heading> :
+            <Button colorScheme="jeopardyBlue" size="lg" disabled={disabled} onClick={this.createNewGame}>Start New Game</Button>
+          }
         </Flex>
       </Card>
     );

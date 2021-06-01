@@ -108,6 +108,14 @@ html, body {
     height: 100%;
 }
 
+.hover-not-allowed:hover {
+    cursor: not-allowed;
+}
+
+.hover-pointer:hover {
+    cursor: pointer;
+}
+
 .list-group {
     display: flex;
     flex-direction: column;
