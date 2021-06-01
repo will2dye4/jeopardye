@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@chakra-ui/react';
+import { Box, createStandaloneToast } from '@chakra-ui/react';
 import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
@@ -7,6 +7,7 @@ import {
 } from '../../../constants.mjs';
 import { isDailyDouble } from '../../../utils.mjs';
 import { getCorrectAnswerMessage, getIncorrectAnswerMessage, getTimeElapsedMessage } from '../../messages';
+import JEOPARDYE_THEME from '../../theme';
 import { getUnplayedClues, markClueAsInvalid, playSound, speakClue } from '../../utils';
 import './Game.css';
 import Board from './board/Board';
@@ -14,7 +15,10 @@ import CountdownTimer from './CountdownTimer';
 import Podiums from './podium/Podiums';
 import StatusBar from './status/StatusBar';
 
+const DISMISS_CLUE_DELAY_MILLIS = 5000;
 const SHOW_CLUE_DELAY_MILLIS = 500;
+
+const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
 class Game extends React.Component {
   constructor(props) {
@@ -39,9 +43,6 @@ class Game extends React.Component {
         if (this.props.allowAnswers && !this.props.playerAnswering) {
           event.preventDefault();
           this.props.buzzIn(this.props.game.gameID, this.props.player.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
-        } else if (this.props.revealAnswer) {
-          event.preventDefault();
-          this.dismissActiveClue();
         }
       } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
         if (key === 's') {
@@ -113,6 +114,17 @@ class Game extends React.Component {
         this.handleCorrectAnswer(isCurrentPlayer, tookControl, playerName);
       } else {
         this.handleIncorrectAnswer(isCurrentPlayer, false, playerName);
+      }
+      if (!isCurrentPlayer) {
+        const { playerID, answer, correct, value } = this.props.prevAnswer;
+        const prefix = (correct ? '+$' : '-$');
+        const amount = `${prefix}${value.toLocaleString()}`;
+        toast({
+          /*position: 'bottom-left',*/
+          title: `${this.getPlayerName(playerID)} answered "${answer}" (${amount})`,
+          status: correct ? 'success' : 'error',
+          isClosable: true,
+        });
       }
     } else if (!prevProps.revealAnswer && this.props.revealAnswer) {
       const isCurrentPlayer = (this.isActiveDailyDouble() && this.playerHasControl());
@@ -309,6 +321,7 @@ class Game extends React.Component {
       newState.status = status;
     }
     this.setState(newState);
+    setTimeout(this.dismissActiveClue, DISMISS_CLUE_DELAY_MILLIS);
   }
 
   dismissActiveClue() {
@@ -368,7 +381,7 @@ class Game extends React.Component {
                buzzIn={this.props.buzzIn}
                markClueAsInvalid={this.props.markClueAsInvalid}
                playersMarkingClueInvalid={this.props.playersMarkingClueInvalid}
-               dismissActiveClue={this.dismissActiveClue}
+               playerAnswering={this.props.playerAnswering}
                handleClueClick={this.handleClueClick}
                skipActiveClue={this.skipActiveClue}
                {...this.state} />

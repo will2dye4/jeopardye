@@ -162,3 +162,7 @@ body {
     background-color: white;
     color: #1D08A3;
 }
+
+.chakra-alert {
+    font-size: 20px !important;
+}

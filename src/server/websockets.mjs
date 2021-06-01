@@ -339,7 +339,7 @@ async function handleSubmitAnswer(ws, event) {
   updateGame(gameID, newFields).then(() => {
     logger.info(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
     const delayMillis = (dailyDouble || correct ? 0 : buzzTimers[gameID]?.delayMillis);
-    const payload = {...event.payload, correct: correct, score: newScore, answerDelayMillis: delayMillis};
+    const payload = {...event.payload, correct: correct, score: newScore, value: value, answerDelayMillis: delayMillis};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
     if (delayMillis) {
       setExpirationTimerForClue(game.gameID, clue, delayMillis);

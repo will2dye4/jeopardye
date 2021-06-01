@@ -1,26 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { ChakraProvider } from '@chakra-ui/react';
 import './index.css';
 import { GameConnector } from './client/components/GameConnector';
 import { store } from './client/store/data_store';
+import JEOPARDYE_THEME from './client/theme';
 import reportWebVitals from './reportWebVitals';
-
-const theme = extendTheme({
-  colors: {
-    jeopardyBlue: {
-      50: '#1D08A3',
-      500: '#1D08A3',
-      600: '#0D0273',
-    },
-  },
-});
 
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <ChakraProvider theme={theme}>
+      <ChakraProvider theme={JEOPARDYE_THEME}>
         <GameConnector />
       </ChakraProvider>
     </Provider>
