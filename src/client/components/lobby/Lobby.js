@@ -15,9 +15,9 @@ class Lobby extends React.Component {
           <GridItem>
             <RoomCode code="YYZ" />
             <PlayerList listType="Players" players={this.props.players} currentPlayerID={this.props.player?.playerID}
-                        edit={this.props.showPlayerEditor} />
+                        edit={this.props.playerEditor.open} />
             <PlayerList listType="Spectators" players={this.props.spectators} currentPlayerID={this.props.player?.playerID}
-                        edit={this.props.showPlayerEditor} />
+                        edit={this.props.playerEditor.open} />
           </GridItem>
           <GridItem colSpan={3}>
             <GameSettings {...this.props} />

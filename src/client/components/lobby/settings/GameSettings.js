@@ -5,8 +5,8 @@ import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { range } from '../../../../utils.mjs';
 import Card from '../../common/card/Card';
 import GameSetting from './GameSetting';
-import RadioToggleGroup from './RadioToggleGroup';
-import ToggleSwitch from './ToggleSwitch';
+import RadioToggleGroup from '../../common/form/RadioToggleGroup';
+import ToggleSwitch from '../../common/form/ToggleSwitch';
 
 const NUM_ROUNDS_OPTIONS = range(MAX_NUM_ROUNDS).map(i => i + 1);
 const DAILY_DOUBLE_OPTIONS = Object.entries(DailyDoubleSettings).map(([value, label]) => { return {label, value}; });
@@ -76,7 +76,7 @@ class GameSettings extends React.Component {
         </Card>
       );
     }
-    const disabled = (this.props.player.playerID !== this.props.hostPlayerID);
+    const disabled = (this.props.player?.playerID !== this.props.hostPlayerID);
     return (
       <Card className="game-settings" px={8} py={6}>
         <Heading mb={5} textAlign="center">Game Settings</Heading>

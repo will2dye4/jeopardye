@@ -45,6 +45,11 @@ class Game extends React.Component {
   }
 
   componentDidMount() {
+    if (this.props.game && this.props.player && !this.props.game.players.hasOwnProperty(this.props.player.playerID)) {
+      console.log('Joining game...');
+      this.props.joinGame(this.props.game.gameID, this.props.player);
+    }
+
     document.addEventListener('keyup', function handleKeyUp(event) {
       const key = event.key.toLowerCase();
       if ((key === ' ' || key === 'enter') && this.state.showActiveClue) {
@@ -75,7 +80,7 @@ class Game extends React.Component {
       this.props.websocketConnect();
     }
 
-    if (this.props.game && this.props.player && !this.props.players.hasOwnProperty(this.props.player.playerID)) {
+    if (this.props.game && this.props.player && !this.props.game.players.hasOwnProperty(this.props.player.playerID)) {
       console.log('Joining game...');
       this.props.joinGame(this.props.game.gameID, this.props.player);
     }

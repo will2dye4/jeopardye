@@ -2,6 +2,12 @@ import { randomChoice } from '../utils.mjs';
 
 const PLAYER_PLACEHOLDER = '{{PLAYER}}';
 
+const SELECT_CLUE_RESPONSES = [
+  `Choose another clue.`,
+  `Select again, ${PLAYER_PLACEHOLDER}.`,
+  `${PLAYER_PLACEHOLDER}, pick the next clue.`,
+];
+
 const CORRECT_RESPONSES = {
   CURRENT_PLAYER: {
     TAKE_CONTROL: [
@@ -39,7 +45,7 @@ const INCORRECT_RESPONSES = {
   ],
   OTHER_PLAYER: [
     `${PLAYER_PLACEHOLDER} answered incorrectly.`,
-    // TODO
+    `${PLAYER_PLACEHOLDER} did not get the right answer.`,
   ],
 };
 
@@ -57,7 +63,7 @@ export function getWaitingForBuzzMessage() {
 }
 
 export function getSelectClueMessage(playerName) {
-  return 'Choose another clue.';  // TODO - add other responses
+  return randomChoice(SELECT_CLUE_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, playerName);
 }
 
 export function getCorrectAnswerMessage(isCurrentPlayer, tookControl, playerName) {

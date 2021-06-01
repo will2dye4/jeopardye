@@ -30,7 +30,7 @@ function PlayerFontStyleSetting(props) {
       <GridItem my={1}>
         <Text fontWeight="bold">Font Style</Text>
       </GridItem>
-      <GridItem colSpan={4}>
+      <GridItem colSpan={5}>
         {rows}
       </GridItem>
     </GridRow>

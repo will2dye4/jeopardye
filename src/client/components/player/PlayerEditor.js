@@ -1,17 +1,26 @@
 import React from 'react';
-import { Box } from '@chakra-ui/react';
+import {
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalOverlay,
+} from '@chakra-ui/react';
 import './PlayerEditor.css';
-import LogoPage from '../common/LogoPage';
 import PlayerSettings from './settings/PlayerSettings';
 
 class PlayerEditor extends React.Component {
   render() {
     return (
-      <LogoPage id="player-editor">
-        <Box mx={5} my={3}>
-          <PlayerSettings {...this.props} />
-        </Box>
-      </LogoPage>
+      <Modal isOpen={true} onClose={this.props.playerEditor.close} size="5xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody p={0}>
+            <PlayerSettings onSubmit={this.props.playerEditor.close} {...this.props} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     );
   }
 }

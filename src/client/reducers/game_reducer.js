@@ -69,7 +69,11 @@ function handlePlayerChangedName(storeData, event) {
   console.log(`Player ${playerID} has changed name to "${name}" (font: ${preferredFontStyle}).`);
   const newPlayer = {...storeData.players[playerID], name: name, preferredFontStyle: preferredFontStyle};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
-  return {...storeData, players: newPlayers};
+  let newState = {...storeData, players: newPlayers};
+  if (playerID === storeData.player?.playerID) {
+    newState.player = {...storeData.player, name: name, preferredFontStyle: preferredFontStyle};
+  }
+  return newState;
 }
 
 function handlePlayerJoined(storeData, event) {

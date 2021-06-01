@@ -1,15 +1,17 @@
-import { JSERVICE_API_BASE } from '../constants.mjs';
+import { JSERVICE_API_BASE, SOUND_EFFECTS_ENABLED_KEY, SPEAK_CLUES_ENABLED_KEY } from '../constants.mjs';
 
 const INVALID_CLUE_URL =`${JSERVICE_API_BASE}/invalid`;
 
 const SPEECH_DELAY_MILLIS = 500;
 
 export function playSound(url) {
-  new Audio(url).play().catch(console.log);
+  if (localStorage.getItem(SOUND_EFFECTS_ENABLED_KEY) === 'true') {
+    new Audio(url).play().catch(console.log);
+  }
 }
 
 export function speakClue(clue, delay = SPEECH_DELAY_MILLIS) {
-  if ('speechSynthesis' in window && clue?.question) {
+  if ('speechSynthesis' in window && clue?.question && localStorage.getItem(SPEAK_CLUES_ENABLED_KEY) === 'true') {
     setTimeout(function() {
       let text = clue.question.replaceAll(/\b_+\b/g, 'blank');
       let message = new SpeechSynthesisUtterance(text);

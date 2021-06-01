@@ -3,6 +3,10 @@ import { Box, Flex } from '@chakra-ui/react';
 import { DEFAULT_FONT_STYLE } from '../../../../constants.mjs';
 
 function Podium(props) {
+  let wrapperClasses = 'podium';
+  if (props.onClick) {
+    wrapperClasses += ' hover-pointer';
+  }
   let score = props.score.toLocaleString();
   let scoreClasses = 'podium-score';
   if (props.score < 0) {
@@ -17,7 +21,7 @@ function Podium(props) {
   }
   const fontStyle = props.preferredFontStyle || DEFAULT_FONT_STYLE;
   return (
-    <Flex className="podium" mb={2} mx={12} textAlign="center" userSelect="none">
+    <Flex className={wrapperClasses} mb={2} mx={12} onClick={props.onClick} textAlign="center" userSelect="none">
       <Box className="podium-left-side podium-side">
         <Box className="podium-stripe" />
         <Box className="podium-stripe" />

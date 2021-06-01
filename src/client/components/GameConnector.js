@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { PLAYER_ID_KEY } from '../../constants.mjs';
 import {
   buzzIn,
   changePlayerName,
@@ -22,7 +23,6 @@ import {
 import Game from './game/Game';
 import Lobby from './lobby/Lobby';
 import PlayerEditor from './player/PlayerEditor';
-import { PLAYER_ID_KEY } from '../../constants.mjs';
 
 function mapStateToProps(state) {
   return {...state};
@@ -55,7 +55,7 @@ class Connector extends React.Component {
       showPlayerEditor: !props.player,
     };
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
-    this.showPlayerEditor = this.showPlayerEditor.bind(this);
+    this.openPlayerEditor = this.openPlayerEditor.bind(this);
   }
 
   componentDidMount() {
@@ -88,7 +88,7 @@ class Connector extends React.Component {
     }
   }
 
-  showPlayerEditor() {
+  openPlayerEditor() {
     this.setState({showPlayerEditor: true});
   }
 
@@ -97,13 +97,22 @@ class Connector extends React.Component {
   }
 
   render() {
-    if (!this.props.player || this.state.showPlayerEditor) {
-      return <PlayerEditor onSubmit={this.closePlayerEditor} {...this.props} />;
+    const playerEditor = {
+      open: this.openPlayerEditor,
+      close: this.closePlayerEditor,
+    };
+    let content;
+    if (this.props.game) {
+      content = <Game playerEditor={playerEditor} {...this.props} />;
+    } else {
+      content = <Lobby playerEditor={playerEditor} {...this.props} />;
     }
-    if (!this.props.game) {
-      return <Lobby showPlayerEditor={this.showPlayerEditor} {...this.props} />;
-    }
-    return <Game {...this.props} />;
+    return (
+      <React.Fragment>
+        {content}
+        {this.state.showPlayerEditor && <PlayerEditor playerEditor={playerEditor} {...this.props} />}
+      </React.Fragment>
+    )
   }
 }
 
