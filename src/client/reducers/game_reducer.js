@@ -159,6 +159,11 @@ function handlePlayerWagered(storeData, event) {
 function handlePlayerWentActive(storeData, event) {
   const { playerID, players } = event.payload;
   console.log(`${playerID} went active.`);
+  Object.keys(players).forEach(playerID => {
+    if (storeData.players.hasOwnProperty(playerID)) {
+      players[playerID].score = storeData.players[playerID].score;
+    }
+  });
   return {...storeData, players: players};
 }
 
