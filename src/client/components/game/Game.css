@@ -98,15 +98,33 @@ body {
 .podium {
     border: 5px solid white;
     border-radius: 1.25rem;
+}
+
+.podium-lg {
     min-width: 300px;
+}
+
+.podium-md {
+    min-width: 250px;
+}
+
+.podium-sm {
+    min-width: 200px;
+}
+
+.podium-xs {
+    min-width: 180px;
 }
 
 .podium-center {
     background-color: #1D08A3;
     font-weight: bold;
-    min-width: 200px;
     min-height: 50px;
     width: 70%;
+}
+
+.podium-center-xs {
+    width: 90% !important;
 }
 
 .podium-side {
@@ -150,8 +168,24 @@ body {
     background-color: white;
 }
 
-.podium-name {
+.podium-name-xl {
+    font-size: 36px;
+}
+
+.podium-name-lg {
     font-size: 30px;
+}
+
+.podium-name-md {
+    font-size: 24px;
+}
+
+.podium-name-sm {
+    font-size: 20px;
+}
+
+.podium-name-xs {
+    font-size: 18px;
 }
 
 .podium-name-active {
