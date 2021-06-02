@@ -401,7 +401,7 @@ async function handleStartSpectating(ws, event) {
     return;
   }
   updatePlayer(playerID, {spectating: true}).then(() => {
-    console.log(`${playerID} started spectating.`);
+    logger.info(`${playerID} started spectating.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_STARTED_SPECTATING, event.payload));
   });
 }
@@ -414,7 +414,7 @@ async function handleStopSpectating(ws, event) {
     return;
   }
   updatePlayer(playerID, {spectating: false}).then(() => {
-    console.log(`${playerID} stopped spectating.`);
+    logger.info(`${playerID} stopped spectating.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, event.payload));
   });
 }
