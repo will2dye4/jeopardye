@@ -42,8 +42,11 @@ export async function updateGame(gameID, newFields) {
   await updateGameFields(gameID, {$set: newFields});
 }
 
-export async function addPlayerToGame(gameID, player) {
-  await updateGameFields(gameID, {$set: {[`players.${player.playerID}`]: player}});
+export async function addPlayerToGame(gameID, playerID) {
+  await updateGameFields(gameID, {
+    $set: {[`scores.${playerID}`]: 0},
+    $addToSet: {playerIDs: playerID},
+  });
 }
 
 export async function setActiveClue(game, clue) {

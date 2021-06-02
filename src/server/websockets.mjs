@@ -119,8 +119,8 @@ async function handleJoinGame(ws, event) {
     handleError(ws, event, 'player not found', 404);
     return;
   }
-  const gamePlayer = new GamePlayer(playerID, player.name, player.preferredFontStyle);
-  addPlayerToGame(gameID, gamePlayer).then(() => {
+  const gamePlayer = GamePlayer.fromPlayer(player);
+  addPlayerToGame(gameID, playerID).then(() => {
     logger.info(`${player.name} joined game ${gameID}.`);
     connectedClients[playerID] = ws;
     broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player: gamePlayer}));
@@ -134,7 +134,7 @@ async function validateGamePlayerAndClue(ws, event) {
     handleError(ws, event, `game ${gameID} not found`, 404);
     return null;
   }
-  if (Object.keys(game.players).indexOf(playerID) === -1) {
+  if (game.playerIDs.indexOf(playerID) === -1) {
     handleError(ws, event, `player ${playerID} not in game ${gameID}`, 400);
     return null;
   }
@@ -184,12 +184,12 @@ function setResponseTimerForClue(game, clue, playerID, wagering = false) {
       const expectedPlayerID = (wagering ? game.playerInControl : game.playerAnswering);
       if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID && expectedPlayerID === playerID) {
         logger.info(`${wagering ? 'Wagering' : 'Response'} time expired for ${playerID}.`);
-        let newScore = game.players[playerID].score;
+        let newScore = game.scores[playerID];
         let newFields = {currentWager: null};
         if (!wagering) {
           const value = game.currentWager || clue.value;
           newScore -= value;
-          newFields[`players.${playerID}.score`] = newScore;
+          newFields[`scores.${playerID}`] = newScore;
           newFields.playerAnswering = null;
           if (dailyDouble) {
             newFields.activeClue = null;
@@ -336,9 +336,9 @@ async function handleSubmitAnswer(ws, event) {
   const clue = clues[clueIndex];
   const correct = checkSubmittedAnswer(clue.answer, answer);
   const value = game.currentWager || clue.value;
-  let score = game.players[playerID].score;
+  let score = game.scores[playerID];
   let newScore = (correct ? score + value : score - value);
-  let newFields = {playerAnswering: null, currentWager: null, [`players.${playerID}.score`]: newScore};
+  let newFields = {playerAnswering: null, currentWager: null, [`scores.${playerID}`]: newScore};
   const dailyDouble = isDailyDouble(game.rounds[game.currentRound], clue.clueID);
   if (correct || dailyDouble) {
     newFields.activeClue = null;
@@ -375,7 +375,7 @@ async function handleSubmitWager(ws, event) {
     handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not a daily double`, 400);
     return;
   }
-  const [minWager, maxWager] = getWagerRange(game.currentRound, game.players[playerID].score);
+  const [minWager, maxWager] = getWagerRange(game.currentRound, game.scores[playerID]);
   const playerWager = parseInt(wager);
   if (isNaN(playerWager) || playerWager < minWager || playerWager > maxWager) {
     handleError(ws, event, `invalid wager attempt - wager ${wager} is invalid (range is ${minWager} - ${maxWager})`, 400);
@@ -400,7 +400,10 @@ async function handleStartSpectating(ws, event) {
     handleError(ws, event, 'player not found', 404);
     return;
   }
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_STARTED_SPECTATING, event.payload));
+  updatePlayer(playerID, {spectating: true}).then(() => {
+    console.log(`${playerID} started spectating.`);
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_STARTED_SPECTATING, event.payload));
+  });
 }
 
 async function handleStopSpectating(ws, event) {
@@ -410,7 +413,10 @@ async function handleStopSpectating(ws, event) {
     handleError(ws, event, 'player not found', 404);
     return;
   }
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, event.payload));
+  updatePlayer(playerID, {spectating: false}).then(() => {
+    console.log(`${playerID} stopped spectating.`);
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, event.payload));
+  });
 }
 
 const eventHandlers = {

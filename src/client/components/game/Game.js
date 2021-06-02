@@ -45,28 +45,25 @@ class Game extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.game && this.props.player && !this.props.game.players.hasOwnProperty(this.props.player.playerID)) {
-      console.log('Joining game...');
-      this.props.joinGame(this.props.game.gameID, this.props.player);
-    }
+    this.checkPlayerInGame();
 
     document.addEventListener('keyup', function handleKeyUp(event) {
       const key = event.key.toLowerCase();
       if ((key === ' ' || key === 'enter') && this.state.showActiveClue) {
         if (this.props.allowAnswers && !this.props.playerAnswering) {
           event.preventDefault();
-          this.props.buzzIn(this.props.game.gameID, this.props.player.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+          this.props.buzzIn(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
         }
       } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
         if (key === 's') {
           console.log('Skipping the current clue...');
           event.preventDefault();
           this.skipActiveClue();
-        } else if (key === 'i' && this.props.playersMarkingClueInvalid.indexOf(this.props.player?.playerID) === -1) {
+        } else if (key === 'i' && this.props.playersMarkingClueInvalid.indexOf(this.props.playerID) === -1) {
           event.preventDefault();
           markClueAsInvalid(this.props.activeClue.clueID).then(response => {
             if (response.ok) {
-              this.props.markClueAsInvalid(this.props.game.gameID, this.props.player.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+              this.props.markClueAsInvalid(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
             }
           });
         }
@@ -80,10 +77,7 @@ class Game extends React.Component {
       this.props.websocketConnect();
     }
 
-    if (this.props.game && this.props.player && !this.props.game.players.hasOwnProperty(this.props.player.playerID)) {
-      console.log('Joining game...');
-      this.props.joinGame(this.props.game.gameID, this.props.player);
-    }
+    this.checkPlayerInGame();
 
     if (!prevProps.activeClue && this.props.activeClue) {
       const dailyDouble = this.isActiveDailyDouble();
@@ -126,7 +120,7 @@ class Game extends React.Component {
 
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
       this.getTimerRef()?.resetResponseTimer();
-      const isCurrentPlayer = (this.props.prevAnswer.playerID === this.props.player.playerID);
+      const isCurrentPlayer = (this.props.prevAnswer.playerID === this.props.playerID);
       const playerName = this.getPlayerName(this.props.prevAnswer.playerID);
       if (this.props.prevAnswer.correct) {
         const tookControl = this.props.playerInControl !== prevProps.playerInControl;
@@ -178,7 +172,7 @@ class Game extends React.Component {
 
     if (!prevProps.allowAnswers && this.props.allowAnswers) {
       let status;
-      if (this.props.activeClue.playersAttempted.indexOf(this.props.player.playerID) === -1) {
+      if (this.props.activeClue.playersAttempted.indexOf(this.props.playerID) === -1) {
         status = {
           appearance: 'action',
           emoji: 'bell',
@@ -196,8 +190,8 @@ class Game extends React.Component {
 
     if (!prevProps.responseTimerElapsed && this.props.responseTimerElapsed) {
       if (this.state.showDailyDoubleWager) {
-        this.props.submitWager(this.props.game.gameID, this.props.player.playerID,
-                               this.props.activeClue.categoryID, this.props.activeClue.clueID, DAILY_DOUBLE_MINIMUM_WAGER);
+        this.props.submitWager(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID,
+                               this.props.activeClue.clueID, DAILY_DOUBLE_MINIMUM_WAGER);
       } else {
         let playerID;
         if (this.isActiveDailyDouble()) {
@@ -206,10 +200,17 @@ class Game extends React.Component {
           const playersAttempted = this.props.activeClue.playersAttempted;
           playerID = playersAttempted[playersAttempted.length - 1];
         }
-        const isCurrentPlayer = (playerID === this.props.player.playerID);
+        const isCurrentPlayer = (playerID === this.props.playerID);
         const playerName = this.getPlayerName(playerID);
         this.handleIncorrectAnswer(isCurrentPlayer, true, playerName);
       }
+    }
+  }
+
+  checkPlayerInGame() {
+    if (this.props.game && this.props.playerID && this.props.game.playerIDs.indexOf(this.props.playerID) === -1) {
+      console.log('Joining game...');
+      this.props.joinGame(this.props.game.gameID, this.props.playerID);
     }
   }
 
@@ -218,13 +219,12 @@ class Game extends React.Component {
   }
 
   playerHasControl() {
-    if (this.props.player) {
-      const playerID = this.props.player.playerID;
+    if (this.props.playerID) {
       if (this.props.playerAnswering) {
-        return (this.props.playerAnswering === playerID);
+        return (this.props.playerAnswering === this.props.playerID);
       }
       if (this.props.playerInControl) {
-        return (this.props.playerInControl === playerID);
+        return (this.props.playerInControl === this.props.playerID);
       }
     }
     return false;
@@ -300,7 +300,7 @@ class Game extends React.Component {
         appearance: 'incorrect',
         text: response,
       };
-    } else if (this.props.activeClue.playersAttempted.indexOf(this.props.player.playerID) === -1) {
+    } else if (this.props.activeClue.playersAttempted.indexOf(this.props.playerID) === -1) {
       status = {
         appearance: 'action',
         emoji: 'bell',
@@ -352,7 +352,7 @@ class Game extends React.Component {
     let status;
     if (setStatus) {
       if (isCurrentPlayer) {
-        status = getTimeElapsedMessage(this.getPlayerName(this.props.player.playerID));
+        status = getTimeElapsedMessage(this.getPlayerName(this.props.playerID));
       } else if (this.props.activeClue.playersAttempted.length > 0) {
         status = 'Time\'s up! Looks like no one got this one right.';
       } else {
@@ -400,7 +400,7 @@ class Game extends React.Component {
 
   handleClueClick(clue) {
     if (this.playerHasControl()) {
-      this.props.selectClue(this.props.game.gameID, this.props.player.playerID, clue.categoryID, clue.clueID);
+      this.props.selectClue(this.props.game.gameID, this.props.playerID, clue.categoryID, clue.clueID);
     }
   }
 
@@ -417,8 +417,8 @@ class Game extends React.Component {
       currentRound: this.props.game?.currentRound,
       categories: this.props.board?.categories,
       isDailyDouble: (this.props.board && this.props.activeClue ? this.isActiveDailyDouble() : false),
-      playerID: this.props.player?.playerID,
-      playerScore: this.props.players[this.props.player?.playerID]?.score,
+      playerID: this.props.playerID,
+      playerScore: this.props.players[this.props.playerID]?.score || 0,
       playerHasControl: this.playerHasControl(),
     };
     return (

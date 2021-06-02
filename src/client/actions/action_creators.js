@@ -144,8 +144,8 @@ export function stopSpectating(playerID) {
   return send(new WebsocketEvent(EventTypes.STOP_SPECTATING, {playerID}));
 }
 
-export function joinGame(gameID, player) {
-  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID: gameID, playerID: player.playerID}));
+export function joinGame(gameID, playerID) {
+  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID, playerID}));
 }
 
 export function selectClue(gameID, playerID, categoryID, clueID) {

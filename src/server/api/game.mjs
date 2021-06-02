@@ -12,7 +12,6 @@ import {
   Rounds,
 } from '../../constants.mjs';
 import { Category, Game, Round } from '../../models/game.mjs';
-import { GamePlayer } from '../../models/player.mjs';
 import { range, WebsocketEvent } from '../../utils.mjs';
 import { createGame, getGame, getPlayers } from '../db.mjs';
 import { fetchRandomCategories } from '../jservice.mjs';
@@ -87,13 +86,11 @@ async function handleCreateGame(req, res, next) {
     }
   }
 
-  let gamePlayers = {};
+  let playerIDs = [];
   if (req.body.hasOwnProperty('playerIDs')) {
+    playerIDs = req.body.playerIDs;
     try {
-      const players = await getPlayers(req.body.playerIDs);
-      players.forEach(player => {
-        gamePlayers[player.playerID] = new GamePlayer(player.playerID, player.name, player.preferredFontStyle);
-      });
+      await getPlayers(playerIDs);
     } catch (e) {
       handleError(`Failed to get players: ${e}`, 404);
       return;
@@ -102,7 +99,7 @@ async function handleCreateGame(req, res, next) {
   let playerInControl = null;
   if (req.body.hasOwnProperty('playerInControl') && req.body.playerInControl !== null) {
     playerInControl = req.body.playerInControl;
-    if (Object.keys(gamePlayers).indexOf(playerInControl) === -1) {
+    if (playerIDs.indexOf(playerInControl) === -1) {
       handleError(`Invalid player in control "${playerInControl}"`, 400);
       return;
     }
@@ -123,7 +120,7 @@ async function handleCreateGame(req, res, next) {
     rounds[Rounds.FINAL] = await createRound(Rounds.FINAL);
   }
 
-  const game = new Game(rounds, gamePlayers, playerInControl);
+  const game = new Game(rounds, playerIDs, playerInControl);
   try {
     await createGame(game);
   } catch (e) {

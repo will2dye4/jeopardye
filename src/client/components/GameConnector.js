@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { PLAYER_ID_KEY } from '../../constants.mjs';
 import {
   buzzIn,
   changePlayerName,
@@ -65,7 +64,7 @@ class Connector extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      showPlayerEditor: !props.player,
+      showPlayerEditor: !props.playerID,
     };
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
     this.openPlayerEditor = this.openPlayerEditor.bind(this);
@@ -77,27 +76,22 @@ class Connector extends React.Component {
       this.props.websocketConnect();
     }
 
-    const playerID = localStorage.getItem(PLAYER_ID_KEY);
-    if (playerID) {
-      this.props.fetchPlayer(playerID);
+    if (this.props.playerID) {
+      this.props.fetchPlayer(this.props.playerID);
     }
-
-    this.props.fetchCurrentGame();
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if ((!prevProps.connected && this.props.connected && this.props.player) ||
-        (!prevProps.player && this.props.player && this.props.connected)) {
+    if (!prevProps.connected && this.props.connected && this.props.playerID) {
       console.log('Establishing connection to server...');
-      this.props.clientConnect(this.props.player.playerID);
+      this.props.clientConnect(this.props.playerID);
+      this.props.fetchCurrentGame();
     }
-    if (prevProps.connected && !this.props.connected && this.props.player) {
+    if (prevProps.connected && !this.props.connected && this.props.playerID) {
       /* TODO - show message to user? */
       console.log('Websocket connection lost. Attempting to reconnect...');
-      this.props.clientConnect(this.props.player.playerID);
-    }
-    if (!prevProps.player && this.props.player) {
-      this.closePlayerEditor();
+      this.props.clientConnect(this.props.playerID);
+      this.props.fetchCurrentGame();
     }
   }
 

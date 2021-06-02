@@ -95,11 +95,11 @@ export class Round {
 }
 
 export class Game {
-  constructor(rounds, players, playerInControl, playerAnswering, currentRound,  activeClue, currentWager) {
+  constructor(rounds, playerIDs, playerInControl, playerAnswering, currentRound, activeClue, currentWager) {
     this.gameID = uuid.v4();
     this.rounds = rounds;
     this.numRounds = Object.keys(rounds).length - (rounds.hasOwnProperty(Rounds.FINAL) ? 1 : 0);
-    this.players = players || {};
+    this.playerIDs = playerIDs || [];
     this.playerInControl = playerInControl || null;
     this.playerAnswering = playerAnswering || null;
     this.currentRound = currentRound || Rounds.SINGLE;
@@ -108,9 +108,12 @@ export class Game {
     this.createdTime = new Date();
     this.finishedTime = null;
 
-    if (this.playerInControl === null && Object.keys(this.players).length) {
+    this.scores = {};
+    this.playerIDs.forEach(playerID => this.scores[playerID] = 0);
+
+    if (this.playerInControl === null && this.playerIDs.length) {
       /* Randomly pick a player to start in control of the game */
-      this.playerInControl = randomChoice(Object.keys(this.players));
+      this.playerInControl = randomChoice(this.playerIDs);
     }
   }
 }

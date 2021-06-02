@@ -7,7 +7,7 @@ function newStoreData() {
   return {
     connected: false,
     hostPlayerID: DEFAULT_PLAYER_ID,
-    playerID: null,
+    playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
     board: null,
     game: null,
     gameSettings: new GameSettings(),
@@ -27,7 +27,7 @@ function newStoreData() {
 
 function handleError(storeData, event) {
   console.log(`Request to ${event.payload.eventType} failed: ${event.payload.error} (${event.payload.status})`);
-  return storeData;  // TODO - should this set an error to display to the user?
+  return storeData;  /* TODO - should this set an error to display to the user? */
 }
 
 function handleNewGame(storeData, newGame) {
@@ -35,12 +35,21 @@ function handleNewGame(storeData, newGame) {
     return storeData;
   }
   const newBoard = newGame.rounds[newGame.currentRound];
+  let newPlayers = {...storeData.players};
+  Object.entries(newGame.scores).forEach(([playerID, score]) => {
+    if (newPlayers.hasOwnProperty(playerID)) {
+      newPlayers[playerID].score = score;
+    } else {
+      /* TODO - fetch player from API? */
+      console.log(`Not updating score for unknown player ${playerID}.`);
+    }
+  });
   localStorage.setItem(GAME_ID_KEY, newGame.gameID);
   return {
     ...storeData,
     game: newGame,
     board: newBoard,
-    players: newGame.players,
+    players: newPlayers,
     activeClue: newGame.activeClue,
     playerAnswering: newGame.playerAnswering,
     playerInControl: newGame.playerInControl,
@@ -69,18 +78,18 @@ function handlePlayerChangedName(storeData, event) {
   console.log(`Player ${playerID} has changed name to "${name}" (font: ${preferredFontStyle}).`);
   const newPlayer = {...storeData.players[playerID], name: name, preferredFontStyle: preferredFontStyle};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
-  let newState = {...storeData, players: newPlayers};
-  if (playerID === storeData.player?.playerID) {
-    newState.player = {...storeData.player, name: name, preferredFontStyle: preferredFontStyle};
-  }
-  return newState;
+  return {...storeData, players: newPlayers};
 }
 
 function handlePlayerJoined(storeData, event) {
   const { player } = event.payload;
   console.log(`${player.name} has joined the game.`);
-  let newPlayers = {...storeData.players, [player.playerID]: player};
-  return {...storeData, players: newPlayers};
+  let newPlayers = {...storeData.players, [player.playerID]: {...player, score: 0}};
+  let newStoreData = {...storeData, players: newPlayers};
+  if (storeData.game && storeData.game.playerIDs.indexOf(player.playerID) === -1) {
+    newStoreData.game = {...storeData.game, playerIDs: storeData.game.playerIDs.concat(player.playerID)};
+  }
+  return newStoreData;
 }
 
 function handlePlayerSelectedClue(storeData, event) {
@@ -116,7 +125,7 @@ function handlePlayerBuzzed(storeData, event) {
 function handlePlayerAnswered(storeData, event) {
   const { answer, answerDelayMillis, clueID, correct, playerID, score } = event.payload;
   const dailyDouble = isDailyDouble(storeData.board, clueID);
-  const allowAnswers = (!correct && !dailyDouble && playerID !== storeData.player.playerID);
+  const allowAnswers = (!correct && !dailyDouble && playerID !== storeData.playerID);
   console.log(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
   const newPlayer = {...storeData.players[playerID], score: score};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
@@ -255,13 +264,13 @@ export function GameReducer(storeData, action) {
       const player = action.payload;
       const newPlayers = {...storeData.players, [player.playerID]: player};
       localStorage.setItem(PLAYER_ID_KEY, player.playerID);
-      return {...storeData, player: player, players: newPlayers};
+      return {...storeData, playerID: player.playerID, players: newPlayers};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
     case ActionTypes.MARK_CLUE_AS_INVALID:
       const { gameID, playerID, categoryID, clueID } = action.payload;
       if (storeData.game?.gameID === gameID && storeData.activeClue?.categoryID === categoryID &&
-          storeData.activeClue?.clueID === clueID && Object.keys(storeData.game?.players).indexOf(playerID) !== -1) {
+          storeData.activeClue?.clueID === clueID && storeData.players.hasOwnProperty(playerID)) {
         return {...storeData, playersMarkingClueInvalid: storeData.playersMarkingClueInvalid.concat(playerID)};
       } else {
         return storeData;

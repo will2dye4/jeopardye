@@ -21,10 +21,11 @@ import PlayerNameInput from './PlayerNameInput';
 class PlayerSettings extends React.Component {
   constructor(props) {
     super(props);
+    const player = props.players[props.playerID];
     this.state = {
       invalid: false,
-      name: props.player?.name || '',
-      fontStyle: props.player?.preferredFontStyle || DEFAULT_FONT_STYLE,
+      name: player?.name || '',
+      fontStyle: player?.preferredFontStyle || DEFAULT_FONT_STYLE,
       soundEffectsEnabled: true,
       speakCluesEnabled: true,
     };
@@ -49,10 +50,12 @@ class PlayerSettings extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (!prevProps.player && this.props.player) {
+    if ((!prevProps.playerID && this.props.playerID && this.props.players.hasOwnProperty(this.props.playerID)) ||
+        (this.props.playerID && !prevProps.players.hasOwnProperty(this.props.playerID) && this.props.players.hasOwnProperty(this.props.playerID))) {
+      const player = this.props.players[this.props.playerID];
       this.setState({
-        name: this.props.player.name,
-        fontStyle: this.props.player.preferredFontStyle,
+        name: player.name,
+        fontStyle: player.preferredFontStyle,
       });
     }
   }
@@ -78,10 +81,13 @@ class PlayerSettings extends React.Component {
     if (!validatePlayerName(this.state.name.trim())) {
       this.setState({invalid: true});
     } else {
-      if (!this.props.player) {
+      if (!this.props.playerID) {
         this.props.createNewPlayer(this.state.name, this.state.fontStyle);
-      } else if (this.state.name !== this.props.player.name || this.state.fontStyle !== this.props.player.preferredFontStyle) {
-        this.props.changePlayerName(this.props.player.playerID, this.state.name, this.state.fontStyle);
+      } else {
+        const player = this.props.players[this.props.playerID];
+        if (this.state.name !== player.name || this.state.fontStyle !== player.preferredFontStyle) {
+          this.props.changePlayerName(this.props.playerID, this.state.name, this.state.fontStyle);
+        }
       }
       localStorage.setItem(SOUND_EFFECTS_ENABLED_KEY, this.state.soundEffectsEnabled);
       localStorage.setItem(SPEAK_CLUES_ENABLED_KEY, this.state.speakCluesEnabled);
@@ -93,7 +99,7 @@ class PlayerSettings extends React.Component {
 
   render() {
     const name = this.state.name.trim() || PLACEHOLDER_PLAYER_NAME;
-    const mode = this.props.player ? PlayerEditorModes.EDIT : PlayerEditorModes.CREATE;
+    const mode = this.props.playerID ? PlayerEditorModes.EDIT : PlayerEditorModes.CREATE;
     const heading = (mode === PlayerEditorModes.CREATE ? 'Create New Player' : 'Edit Player Settings');
     const buttonLabel = (mode === PlayerEditorModes.CREATE ? 'Create' : 'Save');
     return (

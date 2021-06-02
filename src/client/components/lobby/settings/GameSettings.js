@@ -76,7 +76,8 @@ class GameSettings extends React.Component {
         </Card>
       );
     }
-    const disabled = (this.props.player?.playerID !== this.props.hostPlayerID);
+    const disabled = (this.props.playerID !== this.props.hostPlayerID);
+    const startGameDisabled = (disabled || Object.keys(this.props.players).length === 0);
     return (
       <Card className="game-settings" px={8} py={6}>
         <Heading mb={5} textAlign="center">Game Settings</Heading>
@@ -95,7 +96,7 @@ class GameSettings extends React.Component {
         <Flex justify="center" mt={5} mb={3}>
           {disabled ?
             <Heading size="lg">Waiting for host to start a new game...</Heading> :
-            <Button colorScheme="jeopardyBlue" size="lg" disabled={disabled} onClick={this.createNewGame}>Start New Game</Button>
+            <Button colorScheme="jeopardyBlue" size="lg" disabled={startGameDisabled} onClick={this.createNewGame}>Start New Game</Button>
           }
         </Flex>
       </Card>

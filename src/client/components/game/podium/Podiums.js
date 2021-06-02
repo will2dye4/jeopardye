@@ -5,7 +5,7 @@ import Podium from './Podium';
 function Podiums(props) {
   const podiums = Object.values(props.players).map(player => {
     let onClick;
-    if (player.playerID === props.player?.playerID) {
+    if (player.playerID === props.playerID) {
       onClick = props.playerEditor.open;
     }
     const active = (player.playerID === props.playerAnswering);
