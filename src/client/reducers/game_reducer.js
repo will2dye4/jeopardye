@@ -147,22 +147,36 @@ function handlePlayerWagered(storeData, event) {
   return {...storeData, currentWager: wager, playerAnswering: playerID, responseTimerElapsed: false};
 }
 
-function handlePlayerActiveStatusChanged(status) {
+function handlePlayerWentActive(storeData, event) {
+  const { playerID, players } = event.payload;
+  console.log(`${playerID} went active.`);
+  return {...storeData, players: players};
+}
+
+function handlePlayerWentInactive(storeData, event) {
+  const { player } = event.payload;
+  const playerID = player.playerID;
+  if (storeData.players.hasOwnProperty(playerID)) {
+    console.log(`${playerID} went inactive.`);
+    const newPlayer = {...storeData.players[playerID], active: false};
+    const newPlayers = {...storeData.players, [playerID]: newPlayer};
+    return {...storeData, players: newPlayers};
+  }
+  console.log(`Ignoring status change for unknown player ${playerID}.`);
+  return storeData;
+}
+
+function handlePlayerSpectatingStatusChanged(status) {
   return function handleStatusChanged(storeData, event) {
-    const { player } = event.payload;
-    const playerID = player.playerID;
+    const { playerID } = event.payload;
     if (storeData.players.hasOwnProperty(playerID)) {
-      console.log(`${playerID} went ${status ? 'active' : 'inactive'}.`);
-      const newPlayer = {...storeData.players[playerID], active: status};
+      console.log(`${playerID} ${status ? 'started' : 'stopped'} spectating.`);
+      const newPlayer = {...storeData.players[playerID], spectating: status};
       const newPlayers = {...storeData.players, [playerID]: newPlayer};
       return {...storeData, players: newPlayers};
     }
-    if (status) {
-      console.log(`${playerID} joined.`);
-      const newPlayers = {...storeData.players, [playerID]: player};
-      return {...storeData, players: newPlayers};
-    }
-    console.log(`Ignoring status change for unknown player ${playerID}.`);
+    console.log(`Ignoring spectating status change for unknown player ${playerID}.`);
+    console.log(Object.keys(storeData.players));
     return storeData;
   };
 }
@@ -206,8 +220,10 @@ const eventHandlers = {
   [EventTypes.PLAYER_BUZZED]: handlePlayerBuzzed,
   [EventTypes.PLAYER_ANSWERED]: handlePlayerAnswered,
   [EventTypes.PLAYER_WAGERED]: handlePlayerWagered,
-  [EventTypes.PLAYER_WENT_ACTIVE]: handlePlayerActiveStatusChanged(true),
-  [EventTypes.PLAYER_WENT_INACTIVE]: handlePlayerActiveStatusChanged(false),
+  [EventTypes.PLAYER_STARTED_SPECTATING]: handlePlayerSpectatingStatusChanged(true),
+  [EventTypes.PLAYER_STOPPED_SPECTATING]: handlePlayerSpectatingStatusChanged(false),
+  [EventTypes.PLAYER_WENT_ACTIVE]: handlePlayerWentActive,
+  [EventTypes.PLAYER_WENT_INACTIVE]: handlePlayerWentInactive,
   [EventTypes.BUZZING_PERIOD_ENDED]: handleBuzzingPeriodEnded,
   [EventTypes.RESPONSE_PERIOD_ENDED]: handleResponsePeriodEnded,
   [EventTypes.WAITING_PERIOD_ENDED]: handleWaitingPeriodEnded,

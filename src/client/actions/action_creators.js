@@ -136,6 +136,14 @@ export function changePlayerName(playerID, name, preferredFontStyle) {
   }
 }
 
+export function startSpectating(playerID) {
+  return send(new WebsocketEvent(EventTypes.START_SPECTATING, {playerID}));
+}
+
+export function stopSpectating(playerID) {
+  return send(new WebsocketEvent(EventTypes.STOP_SPECTATING, {playerID}));
+}
+
 export function joinGame(gameID, player) {
   return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID: gameID, playerID: player.playerID}));
 }

@@ -179,14 +179,18 @@ class CountdownTimer extends React.Component {
       const answering = (this.state.showResponseTimer || this.props.gameState.isDailyDouble);
       color = (answering ? 'red' : 'purple');
       if (timer.running || timer.paused) {
-        let verb = 'Buzz';
-        if (timer.wagering) {
-          verb = 'Wager';
-        } else if (answering) {
-          verb = 'Answer';
+        if (timer.paused) {
+          label = 'Paused';
+        } else {
+          let verb = 'Buzz';
+          if (timer.wagering) {
+            verb = 'Wager';
+          } else if (answering) {
+            verb = 'Answer';
+          }
+          const secondsRemaining = Math.ceil(timer.value * timer.seconds / 100);
+          label = `${verb} in ${secondsRemaining}`;
         }
-        const secondsRemaining = Math.ceil(timer.value * timer.seconds / 100);
-        label = `${verb} in ${secondsRemaining}`;
         value = timer.value;
         if (value < 52) {
           fontColor = 'black';

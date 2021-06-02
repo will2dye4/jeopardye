@@ -19,6 +19,7 @@ import {
   addPlayerToGame,
   getGame,
   getPlayer,
+  getPlayers,
   setActiveClue,
   setPlayerAnswering,
   updateGame,
@@ -74,7 +75,6 @@ async function handleClientConnect(ws, event) {
   }
   updatePlayer(playerID, {active: true}).then(() => {
     logger.info(`${player.name} connected.`);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {player: new GamePlayer(playerID, player.name, player.preferredFontStyle)}));
     connectedClients[playerID] = ws;
     pingHandlers[ws] = setInterval(function() {
       logger.debug(`Pinging websocket for ${playerID}...`);
@@ -86,6 +86,11 @@ async function handleClientConnect(ws, event) {
         logger.error(`Unexpected error while pinging websocket: ${e}`);
       }
     }, PING_INTERVAL_MILLIS);
+    return getPlayers(Object.keys(connectedClients));
+  }).then(players => {
+    let newPlayers = {};
+    players.forEach(player => newPlayers[player.playerID] = player);
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {playerID: playerID, players: newPlayers}));
   });
 }
 
@@ -388,6 +393,26 @@ async function handleSubmitWager(ws, event) {
   });
 }
 
+async function handleStartSpectating(ws, event) {
+  const { playerID } = event.payload;
+  const player = await getPlayer(playerID);
+  if (!player) {
+    handleError(ws, event, 'player not found', 404);
+    return;
+  }
+  broadcast(new WebsocketEvent(EventTypes.PLAYER_STARTED_SPECTATING, event.payload));
+}
+
+async function handleStopSpectating(ws, event) {
+  const { playerID } = event.payload;
+  const player = await getPlayer(playerID);
+  if (!player) {
+    handleError(ws, event, 'player not found', 404);
+    return;
+  }
+  broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, event.payload));
+}
+
 const eventHandlers = {
   [EventTypes.CLIENT_CONNECT]: handleClientConnect,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
@@ -396,6 +421,8 @@ const eventHandlers = {
   [EventTypes.BUZZ_IN]: handleBuzzIn,
   [EventTypes.SUBMIT_ANSWER]: handleSubmitAnswer,
   [EventTypes.SUBMIT_WAGER]: handleSubmitWager,
+  [EventTypes.START_SPECTATING]: handleStartSpectating,
+  [EventTypes.STOP_SPECTATING]: handleStopSpectating,
 }
 
 export function handleWebsocket(ws, req) {

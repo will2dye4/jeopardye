@@ -15,6 +15,8 @@ import {
   markClueAsInvalid,
   selectClue,
   skipActiveClue,
+  startSpectating,
+  stopSpectating,
   submitAnswer,
   submitWager,
   updateGameSettings,
@@ -25,7 +27,16 @@ import Lobby from './lobby/Lobby';
 import PlayerEditor from './player/PlayerEditor';
 
 function mapStateToProps(state) {
-  return {...state};
+  let players = {};
+  let spectators = {};
+  Object.entries(state.players).forEach(([playerID, player]) => {
+    if (player.spectating) {
+      spectators[playerID] = player;
+    } else {
+      players[playerID] = player;
+    }
+  });
+  return {...state, players: players, spectators: spectators};
 }
 
 const actionCreators = {
@@ -42,6 +53,8 @@ const actionCreators = {
   markClueAsInvalid,
   selectClue,
   skipActiveClue,
+  startSpectating,
+  stopSpectating,
   submitAnswer,
   submitWager,
   updateGameSettings,

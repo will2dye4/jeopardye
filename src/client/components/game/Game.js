@@ -112,9 +112,9 @@ class Game extends React.Component {
       setTimeout(function() {
         this.setState({showActiveClue: true});
         if (showWager) {
-          this.getTimerRef().startResponseTimer(true);  /* start wager timer */
+          this.getTimerRef()?.startResponseTimer(true);  /* start wager timer */
         } else if (!dailyDouble) {
-          this.getTimerRef().startWaitingPeriod();
+          this.getTimerRef()?.startWaitingPeriod();
           speakClue(this.props.activeClue);
         }
       }.bind(this), SHOW_CLUE_DELAY_MILLIS);
@@ -125,7 +125,7 @@ class Game extends React.Component {
     }
 
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
-      this.getTimerRef().resetResponseTimer();
+      this.getTimerRef()?.resetResponseTimer();
       const isCurrentPlayer = (this.props.prevAnswer.playerID === this.props.player.playerID);
       const playerName = this.getPlayerName(this.props.prevAnswer.playerID);
       if (this.props.prevAnswer.correct) {
@@ -153,8 +153,8 @@ class Game extends React.Component {
     if (!prevProps.currentWager && this.props.currentWager) {
       if (this.playerHasControl()) {
         this.setState({showDailyDoubleWager: false});
-        this.getTimerRef().resetResponseTimer();
-        this.getTimerRef().startCountdown();
+        this.getTimerRef()?.resetResponseTimer();
+        this.getTimerRef()?.startCountdown();
       } else {
         this.setStatus({
           emoji: 'hourglass',
@@ -165,9 +165,9 @@ class Game extends React.Component {
     }
 
     if (!prevProps.playerAnswering && this.props.playerAnswering && !this.isActiveDailyDouble()) {
-      this.getTimerRef().pause();
+      this.getTimerRef()?.pause();
       if (this.playerHasControl()) {
-        this.getTimerRef().startResponseTimer();
+        this.getTimerRef()?.startResponseTimer();
       } else {
         this.setStatus({
           emoji: "hourglass",
@@ -191,7 +191,7 @@ class Game extends React.Component {
         };
       }
       this.setStatus(status);
-      this.getTimerRef().startCountdown();
+      this.getTimerRef()?.startCountdown();
     }
 
     if (!prevProps.responseTimerElapsed && this.props.responseTimerElapsed) {
@@ -287,7 +287,7 @@ class Game extends React.Component {
         text: response,
       },
     });
-    this.getTimerRef().reset();
+    this.getTimerRef()?.reset();
     this.checkForLastClue(isCurrentPlayer);
   }
 
@@ -315,10 +315,10 @@ class Game extends React.Component {
       status: status,
     });
     if (dailyDouble) {
-      this.getTimerRef().reset();
+      this.getTimerRef()?.reset();
       this.revealAnswer(isCurrentPlayer, false, false);
     } else {
-      this.getTimerRef().resume(this.props.answerDelayMillis);
+      this.getTimerRef()?.resume(this.props.answerDelayMillis);
     }
   }
 
@@ -393,7 +393,7 @@ class Game extends React.Component {
       showDailyDoubleWager: false,
       status: status,
     });
-    this.getTimerRef().reset();
+    this.getTimerRef()?.reset();
     this.props.dismissActiveClue();
     this.checkForLastClue();
   }
