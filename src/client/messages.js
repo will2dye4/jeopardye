@@ -49,10 +49,15 @@ const INCORRECT_RESPONSES = {
   ],
 };
 
-const TIME_ELAPSED_RESPONSES = [
-  `Sorry, you didn't answer in time.`,
-  `Time's up, ${PLAYER_PLACEHOLDER}.`,
-];
+const TIME_ELAPSED_RESPONSES = {
+  CURRENT_PLAYER: [
+    `Sorry, you didn't answer in time.`,
+    `Time's up, ${PLAYER_PLACEHOLDER}.`,
+  ],
+  OTHER_PLAYER: [
+    `${PLAYER_PLACEHOLDER} ran out of time.`
+  ],
+};
 
 export function getBuzzInMessage(categoryName) {
   return `Buzz in if you know the answer in ${categoryName}!`;
@@ -77,6 +82,11 @@ export function getIncorrectAnswerMessage(isCurrentPlayer, playerName) {
   return randomChoice(responses).replaceAll(PLAYER_PLACEHOLDER, playerName);
 }
 
-export function getTimeElapsedMessage(playerName) {
-  return randomChoice(TIME_ELAPSED_RESPONSES).replaceAll(PLAYER_PLACEHOLDER, playerName);
+export function getTimeElapsedMessage(isCurrentPlayer, playerName, amount) {
+  const responses = (isCurrentPlayer ? TIME_ELAPSED_RESPONSES.CURRENT_PLAYER : TIME_ELAPSED_RESPONSES.OTHER_PLAYER);
+  let response = randomChoice(responses).replaceAll(PLAYER_PLACEHOLDER, playerName);
+  if (amount) {
+    response = `${response.substring(0, response.length - 1)} (-$${amount.toLocaleString()})`;
+  }
+  return response;
 }

@@ -329,7 +329,7 @@ class Game extends React.Component {
     const spectating = this.playerIsSpectating();
     let status;
     if (isCurrentPlayer || dailyDouble) {
-      const response = (timeElapsed ? getTimeElapsedMessage(playerName) : getIncorrectAnswerMessage(isCurrentPlayer, playerName));
+      const response = (timeElapsed ? getTimeElapsedMessage(isCurrentPlayer, playerName) : getIncorrectAnswerMessage(isCurrentPlayer, playerName));
       status = {
         appearance: 'incorrect',
         text: response,
@@ -348,6 +348,15 @@ class Game extends React.Component {
       showDailyDoubleWager: false,
       status: status,
     });
+    if (!isCurrentPlayer && !dailyDouble && timeElapsed) {
+      const amount = this.props.activeClue.value;
+      toast({
+        position: 'top',
+        title: getTimeElapsedMessage(false, playerName, amount),
+        status: 'error',
+        isClosable: true,
+      });
+    }
     if (dailyDouble) {
       this.getTimerRef()?.reset();
       this.revealAnswer(isCurrentPlayer, false, false);
