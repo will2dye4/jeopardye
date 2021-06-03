@@ -1,6 +1,7 @@
 import React from 'react';
 import { Flex } from '@chakra-ui/react';
 import Podium from './Podium';
+import SpectatorsBadge from './SpectatorsBadge';
 
 function getSize(players) {
   const numPlayers = Object.keys(players).length;
@@ -22,12 +23,12 @@ function Podiums(props) {
       onClick = props.playerEditor.open;
     }
     const active = (player.playerID === props.playerAnswering);
-    return <Podium key={player.playerID} name={player.name} score={player.score || 0} onClick={onClick}
-                   preferredFontStyle={player.preferredFontStyle} active={active} size={size} />
+    return <Podium key={player.playerID} player={player} onClick={onClick} active={active} size={size} />;
   });
   return (
     <Flex className="podium-container" justify="center">
       {podiums}
+      {Object.keys(props.spectators).length > 0 && <SpectatorsBadge {...props} />}
     </Flex>
   );
 }

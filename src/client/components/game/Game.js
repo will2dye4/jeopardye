@@ -5,7 +5,7 @@ import {
   CLUES_PER_CATEGORY,
   DAILY_DOUBLE_MINIMUM_WAGER,
 } from '../../../constants.mjs';
-import { isDailyDouble } from '../../../utils.mjs';
+import { formatList, isDailyDouble } from '../../../utils.mjs';
 import {
   getBuzzInMessage,
   getCorrectAnswerMessage,
@@ -15,7 +15,7 @@ import {
   getWaitingForBuzzMessage,
 } from '../../messages';
 import JEOPARDYE_THEME from '../../theme';
-import { getUnplayedClues, markClueAsInvalid, playSound, speakClue } from '../../utils';
+import { getUnplayedClues, markClueAsInvalid, playSound, speakAnswer, speakClue } from '../../utils';
 import './Game.css';
 import Bold from '../common/Bold';
 import Board from './board/Board';
@@ -36,6 +36,7 @@ class Game extends React.Component {
       showClueAnimation: !!props.activeClue,
       showDailyDoubleWager: false,
       status: this.getInitialStatus(props),
+      timerKey: Date.now(),
       timerRef: React.createRef(),
     };
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
@@ -48,6 +49,9 @@ class Game extends React.Component {
     this.checkPlayerInGame();
 
     document.addEventListener('keyup', function handleKeyUp(event) {
+      if (this.playerIsSpectating()) {
+        return;
+      }
       const key = event.key.toLowerCase();
       if ((key === ' ' || key === 'enter') && this.state.showActiveClue) {
         if (this.props.allowAnswers && !this.props.playerAnswering) {
@@ -133,7 +137,7 @@ class Game extends React.Component {
         const prefix = (correct ? '+' : '-');
         const amount = `${prefix}$${value.toLocaleString()}`;
         toast({
-          position: 'bottom-left',
+          position: 'top',
           title: `${this.getPlayerName(playerID)} answered "${answer.trim()}" (${amount})`,
           status: correct ? 'success' : 'error',
           isClosable: true,
@@ -171,8 +175,9 @@ class Game extends React.Component {
     }
 
     if (!prevProps.allowAnswers && this.props.allowAnswers) {
+      const spectating = this.playerIsSpectating();
       let status;
-      if (this.props.activeClue.playersAttempted.indexOf(this.props.playerID) === -1) {
+      if (!spectating && this.props.activeClue.playersAttempted.indexOf(this.props.playerID) === -1) {
         status = {
           appearance: 'action',
           emoji: 'bell',
@@ -181,7 +186,7 @@ class Game extends React.Component {
       } else {
         status = {
           emoji: 'hourglass',
-          text: getWaitingForBuzzMessage(),
+          text: getWaitingForBuzzMessage(spectating),
         };
       }
       this.setStatus(status);
@@ -190,6 +195,7 @@ class Game extends React.Component {
 
     if (!prevProps.responseTimerElapsed && this.props.responseTimerElapsed) {
       if (this.state.showDailyDoubleWager) {
+        /* TODO - only do this for the player in control? */
         this.props.submitWager(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID,
                                this.props.activeClue.clueID, DAILY_DOUBLE_MINIMUM_WAGER);
       } else {
@@ -203,6 +209,24 @@ class Game extends React.Component {
         const isCurrentPlayer = (playerID === this.props.playerID);
         const playerName = this.getPlayerName(playerID);
         this.handleIncorrectAnswer(isCurrentPlayer, true, playerName);
+      }
+    }
+
+    if (this.props.game && prevProps.players !== this.props.players &&
+        Object.keys(this.props.players).length > Object.keys(prevProps.players).length) {
+      let newPlayers = [];
+      Object.entries(this.props.players).forEach(([playerID, player]) => {
+        if (playerID !== this.props.playerID && !prevProps.players.hasOwnProperty(playerID)) {
+          newPlayers.push(player.name);
+        }
+      });
+      if (newPlayers.length) {
+        toast({
+          position: 'top',
+          title: `${formatList(newPlayers)} joined the game.`,
+          status: 'info',
+          isClosable: true,
+        });
       }
     }
   }
@@ -230,19 +254,20 @@ class Game extends React.Component {
     return false;
   }
 
+  playerIsSpectating() {
+    return (!this.props.playerID || !this.props.players.hasOwnProperty(this.props.playerID));
+  }
+
   getPlayerName(playerID) {
     return this.props.players[playerID]?.name;
   }
 
   getTimerRef() {
-    let ref = this.state.timerRef;
-    if (ref.current) {
-      return ref.current;
+    if (!this.state.timerRef.current) {
+      console.log('Replacing timer key');
+      this.setState({timerKey: Date.now()});
     }
-    console.log('Replacing timer ref');
-    ref = React.createRef();
-    this.setState({timerRef: ref});
-    return ref.current;
+    return this.state.timerRef.current;
   }
 
   isActiveDailyDouble() {
@@ -287,12 +312,16 @@ class Game extends React.Component {
         text: response,
       },
     });
+    if (!isCurrentPlayer) {
+      speakAnswer(this.props.prevAnswer.clue.answer);
+    }
     this.getTimerRef()?.reset();
     this.checkForLastClue(isCurrentPlayer);
   }
 
   handleIncorrectAnswer(isCurrentPlayer, timeElapsed, playerName) {
     const dailyDouble = this.isActiveDailyDouble();
+    const spectating = this.playerIsSpectating();
     let status;
     if (isCurrentPlayer || dailyDouble) {
       const response = (timeElapsed ? getTimeElapsedMessage(playerName) : getIncorrectAnswerMessage(isCurrentPlayer, playerName));
@@ -300,14 +329,14 @@ class Game extends React.Component {
         appearance: 'incorrect',
         text: response,
       };
-    } else if (this.props.activeClue.playersAttempted.indexOf(this.props.playerID) === -1) {
+    } else if (!spectating && this.props.activeClue.playersAttempted.indexOf(this.props.playerID) === -1) {
       status = {
         appearance: 'action',
         emoji: 'bell',
         text: getBuzzInMessage(this.props.activeClue.category),
       };
     } else {
-      status = getWaitingForBuzzMessage();
+      status = getWaitingForBuzzMessage(spectating);
     }
     this.setState({
       showClueAnimation: false,
@@ -370,6 +399,7 @@ class Game extends React.Component {
       };
     }
     this.setState(newState);
+    speakAnswer(this.props.activeClue.answer, SHOW_CLUE_DELAY_MILLIS * 2);
     setTimeout(this.dismissActiveClue, DISMISS_CLUE_DELAY_MILLIS);
   }
 
@@ -420,10 +450,12 @@ class Game extends React.Component {
       playerID: this.props.playerID,
       playerScore: this.props.players[this.props.playerID]?.score || 0,
       playerHasControl: this.playerHasControl(),
+      playerIsSpectating: this.playerIsSpectating(),
     };
     return (
       <Box id="game" className="game" p={6}>
         <CountdownTimer gameState={gameState}
+                        key={this.state.timerKey}
                         ref={this.state.timerRef}
                         activeClue={this.props.activeClue} />
         <Board gameState={gameState}
@@ -439,7 +471,7 @@ class Game extends React.Component {
                skipActiveClue={this.skipActiveClue}
                {...this.state} />
         <StatusBar gameState={gameState} {...this.props} {...this.state} />
-        <Podiums {...this.props} />
+        <Podiums gameState={gameState} {...this.props} />
       </Box>
     );
   }

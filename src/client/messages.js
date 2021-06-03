@@ -58,8 +58,8 @@ export function getBuzzInMessage(categoryName) {
   return `Buzz in if you know the answer in ${categoryName}!`;
 }
 
-export function getWaitingForBuzzMessage() {
-  return 'Waiting for other players to buzz in.';
+export function getWaitingForBuzzMessage(isSpectating = false) {
+  return `Waiting for ${isSpectating ? '' : 'other '}players to buzz in.`;
 }
 
 export function getSelectClueMessage(playerName) {

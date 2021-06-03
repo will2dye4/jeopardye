@@ -71,6 +71,7 @@ export const GAME_ID_KEY = 'gameID';
 export const PLAYER_ID_KEY = 'playerID';
 export const SOUND_EFFECTS_ENABLED_KEY = 'soundEffectsEnabled';
 export const SPEAK_CLUES_ENABLED_KEY = 'speakCluesEnabled';
+export const SPEAK_ANSWERS_ENABLED_KEY = 'speakAnswersEnabled';
 
 export const PlayerEditorModes = {
   CREATE: 'create',

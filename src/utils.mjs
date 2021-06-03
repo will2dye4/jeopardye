@@ -58,6 +58,19 @@ export function randomChoice(values) {
   return values[Math.floor(Math.random() * values.length)];
 }
 
+export function formatList(items) {
+  let result = '';
+  items.forEach((item, i) => {
+    result += item;
+    if (i < items.length - 2) {
+      result += ', ';
+    } else if (i === items.length - 2) {
+      result += ' and ';
+    }
+  });
+  return result;
+}
+
 export function getWagerRange(currentRound, playerScore) {
   const defaultMax = DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS[currentRound];
   const maxWager = Math.max(playerScore, defaultMax);

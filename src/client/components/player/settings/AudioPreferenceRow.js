@@ -5,11 +5,11 @@ import ToggleSwitch from '../../common/form/ToggleSwitch';
 
 function AudioPreferenceRow(props) {
   return (
-    <GridRow cols={4} my={5}>
-      <GridItem my={1}>
+    <GridRow cols={6} my={5}>
+      <GridItem colSpan={2} my={1}>
         <Text fontWeight="bold" fontSize="xl">{props.label}</Text>
       </GridItem>
-      <GridItem colSpan={3} d="flex" alignItems="center">
+      <GridItem colSpan={4} d="flex" alignItems="center">
         <ToggleSwitch name={props.name} checked={props.checked} onChange={props.onChange} />
       </GridItem>
     </GridRow>

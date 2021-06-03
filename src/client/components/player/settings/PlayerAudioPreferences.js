@@ -24,6 +24,8 @@ function PlayerAudioPreferences(props) {
                               onChange={props.onSoundEffectsChanged} />
           <AudioPreferenceRow label="Speak Clues" name="speak-clues" checked={props.speakCluesEnabled}
                               onChange={props.onSpeakCluesChanged} />
+          <AudioPreferenceRow label="Speak Correct Answers" name="speak-answers" checked={props.speakAnswersEnabled}
+                              onChange={props.onSpeakAnswersChanged} />
         </AccordionPanel>
       </AccordionItem>
     </Accordion>

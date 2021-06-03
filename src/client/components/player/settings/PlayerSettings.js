@@ -11,8 +11,10 @@ import {
   PlayerEditorModes,
   SOUND_EFFECTS_ENABLED_KEY,
   SPEAK_CLUES_ENABLED_KEY,
+  SPEAK_ANSWERS_ENABLED_KEY,
 } from '../../../../constants.mjs';
 import { validatePlayerName } from '../../../../models/player.mjs';
+import { isLocalStorageSettingEnabled } from '../../../utils';
 import Card from '../../common/card/Card';
 import PlayerAudioPreferences from './PlayerAudioPreferences';
 import PlayerFontStyleSetting from './PlayerFontStyleSetting';
@@ -28,23 +30,26 @@ class PlayerSettings extends React.Component {
       fontStyle: player?.preferredFontStyle || DEFAULT_FONT_STYLE,
       soundEffectsEnabled: true,
       speakCluesEnabled: true,
+      speakAnswersEnabled: true,
     };
     this.handleFontStyleChanged = this.handleFontStyleChanged.bind(this);
     this.handleNameChanged = this.handleNameChanged.bind(this);
     this.handleSoundEffectsChanged = this.handleSoundEffectsChanged.bind(this);
     this.handleSpeakCluesChanged = this.handleSpeakCluesChanged.bind(this);
+    this.handleSpeakAnswersChanged = this.handleSpeakAnswersChanged.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   componentDidMount() {
     let newState = {};
-    const soundEffectsEnabled = localStorage.getItem(SOUND_EFFECTS_ENABLED_KEY);
-    if (soundEffectsEnabled) {
-      newState.soundEffectsEnabled = (soundEffectsEnabled === 'true');
+    if (localStorage.getItem(SOUND_EFFECTS_ENABLED_KEY)) {
+      newState.soundEffectsEnabled = isLocalStorageSettingEnabled(SOUND_EFFECTS_ENABLED_KEY);
     }
-    const speakCluesEnabled = localStorage.getItem(SPEAK_CLUES_ENABLED_KEY);
-    if (speakCluesEnabled) {
-      newState.speakCluesEnabled = (speakCluesEnabled === 'true');
+    if (localStorage.getItem(SPEAK_CLUES_ENABLED_KEY)) {
+      newState.speakCluesEnabled = isLocalStorageSettingEnabled(SPEAK_CLUES_ENABLED_KEY);
+    }
+    if (localStorage.getItem(SPEAK_ANSWERS_ENABLED_KEY)) {
+      newState.speakAnswersEnabled = isLocalStorageSettingEnabled(SPEAK_ANSWERS_ENABLED_KEY);
     }
     this.setState(newState);
   }
@@ -77,6 +82,10 @@ class PlayerSettings extends React.Component {
     this.setState({speakCluesEnabled: !this.state.speakCluesEnabled});
   }
 
+  handleSpeakAnswersChanged() {
+    this.setState({speakAnswersEnabled: !this.state.speakAnswersEnabled});
+  }
+
   handleSubmit() {
     if (!validatePlayerName(this.state.name.trim())) {
       this.setState({invalid: true});
@@ -91,6 +100,7 @@ class PlayerSettings extends React.Component {
       }
       localStorage.setItem(SOUND_EFFECTS_ENABLED_KEY, this.state.soundEffectsEnabled);
       localStorage.setItem(SPEAK_CLUES_ENABLED_KEY, this.state.speakCluesEnabled);
+      localStorage.setItem(SPEAK_ANSWERS_ENABLED_KEY, this.state.speakAnswersEnabled);
       if (this.props.onSubmit) {
         this.props.onSubmit();
       }
@@ -108,7 +118,8 @@ class PlayerSettings extends React.Component {
         <PlayerNameInput name={this.state.name} invalid={this.state.invalid} onChange={this.handleNameChanged} />
         <PlayerFontStyleSetting name={name} selectedStyle={this.state.fontStyle} onChange={this.handleFontStyleChanged} />
         <PlayerAudioPreferences soundEffectsEnabled={this.state.soundEffectsEnabled} onSoundEffectsChanged={this.handleSoundEffectsChanged}
-                                speakCluesEnabled={this.state.speakCluesEnabled} onSpeakCluesChanged={this.handleSpeakCluesChanged} />
+                                speakCluesEnabled={this.state.speakCluesEnabled} onSpeakCluesChanged={this.handleSpeakCluesChanged}
+                                speakAnswersEnabled={this.state.speakAnswersEnabled} onSpeakAnswersChanged={this.handleSpeakAnswersChanged} />
         <Flex justify="center" mt={8} mb={3}>
           <Button colorScheme="jeopardyBlue" size="lg" w="25%" isDisabled={this.state.invalid} onClick={this.handleSubmit}>
             {buttonLabel}

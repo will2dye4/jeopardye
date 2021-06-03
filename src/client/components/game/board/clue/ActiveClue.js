@@ -19,7 +19,7 @@ class ActiveClue extends React.Component {
   }
 
   allowBuzz() {
-    return (this.props.allowAnswers && !this.props.playerAnswering &&
+    return (this.props.allowAnswers && !this.props.playerAnswering && !this.props.gameState.playerIsSpectating &&
             this.props.activeClue.playersAttempted.indexOf(this.props.gameState.playerID) === -1);
   }
 
@@ -57,7 +57,7 @@ class ActiveClue extends React.Component {
       content = (
         <React.Fragment>
           <Box className="active-clue" p={5}>{this.state.text}</Box>
-          <ActiveClueButtons {...this.props} />
+          {!this.props.gameState.playerIsSpectating && <ActiveClueButtons {...this.props} />}
         </React.Fragment>
       );
     }

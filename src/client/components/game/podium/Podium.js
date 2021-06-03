@@ -66,29 +66,29 @@ function Podium(props) {
   if (props.onClick) {
     wrapperClasses += ' hover-pointer';
   }
-  let score = props.score.toLocaleString();
+  let score = (props.player.score || 0).toLocaleString();
   let scoreClasses = 'podium-score';
-  if (props.score < 0) {
+  if (props.player.score < 0) {
     score = '-$' + score.substring(1);
     scoreClasses += ' podium-score-negative';
   } else {
     score = '$' + score;
   }
-  let nameClasses = getNameClasses(props.name, props.preferredFontStyle, size);
+  const mx = (size === 'xs' ? 6 : (size === 'sm' ? 8 : 12));
+  const fontStyle = props.player.preferredFontStyle || DEFAULT_FONT_STYLE;
+  let nameClasses = getNameClasses(props.player.name, fontStyle, size);
   if (props.active) {
     nameClasses += ' podium-name-active';
   }
-  const mx = (size === 'xs' ? 6 : (size === 'sm' ? 8 : 12));
-  const fontStyle = props.preferredFontStyle || DEFAULT_FONT_STYLE;
   return (
-    <Flex className={wrapperClasses} mb={2} mx={mx} onClick={props.onClick} textAlign="center" userSelect="none">
+    <Flex className={wrapperClasses} mb={3} mx={mx} onClick={props.onClick} textAlign="center" userSelect="none">
       <Box className="podium-left-side podium-side">
         <Box className="podium-stripe" />
         <Box className="podium-stripe" />
       </Box>
       <Box className={`podium-center podium-center-${size}`}>
         <Box className={scoreClasses} py={2}>{score}</Box>
-        <Box className={nameClasses} borderRadius="md" fontFamily={fontStyle} m={2} py={2}>{props.name}</Box>
+        <Box className={nameClasses} borderRadius="md" fontFamily={fontStyle} m={2} py={2}>{props.player.name}</Box>
       </Box>
       <Box className="podium-right-side podium-side">
         <Box className="podium-stripe" />
