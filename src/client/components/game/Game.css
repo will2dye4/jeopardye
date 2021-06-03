@@ -70,6 +70,14 @@ body {
     word-spacing: 0.2em;
 }
 
+.active-clue-sm {
+    font-size: 60px !important;
+}
+
+.active-clue-xs {
+    font-size: 50px !important;
+}
+
 .active-clue-buttons {
     bottom: 0 !important;
     left: 93% !important;

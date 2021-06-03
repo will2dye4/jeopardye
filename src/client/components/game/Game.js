@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, createStandaloneToast } from '@chakra-ui/react';
+import { Box, Text, createStandaloneToast } from '@chakra-ui/react';
 import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
@@ -136,9 +136,14 @@ class Game extends React.Component {
         const { playerID, answer, correct, value } = this.props.prevAnswer;
         const prefix = (correct ? '+' : '-');
         const amount = `${prefix}$${value.toLocaleString()}`;
+        const title = (
+          <React.Fragment>
+            {this.getPlayerName(playerID)} answered "{answer.trim()}" (<Text as="span" whiteSpace="nowrap">{amount}</Text>)
+          </React.Fragment>
+        );
         toast({
           position: 'top',
-          title: `${this.getPlayerName(playerID)} answered "${answer.trim()}" (${amount})`,
+          title: title,
           status: correct ? 'success' : 'error',
           isClosable: true,
         });

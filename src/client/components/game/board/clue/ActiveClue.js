@@ -2,6 +2,9 @@ import React from 'react';
 import { Box, Flex, Image } from '@chakra-ui/react';
 import ActiveClueButtons from './ActiveClueButtons';
 
+const LONG_CLUE_LENGTH_THRESHOLD = 150;
+const EXTRA_LONG_CLUE_LENGTH_THRESHOLD = LONG_CLUE_LENGTH_THRESHOLD + 60;
+
 class ActiveClue extends React.Component {
   constructor(props) {
     super(props);
@@ -54,9 +57,15 @@ class ActiveClue extends React.Component {
     if (this.props.gameState.isDailyDouble && !this.props.currentWager && !this.props.revealAnswer) {
       content = <Image src="/images/daily_double.jpg" alt="Daily Double" w={width} h={height} objectFit="cover" />;
     } else {
+      let classes = 'active-clue';
+      if (this.state.text.length > EXTRA_LONG_CLUE_LENGTH_THRESHOLD) {
+        classes += ' active-clue-xs';
+      } else if (this.state.text.length > LONG_CLUE_LENGTH_THRESHOLD) {
+        classes += ' active-clue-sm';
+      }
       content = (
         <React.Fragment>
-          <Box className="active-clue" p={5}>{this.state.text}</Box>
+          <Box className={classes} p={5}>{this.state.text}</Box>
           {!this.props.gameState.playerIsSpectating && <ActiveClueButtons {...this.props} />}
         </React.Fragment>
       );
