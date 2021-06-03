@@ -47,7 +47,7 @@ class StatusBarText extends React.Component {
     const appearance = this.getAppearance();
     const animate = (appearance === 'action' || appearance === 'attention' || (appearance === 'correct' && this.props.gameState.playerHasControl));
     const fontWeight = (animate ? 'bold' : 'normal');
-    const classes = (animate ? 'animate__animated animate__pulse animate__infinite' : '');
+    const classes = 'status-text' + (animate ? ' animate__animated animate__pulse animate__infinite' : '');
     const emoji = this.getEmoji();
     const text = (this.props.status.hasOwnProperty('text') ? this.props.status.text : this.props.status);
     return <Text className={classes} fontSize="3xl" fontWeight={fontWeight}>{emoji} {text}</Text>;

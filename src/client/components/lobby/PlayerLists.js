@@ -1,5 +1,5 @@
 import React from 'react';
-import PlayerList from './PlayerList';
+import PlayerList from '../common/players/PlayerList';
 
 function PlayerLists(props) {
   return (

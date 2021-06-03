@@ -4,7 +4,7 @@ import './Lobby.css';
 import GridRow from '../common/GridRow';
 import LogoPage from '../common/LogoPage';
 import GameSettings from './settings/GameSettings';
-import PlayerLists from './players/PlayerLists';
+import PlayerLists from './PlayerLists';
 import RoomCode from './RoomCode';
 
 class Lobby extends React.Component {

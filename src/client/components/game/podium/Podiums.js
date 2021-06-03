@@ -17,13 +17,12 @@ function getSize(players) {
 
 function Podiums(props) {
   const size = getSize(props.players);
+  const allowSpectate = (!props.gameState.playerIsSpectating && !props.gameState.playerHasControl && Object.keys(props.players).length > 1);
   const podiums = Object.values(props.players).map(player => {
-    let onClick;
-    if (player.playerID === props.playerID) {
-      onClick = props.playerEditor.open;
-    }
-    const active = (player.playerID === props.playerAnswering);
-    return <Podium key={player.playerID} player={player} onClick={onClick} active={active} size={size} />;
+    const isCurrentPlayer = (player.playerID === props.playerID);
+    const active = (player.playerID === props.playerAnswering || (props.gameState.isDailyDouble && props.gameState.playerHasControl));
+    return <Podium key={player.playerID} player={player} playerEditor={props.playerEditor} isCurrentPlayer={isCurrentPlayer}
+                   allowSpectate={allowSpectate} startSpectating={props.startSpectating} active={active} size={size} />;
   });
   return (
     <Flex className="podium-container" justify="center">

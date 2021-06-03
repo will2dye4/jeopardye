@@ -7,7 +7,7 @@ function PlayerListItem(props) {
     <li className="list-group-item">
       <Flex align="center">
         <Text>{props.player.name}</Text>
-        <Spacer />
+        <Spacer minW={10} />
         {props.isCurrentPlayer && <PlayerListItemIcons {...props} />}
       </Flex>
     </li>

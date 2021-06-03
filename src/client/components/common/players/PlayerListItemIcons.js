@@ -1,7 +1,7 @@
 import React from 'react';
 import { HStack } from '@chakra-ui/react';
 import { faEye, faPen, faUserPlus } from '@fortawesome/free-solid-svg-icons';
-import Icon from '../../common/Icon';
+import Icon from '../Icon';
 
 function getSpectatingStateIcon(props) {
   let iconProps;

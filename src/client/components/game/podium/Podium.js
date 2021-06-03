@@ -1,6 +1,15 @@
 import React from 'react';
-import { Box, Flex } from '@chakra-ui/react';
+import {
+  Box,
+  Flex,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverContent,
+  PopoverTrigger,
+} from '@chakra-ui/react';
 import { DEFAULT_FONT_STYLE, MAX_PLAYER_NAME_LENGTH } from '../../../../constants.mjs';
+import PodiumMenu from './PodiumMenu';
 
 const FONT_SIZE_CLASSES = ['xs', 'sm', 'md', 'lg', 'xl'];
 const MIN_FONT_SIZE_INDEX = 0;
@@ -60,10 +69,10 @@ function getNameClasses(name, font, size) {
   return `podium-name podium-name-${sizeName}`;
 }
 
-function Podium(props) {
+function getPodiumElement(props) {
   const size = props.size || 'lg';
   let wrapperClasses = `podium podium-${size}`;
-  if (props.onClick) {
+  if (props.isCurrentPlayer) {
     wrapperClasses += ' hover-pointer';
   }
   let score = (props.player.score || 0).toLocaleString();
@@ -81,7 +90,7 @@ function Podium(props) {
     nameClasses += ' podium-name-active';
   }
   return (
-    <Flex className={wrapperClasses} mb={3} mx={mx} onClick={props.onClick} textAlign="center" userSelect="none">
+    <Flex className={wrapperClasses} mb={3} mx={mx} textAlign="center" userSelect="none">
       <Box className="podium-left-side podium-side">
         <Box className="podium-stripe" />
         <Box className="podium-stripe" />
@@ -95,6 +104,26 @@ function Podium(props) {
         <Box className="podium-stripe" />
       </Box>
     </Flex>
+  );
+}
+
+function Podium(props) {
+  let podium = getPodiumElement(props);
+  if (!props.isCurrentPlayer) {
+    return podium;
+  }
+  return (
+    <Popover>
+      <PopoverTrigger>
+        {podium}
+      </PopoverTrigger>
+      <PopoverContent p={0} w="auto">
+        <PopoverArrow />
+        <PopoverBody p={0}>
+          <PodiumMenu {...props} />
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
   );
 }
 

@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { faEye } from '@fortawesome/free-solid-svg-icons';
 import Icon from '../../common/Icon';
-import PlayerList from '../../lobby/players/PlayerList';
+import PlayerList from '../../common/players/PlayerList';
 
 function SpectatorsMenu(props) {
   const numSpectators = Object.keys(props.spectators).length;
@@ -29,12 +29,12 @@ function SpectatorsMenu(props) {
           </HStack>
         </Badge>
       </PopoverTrigger>
-      <PopoverContent p={0}>
+      <PopoverContent p={0} w="auto" minW={200}>
         <PopoverArrow />
         <PopoverCloseButton />
         <PopoverBody p={0}>
           <PlayerList spectators={true} players={props.spectators} currentPlayerID={props.playerID}
-                      edit={props.playerEditor.open} changeSpectatingStatus={props.stopSpectating}
+                      edit={props.playerEditor.open} changeSpectatingStatus={() => props.stopSpectating(props.playerID)}
                       mb={0} boxShadow="dark-lg" />
         </PopoverBody>
       </PopoverContent>

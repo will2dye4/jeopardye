@@ -1,6 +1,6 @@
 import React from 'react';
-import Card from '../../common/card/Card';
-import CardHeader from '../../common/card/CardHeader';
+import Card from '../card/Card';
+import CardHeader from '../card/CardHeader';
 import PlayerListItem from './PlayerListItem';
 
 function PlayerList(props) {

@@ -17,6 +17,7 @@ body {
     background-color: #1D08A3;
     border: 2px solid white;
     color: white;
+    cursor: default;
     font-family: Helvetica, sans-serif;
     font-weight: bold;
     min-height: 90px;
@@ -191,6 +192,10 @@ body {
 .podium-name-active {
     background-color: white;
     color: #1D08A3;
+}
+
+.status-text {
+    cursor: default;
 }
 
 .chakra-alert {

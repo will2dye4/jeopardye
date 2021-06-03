@@ -116,6 +116,10 @@ html, body {
     cursor: pointer;
 }
 
+.hover-blue:hover {
+    color: #1D08A3;
+}
+
 .list-group {
     display: flex;
     flex-direction: column;
@@ -129,6 +133,56 @@ html, body {
     padding: 0.5rem 1rem;
     text-decoration: none;
     border: 1px solid rgba(0, 0, 0, 0.125);
+    user-select: none;
+}
+
+.list-group-menu-item:hover {
+    background: var(--chakra-colors-jeopardyBlue-500);
+    color: white;
+}
+
+.player-list {
+    color: black;
+    min-width: 150px;
+}
+
+.popover-card {
+    color: black;
+    min-width: 100px;
+}
+
+.card-header {
+    background-color: #1D08A3;
+    color: white;
+}
+
+.empty-list, .menu-item-disabled {
+    color: #555555;
+}
+
+.menu-item-disabled {
+    cursor: default;
+}
+
+.btn-check {
+    position: absolute;
+    clip: rect(0, 0, 0, 0);
+}
+
+.btn-check:hover {
+    cursor: pointer;
+}
+
+.radio-toggle-button {
+    margin: 0 20px;
+}
+
+.toggle-switch {
+    padding-left: 3.5em;
+}
+
+.toggle-switch-disabled {
+    color: #888888;
 }
 
 .logo-page {
