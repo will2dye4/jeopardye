@@ -16,7 +16,7 @@ function PlayerList(props) {
     players = <li key="empty" className="list-group-item empty-list">No {listType}</li>;
   }
   return (
-    <Card className="player-list" mb={5}>
+    <Card className="player-list" mb={props.mb ?? 5} boxShadow={props.boxShadow}>
       <CardHeader>{listType}</CardHeader>
       <ul className="list-group">
         {players}

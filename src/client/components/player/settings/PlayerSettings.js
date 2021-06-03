@@ -23,7 +23,7 @@ import PlayerNameInput from './PlayerNameInput';
 class PlayerSettings extends React.Component {
   constructor(props) {
     super(props);
-    const player = props.players[props.playerID];
+    const player = this.getPlayer(props);
     this.state = {
       invalid: false,
       name: player?.name || '',
@@ -55,14 +55,31 @@ class PlayerSettings extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if ((!prevProps.playerID && this.props.playerID && this.props.players.hasOwnProperty(this.props.playerID)) ||
-        (this.props.playerID && !prevProps.players.hasOwnProperty(this.props.playerID) && this.props.players.hasOwnProperty(this.props.playerID))) {
-      const player = this.props.players[this.props.playerID];
+    const prevPlayers = this.getAllPlayers(prevProps);
+    const players = this.getAllPlayers();
+    const playerID = this.props.playerID;
+    if ((!prevProps.playerID && playerID && players.hasOwnProperty(playerID)) ||
+        (playerID && !prevPlayers.hasOwnProperty(playerID) && players.hasOwnProperty(playerID))) {
+      const player = players[playerID];
       this.setState({
         name: player.name,
         fontStyle: player.preferredFontStyle,
       });
     }
+  }
+
+  getAllPlayers(props) {
+    if (!props) {
+      props = this.props;
+    }
+    return {...props.players, ...props.spectators};
+  }
+
+  getPlayer(props) {
+    if (!props) {
+      props = this.props;
+    }
+    return this.getAllPlayers()[props.playerID];
   }
 
   handleFontStyleChanged(fontStyle) {
@@ -93,7 +110,7 @@ class PlayerSettings extends React.Component {
       if (!this.props.playerID) {
         this.props.createNewPlayer(this.state.name, this.state.fontStyle);
       } else {
-        const player = this.props.players[this.props.playerID];
+        const player = this.getPlayer();
         if (this.state.name !== player.name || this.state.fontStyle !== player.preferredFontStyle) {
           this.props.changePlayerName(this.props.playerID, this.state.name, this.state.fontStyle);
         }

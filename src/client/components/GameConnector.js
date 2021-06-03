@@ -82,17 +82,21 @@ class Connector extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (!prevProps.connected && this.props.connected && this.props.playerID) {
+    if ((!prevProps.connected && this.props.connected && this.props.playerID) ||
+        (!prevProps.playerID && this.props.playerID && this.props.connected)) {
       console.log('Establishing connection to server...');
-      this.props.clientConnect(this.props.playerID);
-      this.props.fetchCurrentGame();
+      this.connectAndFetchCurrentGame();
     }
     if (prevProps.connected && !this.props.connected && this.props.playerID) {
       /* TODO - show message to user? */
       console.log('Websocket connection lost. Attempting to reconnect...');
-      this.props.clientConnect(this.props.playerID);
-      this.props.fetchCurrentGame();
+      this.connectAndFetchCurrentGame();
     }
+  }
+
+  connectAndFetchCurrentGame() {
+    this.props.clientConnect(this.props.playerID);
+    this.props.fetchCurrentGame();
   }
 
   openPlayerEditor() {

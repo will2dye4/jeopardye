@@ -1,7 +1,7 @@
 import React from 'react';
 import { Flex } from '@chakra-ui/react';
 import Podium from './Podium';
-import SpectatorsBadge from './SpectatorsBadge';
+import SpectatorsMenu from './SpectatorsMenu';
 
 function getSize(players) {
   const numPlayers = Object.keys(players).length;
@@ -28,7 +28,7 @@ function Podiums(props) {
   return (
     <Flex className="podium-container" justify="center">
       {podiums}
-      {Object.keys(props.spectators).length > 0 && <SpectatorsBadge {...props} />}
+      {Object.keys(props.spectators).length > 0 && <SpectatorsMenu {...props} />}
     </Flex>
   );
 }
