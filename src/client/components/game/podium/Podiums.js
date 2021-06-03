@@ -20,7 +20,7 @@ function Podiums(props) {
   const allowSpectate = (!props.gameState.playerIsSpectating && !props.gameState.playerHasControl && Object.keys(props.players).length > 1);
   const podiums = Object.values(props.players).map(player => {
     const isCurrentPlayer = (player.playerID === props.playerID);
-    const active = (player.playerID === props.playerAnswering || (props.gameState.isDailyDouble && props.gameState.playerHasControl));
+    const active = (player.playerID === props.playerAnswering);
     return <Podium key={player.playerID} player={player} playerEditor={props.playerEditor} isCurrentPlayer={isCurrentPlayer}
                    allowSpectate={allowSpectate} startSpectating={props.startSpectating} active={active} size={size} />;
   });
