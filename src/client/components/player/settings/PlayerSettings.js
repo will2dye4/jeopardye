@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  Button,
-  Flex,
-  Heading,
-} from '@chakra-ui/react';
+import { Button, Flex, Heading } from '@chakra-ui/react';
 import {
   DEFAULT_FONT_STYLE,
   MAX_PLAYER_NAME_LENGTH,
@@ -126,9 +122,8 @@ class PlayerSettings extends React.Component {
 
   render() {
     const name = this.state.name.trim() || PLACEHOLDER_PLAYER_NAME;
-    const mode = this.props.playerID ? PlayerEditorModes.EDIT : PlayerEditorModes.CREATE;
-    const heading = (mode === PlayerEditorModes.CREATE ? 'Create New Player' : 'Edit Player Settings');
-    const buttonLabel = (mode === PlayerEditorModes.CREATE ? 'Create' : 'Save');
+    const heading = (this.props.mode === PlayerEditorModes.CREATE ? 'Create New Player' : 'Edit Player Settings');
+    const buttonLabel = (this.props.mode === PlayerEditorModes.CREATE ? 'Create' : 'Save');
     return (
       <Card className="game-settings" px={10} py={6}>
         <Heading mb={5} textAlign="center">{heading}</Heading>

@@ -90,3 +90,22 @@ export function getTimeElapsedMessage(isCurrentPlayer, playerName, amount) {
   }
   return response;
 }
+
+export function addPrevAnswerStatus(message, isCurrentPlayer, prevAnswerCorrect) {
+  if (isCurrentPlayer) {
+    if (prevAnswerCorrect) {
+      message = `Correct! ${message}`;
+    } else {
+      message = `Sorry, no. ${message}`;
+    }
+  }
+  return message;
+}
+
+export function getLastClueMessage(isCurrentPlayer, prevAnswerCorrect) {
+  return addPrevAnswerStatus('And now the last clue ...', isCurrentPlayer, prevAnswerCorrect);
+}
+
+export function getEndOfRoundMessage(isCurrentPlayer, prevAnswerCorrect, round) {
+  return addPrevAnswerStatus(`That's the end of the ${round} Jeopardye round.`, isCurrentPlayer, prevAnswerCorrect);
+}

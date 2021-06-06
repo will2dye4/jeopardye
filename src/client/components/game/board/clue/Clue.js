@@ -14,11 +14,14 @@ class Clue extends React.Component {
   }
 
   render() {
+    const isActiveClue = (this.props.clue.clueID === this.props.activeClue?.clueID);
     let classes = 'clue-border';
     let text = <br />;
-    if (!this.props.clue.played && this.props.clue.value) {
+    if ((!this.props.clue.played && this.props.clue.value) || isActiveClue) {
       if (this.props.gameState.playerHasControl) {
         classes += ' selectable-clue hover-pointer';
+      } else if (isActiveClue) {
+        classes += ' selected-clue';
       }
       text = `$${this.props.clue.value}`;
     }

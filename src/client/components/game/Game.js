@@ -9,7 +9,9 @@ import { formatList, isDailyDouble } from '../../../utils.mjs';
 import {
   getBuzzInMessage,
   getCorrectAnswerMessage,
+  getEndOfRoundMessage,
   getIncorrectAnswerMessage,
+  getLastClueMessage,
   getSelectClueMessage,
   getTimeElapsedMessage,
   getWaitingForBuzzMessage,
@@ -24,7 +26,7 @@ import Podiums from './podium/Podiums';
 import StatusBar from './status/StatusBar';
 
 const DISMISS_CLUE_DELAY_MILLIS = 5000;
-const SHOW_CLUE_DELAY_MILLIS = 500;
+const SHOW_CLUE_DELAY_MILLIS = 1000;
 
 const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
@@ -321,7 +323,7 @@ class Game extends React.Component {
       speakAnswer(this.props.prevAnswer.clue.answer);
     }
     this.getTimerRef()?.reset();
-    this.checkForLastClue(isCurrentPlayer);
+    this.checkForLastClue(isCurrentPlayer, true);
   }
 
   handleIncorrectAnswer(isCurrentPlayer, timeElapsed, playerName) {
@@ -365,25 +367,25 @@ class Game extends React.Component {
     }
   }
 
-  checkForLastClue(prevAnswerCorrect = false) {
-    let unplayedClues = getUnplayedClues(this.props.board, 2);
+  checkForLastClue(isCurrentPlayer, prevAnswerCorrect = false) {
+    const appearance = (isCurrentPlayer ? (prevAnswerCorrect ? 'correct' : 'incorrect') : 'default');
+    const unplayedClues = getUnplayedClues(this.props.board, 2);
     if (unplayedClues.length === 0) {
-      this.setState({status: `That's the end of the ${this.props.game.currentRound} Jeopardye round.`});
+      this.setStatus({
+        appearance: appearance,
+        text: getEndOfRoundMessage(isCurrentPlayer, prevAnswerCorrect, this.props.game.currentRound),
+    });
     } else if (unplayedClues.length === 1) {
-      let clue = {...unplayedClues[0]};
-      clue.category = this.props.board.categories[clue.categoryID].name;
-      let status = 'And now the last clue ...';
-      if (prevAnswerCorrect) {
-        status = {
-          appearance: 'correct',
-          text: 'Correct! And now the last clue ...',
-        };
-      }
-      this.setState({status: status});
+      this.setStatus({
+        appearance: appearance,
+        text: getLastClueMessage(isCurrentPlayer, prevAnswerCorrect),
+      });
       if (this.playerHasControl()) {
+        const clue = {...unplayedClues[0]};
+        clue.category = this.props.board.categories[clue.categoryID].name;
         setTimeout(function() {
           this.handleClueClick(clue);
-        }.bind(this), SHOW_CLUE_DELAY_MILLIS * 2);
+        }.bind(this), SHOW_CLUE_DELAY_MILLIS);
       }
     }
   }
@@ -413,14 +415,15 @@ class Game extends React.Component {
       };
     }
     this.setState(newState);
-    speakAnswer(this.props.activeClue.answer, SHOW_CLUE_DELAY_MILLIS * 2);
+    speakAnswer(this.props.activeClue.answer, SHOW_CLUE_DELAY_MILLIS);
     setTimeout(this.dismissActiveClue, DISMISS_CLUE_DELAY_MILLIS);
   }
 
   dismissActiveClue() {
     const playerName = this.getPlayerName(this.props.playerInControl);
+    const isCurrentPlayer = this.playerHasControl();
     let status;
-    if (this.playerHasControl()) {
+    if (isCurrentPlayer) {
       status = {
         appearance: 'action',
         text: getSelectClueMessage(playerName),
@@ -439,7 +442,7 @@ class Game extends React.Component {
     });
     this.getTimerRef()?.reset();
     this.props.dismissActiveClue();
-    this.checkForLastClue();
+    this.checkForLastClue(isCurrentPlayer, this.props.prevAnswer?.correct);
   }
 
   handleClueClick(clue) {

@@ -48,6 +48,7 @@ body {
     border: 10px solid #1D08A3;
 }
 
+.clue-border.selected-clue,
 .clue-border.selectable-clue:hover {
     border: 10px solid #FFCC00;
 }

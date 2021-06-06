@@ -29,10 +29,12 @@ function mapStateToProps(state) {
   let players = {};
   let spectators = {};
   Object.entries(state.players).forEach(([playerID, player]) => {
-    if (player.spectating) {
-      spectators[playerID] = player;
-    } else {
-      players[playerID] = player;
+    if (player.active) {
+      if (player.spectating) {
+        spectators[playerID] = player;
+      } else {
+        players[playerID] = player;
+      }
     }
   });
   return {...state, players: players, spectators: spectators};
