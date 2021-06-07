@@ -4,6 +4,7 @@ import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
   DAILY_DOUBLE_MINIMUM_WAGER,
+  MAX_PLAYERS_PER_GAME,
 } from '../../../constants.mjs';
 import { formatList, isDailyDouble } from '../../../utils.mjs';
 import {
@@ -240,6 +241,10 @@ class Game extends React.Component {
 
   checkPlayerInGame() {
     if (this.props.game && this.props.playerID && this.props.game.playerIDs.indexOf(this.props.playerID) === -1) {
+      if (Object.keys(this.props.players).length >= MAX_PLAYERS_PER_GAME) {
+        console.log('Game is full. Becoming a spectator.');
+        this.props.startSpectating(this.props.playerID);
+      }
       console.log('Joining game...');
       this.props.joinGame(this.props.game.gameID, this.props.playerID);
     }
@@ -421,9 +426,11 @@ class Game extends React.Component {
 
   dismissActiveClue() {
     const playerName = this.getPlayerName(this.props.playerInControl);
-    const isCurrentPlayer = this.playerHasControl();
+    const playerHasControl = this.playerHasControl();
+    const timeElapsed = !this.props.prevAnswer;
+    const isCurrentPlayer = (playerHasControl && !timeElapsed && this.props.prevAnswer.playerID === this.props.playerID);
     let status;
-    if (isCurrentPlayer) {
+    if (playerHasControl) {
       status = {
         appearance: 'action',
         text: getSelectClueMessage(playerName),

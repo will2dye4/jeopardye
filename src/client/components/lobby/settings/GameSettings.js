@@ -66,7 +66,7 @@ class GameSettings extends React.Component {
   }
 
   render() {
-    if (this.state.creatingGame) {
+    if (this.props.gameStarting || this.state.creatingGame) {
       return (
         <Card className="game-settings">
           <Box className="game-starting" textAlign="center">

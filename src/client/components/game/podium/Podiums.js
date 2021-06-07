@@ -1,15 +1,16 @@
 import React from 'react';
 import { Flex } from '@chakra-ui/react';
+import { MAX_PLAYERS_PER_GAME } from '../../../../constants.mjs';
 import Podium from './Podium';
 import SpectatorsMenu from './SpectatorsMenu';
 
 function getSize(players) {
   const numPlayers = Object.keys(players).length;
-  if (numPlayers >= 6) {
+  if (numPlayers >= MAX_PLAYERS_PER_GAME) {
     return 'xs';
-  } else if (numPlayers === 5) {
+  } else if (numPlayers === MAX_PLAYERS_PER_GAME - 1) {
     return 'sm';
-  } else if (numPlayers === 4) {
+  } else if (numPlayers === MAX_PLAYERS_PER_GAME - 2) {
     return 'md';
   }
   return 'lg';

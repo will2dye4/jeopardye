@@ -21,6 +21,7 @@ import {
   updateGameSettings,
   websocketConnect,
 } from '../actions/action_creators';
+import { MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
 import Game from './game/Game';
 import Lobby from './lobby/Lobby';
 import PlayerEditor from './player/PlayerEditor';
@@ -110,15 +111,16 @@ class Connector extends React.Component {
   }
 
   render() {
+    const allowJoin = (Object.keys(this.props.players).length < MAX_PLAYERS_PER_GAME);
     const playerEditor = {
       open: this.openPlayerEditor,
       close: this.closePlayerEditor,
     };
     let content;
     if (this.props.game) {
-      content = <Game playerEditor={playerEditor} {...this.props} />;
+      content = <Game allowJoin={allowJoin} playerEditor={playerEditor} {...this.props} />;
     } else {
-      content = <Lobby playerEditor={playerEditor} {...this.props} />;
+      content = <Lobby allowJoin={allowJoin} playerEditor={playerEditor} {...this.props} />;
     }
     return (
       <React.Fragment>

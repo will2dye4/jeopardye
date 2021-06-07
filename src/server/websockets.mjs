@@ -4,6 +4,7 @@ import {
   DAILY_DOUBLE_COUNTDOWN_SECONDS,
   DEFAULT_COUNTDOWN_SECONDS,
   EventTypes,
+  MAX_PLAYERS_PER_GAME,
   WAGER_COUNTDOWN_SECONDS,
 } from '../constants.mjs';
 import { GamePlayer } from '../models/player.mjs';
@@ -118,6 +119,20 @@ async function handleJoinGame(ws, event) {
   if (!player) {
     handleError(ws, event, 'player not found', 404);
     return;
+  }
+  if (!player.spectating) {
+    let players;
+    try {
+      players = await getPlayers(game.playerIDs);
+    } catch (e) {
+      handleError('failed to get players', 500);
+      return;
+    }
+    const numPlayers = players.filter(player => !player.spectating).length;
+    if (numPlayers >= MAX_PLAYERS_PER_GAME) {
+      handleError(ws, event, 'max players exceeded', 400);
+      return;
+    }
   }
   const gamePlayer = GamePlayer.fromPlayer(player);
   addPlayerToGame(gameID, playerID).then(() => {
@@ -407,15 +422,38 @@ async function handleStartSpectating(ws, event) {
 }
 
 async function handleStopSpectating(ws, event) {
-  const { playerID } = event.payload;
+  const { gameID, playerID } = event.payload;
   const player = await getPlayer(playerID);
   if (!player) {
     handleError(ws, event, 'player not found', 404);
     return;
   }
+  if (gameID) {
+    const game = await getGame(gameID);
+    if (!game) {
+      handleError(ws, event, 'game not found', 404);
+      return;
+    }
+    if (game.playerIDs.indexOf(playerID) === -1) {
+      handleError(ws, event, 'player not in game', 400);
+      return;
+    }
+    let players;
+    try {
+      players = await getPlayers(game.playerIDs);
+    } catch (e) {
+      handleError(ws, event, 'failed to get players', 500);
+      return;
+    }
+    const numPlayers = players.filter(player => !player.spectating).length;
+    if (numPlayers >= MAX_PLAYERS_PER_GAME) {
+      handleError(ws, event, 'max players exceeded', 400);
+      return;
+    }
+  }
   updatePlayer(playerID, {spectating: false}).then(() => {
     logger.info(`${playerID} stopped spectating.`);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, event.payload));
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, {playerID}));
   });
 }
 

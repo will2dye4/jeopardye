@@ -11,6 +11,7 @@ function newStoreData() {
     board: null,
     game: null,
     gameSettings: new GameSettings(),
+    gameStarting: false,
     players: {},
     answerDelayMillis: 0,
     activeClue: null,
@@ -48,6 +49,7 @@ function handleNewGame(storeData, newGame) {
   return {
     ...storeData,
     game: newGame,
+    gameStarting: false,
     board: newBoard,
     players: newPlayers,
     activeClue: newGame.activeClue,
@@ -55,6 +57,11 @@ function handleNewGame(storeData, newGame) {
     playerInControl: newGame.playerInControl,
     prevAnswer: null,
   };
+}
+
+function handleGameStarting(storeData, _) {
+  console.log(`New game starting...`);
+  return {...storeData, gameStarting: true};
 }
 
 function handleGameStarted(storeData, event) {
@@ -226,6 +233,7 @@ function handleWaitingPeriodEnded(storeData, event) {
 
 const eventHandlers = {
   [EventTypes.ERROR]: handleError,
+  [EventTypes.GAME_STARTING]: handleGameStarting,
   [EventTypes.GAME_STARTED]: handleGameStarted,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,

@@ -140,8 +140,12 @@ export function startSpectating(playerID) {
   return send(new WebsocketEvent(EventTypes.START_SPECTATING, {playerID}));
 }
 
-export function stopSpectating(playerID) {
-  return send(new WebsocketEvent(EventTypes.STOP_SPECTATING, {playerID}));
+export function stopSpectating(playerID, gameID) {
+  const payload = {playerID};
+  if (gameID) {
+    payload.gameID = gameID;
+  }
+  return send(new WebsocketEvent(EventTypes.STOP_SPECTATING, payload));
 }
 
 export function joinGame(gameID, playerID) {

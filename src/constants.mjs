@@ -49,6 +49,8 @@ export const DEFAULT_NUM_ROUNDS = 2;
 export const MIN_NUM_ROUNDS = 1;
 export const MAX_NUM_ROUNDS = Object.keys(Rounds).length - 1;
 
+export const MAX_PLAYERS_PER_GAME = 6;
+
 export const DEFAULT_FONT_STYLE = 'Dancing Script';
 export const ALL_FONT_STYLES = [
   DEFAULT_FONT_STYLE,
@@ -110,6 +112,7 @@ export const WAGER_COUNTDOWN_SECONDS = 15;
 
 export const EventTypes = {
   ERROR: 'error',
+  GAME_STARTING: 'game_starting',
   GAME_STARTED: 'game_started',
   GAME_SETTINGS_CHANGED: 'game_settings_changed',
   JOIN_GAME: 'join_game',

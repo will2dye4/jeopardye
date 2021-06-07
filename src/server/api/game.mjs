@@ -9,6 +9,7 @@ import {
   EventTypes,
   MAX_NUM_ROUNDS,
   MIN_NUM_ROUNDS,
+  MAX_PLAYERS_PER_GAME,
   Rounds,
 } from '../../constants.mjs';
 import { Category, Game, Round } from '../../models/game.mjs';
@@ -89,10 +90,16 @@ async function handleCreateGame(req, res, next) {
   let playerIDs = [];
   if (req.body.hasOwnProperty('playerIDs')) {
     playerIDs = req.body.playerIDs;
+    let players;
     try {
-      await getPlayers(playerIDs);
+      players = await getPlayers(playerIDs);
     } catch (e) {
       handleError(`Failed to get players: ${e}`, 404);
+      return;
+    }
+    const numPlayers = players.filter(player => !player.spectating).length;
+    if (numPlayers > MAX_PLAYERS_PER_GAME) {
+      handleError(`Maximum number of players (${MAX_PLAYERS_PER_GAME}) exceeded`, 400);
       return;
     }
   }
@@ -104,6 +111,8 @@ async function handleCreateGame(req, res, next) {
       return;
     }
   }
+
+  broadcast(new WebsocketEvent(EventTypes.GAME_STARTING, {}));
 
   let rounds = {};
   for (const i of range(numRounds)) {

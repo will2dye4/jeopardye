@@ -154,6 +154,7 @@ html, body {
 .card-header {
     background-color: #1D08A3;
     color: white;
+    cursor: default;
 }
 
 .empty-list, .menu-item-disabled {
@@ -196,6 +197,7 @@ html, body {
 
 .logo {
     color: #1D08A3;
+    cursor: default;
     font-family: "Gyparody", sans-serif !important;
     font-weight: bolder !important;
     font-size: 120px !important;

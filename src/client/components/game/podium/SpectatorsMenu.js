@@ -18,6 +18,7 @@ function SpectatorsMenu(props) {
   const numSpectators = Object.keys(props.spectators).length;
   const spectating = props.gameState.playerIsSpectating;
   const title = (spectating ? 'You are spectating' : `${numSpectators} spectator${numSpectators > 1 ? 's' : ''}`);
+  const stopSpectating = (props.allowJoin ? (playerID) => props.stopSpectating(playerID, props.gameState.gameID) : null);
   return (
     <Popover>
       <PopoverTrigger>
@@ -34,8 +35,7 @@ function SpectatorsMenu(props) {
         <PopoverCloseButton />
         <PopoverBody p={0}>
           <PlayerList spectators={true} players={props.spectators} currentPlayerID={props.playerID}
-                      edit={props.playerEditor.open} changeSpectatingStatus={() => props.stopSpectating(props.playerID)}
-                      mb={0} boxShadow="dark-lg" />
+                      mb={0} boxShadow="dark-lg" edit={props.playerEditor.open} changeSpectatingStatus={stopSpectating} />
         </PopoverBody>
       </PopoverContent>
     </Popover>

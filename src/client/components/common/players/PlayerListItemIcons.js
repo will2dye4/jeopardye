@@ -4,6 +4,9 @@ import { faEye, faPen, faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import Icon from '../Icon';
 
 function getSpectatingStateIcon(props) {
+  if (!props.changeSpectatingStatus) {
+    return null;
+  }
   let iconProps;
   if (props.isSpectator) {
     iconProps = {
