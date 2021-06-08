@@ -44,6 +44,7 @@ class Game extends React.Component {
     };
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
     this.handleClueClick = this.handleClueClick.bind(this);
+    this.markActiveClueAsInvalid = this.markActiveClueAsInvalid.bind(this);
     this.revealAnswer = this.revealAnswer.bind(this);
     this.voteToSkipActiveClue = this.voteToSkipActiveClue.bind(this);
   }
@@ -62,17 +63,14 @@ class Game extends React.Component {
           this.props.buzzIn(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
         }
       } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
-        if (key === 's') {
+        if (key === 's' && this.props.playersVotingToSkipClue.indexOf(this.props.playerID) === -1) {
           console.log('Voting to skip the current clue...');
           event.preventDefault();
           this.voteToSkipActiveClue();
         } else if (key === 'i' && this.props.playersMarkingClueInvalid.indexOf(this.props.playerID) === -1) {
+          console.log('Marking the current clue as invalid...');
           event.preventDefault();
-          markClueAsInvalid(this.props.activeClue.clueID).then(response => {
-            if (response.ok) {
-              this.props.markClueAsInvalid(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
-            }
-          });
+          this.markActiveClueAsInvalid();
         }
       }
     }.bind(this));
@@ -243,14 +241,34 @@ class Game extends React.Component {
         this.props.playersVotingToSkipClue.length !== Object.keys(this.props.players).length) {
       let newVoters = [];
       this.props.playersVotingToSkipClue.forEach(playerID => {
-        if (playerID !== this.props.playerID && prevProps.playersVotingToSkipClue.indexOf(playerID) === -1) {
-          newVoters.push(this.getPlayerName(playerID));
+        if (prevProps.playersVotingToSkipClue.indexOf(playerID) === -1) {
+          const name = (playerID === this.props.playerID ? 'You' : this.getPlayerName(playerID));
+          newVoters.push(name);
         }
       });
       if (newVoters.length) {
         toast({
           position: 'top',
           title: `${formatList(newVoters)} voted to skip this clue.`,
+          status: 'info',
+          isClosable: true,
+        });
+      }
+    }
+
+    if (this.props.game && prevProps.playersMarkingClueInvalid !== this.props.playersMarkingClueInvalid &&
+      this.props.playersMarkingClueInvalid.length > prevProps.playersMarkingClueInvalid.length) {
+      let newPlayers = [];
+      this.props.playersMarkingClueInvalid.forEach(playerID => {
+        if (prevProps.playersMarkingClueInvalid.indexOf(playerID) === -1) {
+          const name = (playerID === this.props.playerID ? 'You' : this.getPlayerName(playerID));
+          newPlayers.push(name);
+        }
+      });
+      if (newPlayers.length) {
+        toast({
+          position: 'top',
+          title: `${formatList(newPlayers)} marked this clue as invalid.`,
           status: 'info',
           isClosable: true,
         });
@@ -481,6 +499,17 @@ class Game extends React.Component {
     }
   }
 
+  markActiveClueAsInvalid(event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    markClueAsInvalid(this.props.activeClue.clueID).then(response => {
+      if (response.ok) {
+        this.props.markClueAsInvalid(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+      }
+    });
+  }
+
   voteToSkipActiveClue(event) {
     if (event) {
       event.stopPropagation();
@@ -511,11 +540,11 @@ class Game extends React.Component {
                allowAnswers={this.props.allowAnswers}
                revealAnswer={this.props.revealAnswer}
                buzzIn={this.props.buzzIn}
-               markClueAsInvalid={this.props.markClueAsInvalid}
                playersMarkingClueInvalid={this.props.playersMarkingClueInvalid}
                playersVotingToSkipClue={this.props.playersVotingToSkipClue}
                playerAnswering={this.props.playerAnswering}
                handleClueClick={this.handleClueClick}
+               markActiveClueAsInvalid={this.markActiveClueAsInvalid}
                voteToSkipActiveClue={this.voteToSkipActiveClue}
                {...this.state} />
         <StatusBar gameState={gameState} {...this.props} {...this.state} />

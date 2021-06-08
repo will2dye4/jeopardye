@@ -31,7 +31,7 @@ class ActiveClue extends React.Component {
     const skipIcon = document.getElementById('skip-icon');
     if (event.target === invalidIcon || event.target.parentNode === invalidIcon) {
       if (this.props.playersMarkingClueInvalid.indexOf(this.props.gameState.playerID) === -1) {
-        this.props.markClueAsInvalid(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+        this.props.markActiveClueAsInvalid(event);
       }
     } else if (event.target === skipIcon || event.target.parentNode === skipIcon) {
       if (this.props.playersVotingToSkipClue.indexOf(this.props.gameState.playerID) === -1) {

@@ -53,7 +53,7 @@ export async function setActiveClue(game, clue) {
   const cluePlayedKey = `rounds.${game.currentRound}.categories.${clue.categoryID}.clues.$[clue].played`;
   const updates = {
     $set: {
-      activeClue: {...clue, played: true, playersAttempted: [], playersVotingToSkip: []},
+      activeClue: {...clue, played: true, playersAttempted: [], playersMarkingInvalid: [], playersVotingToSkip: []},
       currentWager: null,
       [cluePlayedKey]: true
     }
@@ -76,6 +76,10 @@ export async function setPlayerAnswering(gameID, playerID) {
     }
   };
   await updateGameFields(gameID, updates);
+}
+
+export async function markActiveClueAsInvalid(gameID, playerID) {
+  await updateGameFields(gameID, {$addToSet: {'activeClue.playersMarkingInvalid': playerID}});
 }
 
 export async function voteToSkipActiveClue(gameID, playerID) {

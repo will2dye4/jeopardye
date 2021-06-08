@@ -11,7 +11,6 @@ export const ActionTypes = {
   CREATE_NEW_PLAYER: 'JEOPARDYE::CREATE_NEW_PLAYER',
   CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
-  MARK_CLUE_AS_INVALID: 'JEOPARDYE::MARK_CLUE_AS_INVALID',
   SKIP_ACTIVE_CLUE: 'JEOPARDYE::SKIP_ACTIVE_CLUE',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
@@ -168,6 +167,10 @@ export function submitWager(gameID, playerID, categoryID, clueID, wager) {
   return send(new WebsocketEvent(EventTypes.SUBMIT_WAGER, {gameID, playerID, categoryID, clueID, wager}));
 }
 
+export function markClueAsInvalid(gameID, playerID, categoryID, clueID) {
+  return send(new WebsocketEvent(EventTypes.MARK_CLUE_AS_INVALID, {gameID, playerID, categoryID, clueID}));
+}
+
 export function voteToSkipClue(gameID, playerID, categoryID, clueID) {
   return send(new WebsocketEvent(EventTypes.VOTE_TO_SKIP_CLUE, {gameID, playerID, categoryID, clueID}));
 }
@@ -183,21 +186,6 @@ export function updateGameSettings(settings) {
 export function dismissActiveClue() {
   return {
     type: ActionTypes.DISMISS_CLUE,
-    payload: {},
-  }
-}
-
-export function markClueAsInvalid(gameID, playerID, categoryID, clueID) {
-  /* TODO - convert this to a websocket event so other players are notified (show a badge next to the icon) */
-  return {
-    type: ActionTypes.MARK_CLUE_AS_INVALID,
-    payload: {gameID, playerID, categoryID, clueID},
-  }
-}
-
-export function skipActiveClue() {
-  return {
-    type: ActionTypes.SKIP_ACTIVE_CLUE,
     payload: {},
   }
 }

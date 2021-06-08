@@ -54,6 +54,8 @@ function handleNewGame(storeData, newGame) {
     board: newBoard,
     players: newPlayers,
     activeClue: newGame.activeClue,
+    playersMarkingClueInvalid: newGame.activeClue?.playersMarkingInvalid || [],
+    playersVotingToSkipClue: newGame.activeClue?.playersVotingToSkip || [],
     playerAnswering: newGame.playerAnswering,
     playerInControl: newGame.playerInControl,
     prevAnswer: null,
@@ -165,6 +167,20 @@ function handlePlayerWagered(storeData, event) {
   return {...storeData, currentWager: wager, playerAnswering: playerID, responseTimerElapsed: false};
 }
 
+function handlePlayerMarkedClueAsInvalid(storeData, event) {
+  const { playerID, categoryID, clueID } = event.payload;
+  if (storeData.activeClue.categoryID !== categoryID || storeData.activeClue.clueID !== clueID) {
+    console.log(`Ignoring player marking non-active clue ${clueID} (category ${categoryID}) as invalid.`);
+    return storeData;
+  }
+  if (storeData.playersMarkingClueInvalid.indexOf(playerID) !== -1) {
+    console.log(`Ignoring player marking active clue as invalid because ${playerID} already marked this clue.`);
+    return storeData;
+  }
+  console.log(`${playerID} marked clue ${clueID} (category ${categoryID}) as invalid.`);
+  return {...storeData, playersMarkingClueInvalid: storeData.playersMarkingClueInvalid.concat(playerID)};
+}
+
 function handlePlayerVotedToSkipClue(storeData, event) {
   const { playerID, categoryID, clueID } = event.payload;
   if (storeData.activeClue.categoryID !== categoryID || storeData.activeClue.clueID !== clueID) {
@@ -258,6 +274,7 @@ const eventHandlers = {
   [EventTypes.PLAYER_BUZZED]: handlePlayerBuzzed,
   [EventTypes.PLAYER_ANSWERED]: handlePlayerAnswered,
   [EventTypes.PLAYER_WAGERED]: handlePlayerWagered,
+  [EventTypes.PLAYER_MARKED_CLUE_AS_INVALID]: handlePlayerMarkedClueAsInvalid,
   [EventTypes.PLAYER_VOTED_TO_SKIP_CLUE]: handlePlayerVotedToSkipClue,
   [EventTypes.PLAYER_STARTED_SPECTATING]: handlePlayerSpectatingStatusChanged(true),
   [EventTypes.PLAYER_STOPPED_SPECTATING]: handlePlayerSpectatingStatusChanged(false),
@@ -297,14 +314,6 @@ export function GameReducer(storeData, action) {
       return {...storeData, playerID: player.playerID, players: newPlayers};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
-    case ActionTypes.MARK_CLUE_AS_INVALID:
-      const { gameID, playerID, categoryID, clueID } = action.payload;
-      if (storeData.game?.gameID === gameID && storeData.activeClue?.categoryID === categoryID &&
-          storeData.activeClue?.clueID === clueID && storeData.players.hasOwnProperty(playerID)) {
-        return {...storeData, playersMarkingClueInvalid: storeData.playersMarkingClueInvalid.concat(playerID)};
-      } else {
-        return storeData;
-      }
     case ActionTypes.SKIP_ACTIVE_CLUE:
       return {...storeData, allowAnswers: false, revealAnswer: true};
     case ActionTypes.REDUX_WEBSOCKET_OPEN:

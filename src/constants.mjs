@@ -135,6 +135,8 @@ export const EventTypes = {
   PLAYER_ANSWERED: 'player_answered',
   SUBMIT_WAGER: 'submit_wager',
   PLAYER_WAGERED: 'player_wagered',
+  MARK_CLUE_AS_INVALID: 'mark_clue_as_invalid',
+  PLAYER_MARKED_CLUE_AS_INVALID: 'player_marked_clue_as_invalid',
   VOTE_TO_SKIP_CLUE: 'vote_to_skip_clue',
   PLAYER_VOTED_TO_SKIP_CLUE: 'player_voted_to_skip_clue',
   /* server timing events */

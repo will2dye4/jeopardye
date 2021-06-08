@@ -21,6 +21,7 @@ import {
   getGame,
   getPlayer,
   getPlayers,
+  markActiveClueAsInvalid,
   setActiveClue,
   setPlayerAnswering,
   updateGame,
@@ -458,6 +459,30 @@ async function handleStopSpectating(ws, event) {
   });
 }
 
+async function handleMarkClueAsInvalid(ws, event) {
+  const game = await validateGamePlayerAndClue(ws, event);
+  if (!game) {
+    return;
+  }
+  if (!game.activeClue) {
+    handleError(ws, event, 'invalid mark invalid attempt - no active clue', 400);
+    return;
+  }
+  const { gameID, playerID, categoryID, clueID } = event.payload;
+  if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
+    handleError(ws, event, `invalid mark invalid attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    return;
+  }
+  if (game.activeClue.playersMarkingInvalid.indexOf(playerID) !== -1) {
+    handleError(ws, event, `invalid mark invalid attempt - player ${playerID} has already marked clue ${clueID}`, 400);
+    return;
+  }
+  markActiveClueAsInvalid(gameID, playerID).then(() => {
+    logger.info(`${playerID} marked clue ${clueID} (category ${categoryID}) as invalid.`);
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_MARKED_CLUE_AS_INVALID, event.payload));
+  });
+}
+
 async function handleVoteToSkipClue(ws, event) {
   const game = await validateGamePlayerAndClue(ws, event);
   if (!game) {
@@ -512,6 +537,7 @@ const eventHandlers = {
   [EventTypes.SUBMIT_WAGER]: handleSubmitWager,
   [EventTypes.START_SPECTATING]: handleStartSpectating,
   [EventTypes.STOP_SPECTATING]: handleStopSpectating,
+  [EventTypes.MARK_CLUE_AS_INVALID]: handleMarkClueAsInvalid,
   [EventTypes.VOTE_TO_SKIP_CLUE]: handleVoteToSkipClue,
 }
 
