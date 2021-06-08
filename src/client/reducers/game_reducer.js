@@ -18,6 +18,7 @@ function newStoreData() {
     playerAnswering: null,
     playerInControl: null,
     playersMarkingClueInvalid: [],
+    playersVotingToSkipClue: [],
     prevAnswer: null,
     currentWager: null,
     allowAnswers: false,
@@ -118,6 +119,7 @@ function handlePlayerSelectedClue(storeData, event) {
     board: newBoard,
     currentWager: null,
     playersMarkingClueInvalid: [],
+    playersVotingToSkipClue: [],
     prevAnswer: null,
     revealAnswer: false,
   };
@@ -161,6 +163,20 @@ function handlePlayerWagered(storeData, event) {
   const { playerID, wager } = event.payload;
   console.log(`${playerID} wagered $${wager}.`);
   return {...storeData, currentWager: wager, playerAnswering: playerID, responseTimerElapsed: false};
+}
+
+function handlePlayerVotedToSkipClue(storeData, event) {
+  const { playerID, categoryID, clueID } = event.payload;
+  if (storeData.activeClue.categoryID !== categoryID || storeData.activeClue.clueID !== clueID) {
+    console.log(`Ignoring vote to skip non-active clue ${clueID} (category ${categoryID}).`);
+    return storeData;
+  }
+  if (storeData.playersVotingToSkipClue.indexOf(playerID) !== -1) {
+    console.log(`Ignoring vote to skip active clue because ${playerID} already voted for this clue.`);
+    return storeData;
+  }
+  console.log(`${playerID} voted to skip clue ${clueID} (category ${categoryID}).`);
+  return {...storeData, playersVotingToSkipClue: storeData.playersVotingToSkipClue.concat(playerID)};
 }
 
 function handlePlayerWentActive(storeData, event) {
@@ -242,6 +258,7 @@ const eventHandlers = {
   [EventTypes.PLAYER_BUZZED]: handlePlayerBuzzed,
   [EventTypes.PLAYER_ANSWERED]: handlePlayerAnswered,
   [EventTypes.PLAYER_WAGERED]: handlePlayerWagered,
+  [EventTypes.PLAYER_VOTED_TO_SKIP_CLUE]: handlePlayerVotedToSkipClue,
   [EventTypes.PLAYER_STARTED_SPECTATING]: handlePlayerSpectatingStatusChanged(true),
   [EventTypes.PLAYER_STOPPED_SPECTATING]: handlePlayerSpectatingStatusChanged(false),
   [EventTypes.PLAYER_WENT_ACTIVE]: handlePlayerWentActive,

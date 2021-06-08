@@ -112,11 +112,13 @@ export const WAGER_COUNTDOWN_SECONDS = 15;
 
 export const EventTypes = {
   ERROR: 'error',
+  /* game events */
   GAME_STARTING: 'game_starting',
   GAME_STARTED: 'game_started',
   GAME_SETTINGS_CHANGED: 'game_settings_changed',
-  JOIN_GAME: 'join_game',
+  /* player events */
   PLAYER_CHANGED_NAME: 'player_changed_name',
+  JOIN_GAME: 'join_game',
   PLAYER_JOINED: 'player_joined',
   PLAYER_WENT_ACTIVE: 'player_went_active',
   PLAYER_WENT_INACTIVE: 'player_went_inactive',
@@ -124,6 +126,7 @@ export const EventTypes = {
   PLAYER_STARTED_SPECTATING: 'player_started_spectating',
   STOP_SPECTATING: 'stop_spectating',
   PLAYER_STOPPED_SPECTATING: 'player_stopped_spectating',
+  /* gameplay events */
   SELECT_CLUE: 'select_clue',
   PLAYER_SELECTED_CLUE: 'player_selected_clue',
   BUZZ_IN: 'buzz_in',
@@ -132,6 +135,8 @@ export const EventTypes = {
   PLAYER_ANSWERED: 'player_answered',
   SUBMIT_WAGER: 'submit_wager',
   PLAYER_WAGERED: 'player_wagered',
+  VOTE_TO_SKIP_CLUE: 'vote_to_skip_clue',
+  PLAYER_VOTED_TO_SKIP_CLUE: 'player_voted_to_skip_clue',
   /* server timing events */
   BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
   RESPONSE_PERIOD_ENDED: 'response_period_ended',

@@ -168,6 +168,10 @@ export function submitWager(gameID, playerID, categoryID, clueID, wager) {
   return send(new WebsocketEvent(EventTypes.SUBMIT_WAGER, {gameID, playerID, categoryID, clueID, wager}));
 }
 
+export function voteToSkipClue(gameID, playerID, categoryID, clueID) {
+  return send(new WebsocketEvent(EventTypes.VOTE_TO_SKIP_CLUE, {gameID, playerID, categoryID, clueID}));
+}
+
 export function clientConnect(playerID) {
   return send(new WebsocketEvent(EventTypes.CLIENT_CONNECT, {playerID}));
 }

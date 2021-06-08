@@ -45,7 +45,7 @@ class Game extends React.Component {
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
     this.handleClueClick = this.handleClueClick.bind(this);
     this.revealAnswer = this.revealAnswer.bind(this);
-    this.skipActiveClue = this.skipActiveClue.bind(this);
+    this.voteToSkipActiveClue = this.voteToSkipActiveClue.bind(this);
   }
 
   componentDidMount() {
@@ -63,9 +63,9 @@ class Game extends React.Component {
         }
       } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
         if (key === 's') {
-          console.log('Skipping the current clue...');
+          console.log('Voting to skip the current clue...');
           event.preventDefault();
-          this.skipActiveClue();
+          this.voteToSkipActiveClue();
         } else if (key === 'i' && this.props.playersMarkingClueInvalid.indexOf(this.props.playerID) === -1) {
           event.preventDefault();
           markClueAsInvalid(this.props.activeClue.clueID).then(response => {
@@ -237,6 +237,25 @@ class Game extends React.Component {
         });
       }
     }
+
+    if (this.props.game && prevProps.playersVotingToSkipClue !== this.props.playersVotingToSkipClue &&
+        this.props.playersVotingToSkipClue.length > prevProps.playersVotingToSkipClue.length &&
+        this.props.playersVotingToSkipClue.length !== Object.keys(this.props.players).length) {
+      let newVoters = [];
+      this.props.playersVotingToSkipClue.forEach(playerID => {
+        if (playerID !== this.props.playerID && prevProps.playersVotingToSkipClue.indexOf(playerID) === -1) {
+          newVoters.push(this.getPlayerName(playerID));
+        }
+      });
+      if (newVoters.length) {
+        toast({
+          position: 'top',
+          title: `${formatList(newVoters)} voted to skip this clue.`,
+          status: 'info',
+          isClosable: true,
+        });
+      }
+    }
   }
 
   checkPlayerInGame() {
@@ -400,8 +419,12 @@ class Game extends React.Component {
       playSound('/audio/timer_elapsed.mp3');
     }
     let status;
+    let emoji = 'timer_clock';
     if (setStatus) {
-      if (isCurrentPlayer) {
+      if (this.props.playersVotingToSkipClue.length === Object.keys(this.props.players).length) {
+        emoji = 'skip_forward';
+        status = 'Everyone voted to skip this clue.';
+      } else if (isCurrentPlayer) {
         status = getTimeElapsedMessage(this.getPlayerName(this.props.playerID));
       } else if (this.props.activeClue.playersAttempted.length > 0) {
         status = 'Time\'s up! Looks like no one got this one right.';
@@ -415,7 +438,7 @@ class Game extends React.Component {
     };
     if (status) {
       newState.status = {
-        emoji: 'timer_clock',
+        emoji: emoji,
         text: status,
       };
     }
@@ -458,11 +481,11 @@ class Game extends React.Component {
     }
   }
 
-  skipActiveClue(event) {
+  voteToSkipActiveClue(event) {
     if (event) {
       event.stopPropagation();
     }
-    this.props.skipActiveClue();
+    this.props.voteToSkipClue(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
   }
 
   render() {
@@ -490,9 +513,10 @@ class Game extends React.Component {
                buzzIn={this.props.buzzIn}
                markClueAsInvalid={this.props.markClueAsInvalid}
                playersMarkingClueInvalid={this.props.playersMarkingClueInvalid}
+               playersVotingToSkipClue={this.props.playersVotingToSkipClue}
                playerAnswering={this.props.playerAnswering}
                handleClueClick={this.handleClueClick}
-               skipActiveClue={this.skipActiveClue}
+               voteToSkipActiveClue={this.voteToSkipActiveClue}
                {...this.state} />
         <StatusBar gameState={gameState} {...this.props} {...this.state} />
         <Podiums gameState={gameState} {...this.props} />

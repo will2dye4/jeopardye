@@ -7,6 +7,7 @@ const CROSS_MARK_EMOJI = '\u274C';
 const EXCLAMATION_MARK_EMOJI = '\u2757';
 const HOURGLASS_EMOJI = '\u23F3';
 const QUESTION_MARK_EMOJI = '\u2753';
+const SKIP_FORWARD_EMOJI = '\u23ED';
 const TIMER_CLOCK_EMOJI = '\u23F2';
 
 const EMOJI_NAME_TO_EMOJI = {
@@ -16,6 +17,7 @@ const EMOJI_NAME_TO_EMOJI = {
   'exclamation': EXCLAMATION_MARK_EMOJI,
   'hourglass': HOURGLASS_EMOJI,
   'question': QUESTION_MARK_EMOJI,
+  'skip_forward': SKIP_FORWARD_EMOJI,
   'timer_clock': TIMER_CLOCK_EMOJI,
 }
 

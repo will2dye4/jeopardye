@@ -25,6 +25,7 @@ import {
   setPlayerAnswering,
   updateGame,
   updatePlayer,
+  voteToSkipActiveClue,
 } from './db.mjs';
 
 const PING_INTERVAL_MILLIS = 30_000;
@@ -457,6 +458,50 @@ async function handleStopSpectating(ws, event) {
   });
 }
 
+async function handleVoteToSkipClue(ws, event) {
+  const game = await validateGamePlayerAndClue(ws, event);
+  if (!game) {
+    return;
+  }
+  if (!game.activeClue) {
+    handleError(ws, event, 'invalid vote to skip attempt - no active clue', 400);
+    return;
+  }
+  const { gameID, playerID, categoryID, clueID } = event.payload;
+  if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
+    handleError(ws, event, `invalid vote to skip attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    return;
+  }
+  if (game.activeClue.playersVotingToSkip.indexOf(playerID) !== -1) {
+    handleError(ws, event, `invalid vote to skip attempt - player ${playerID} has already voted to skip clue ${clueID}`, 400);
+    return;
+  }
+  if (game.playerAnswering) {
+    handleError(ws, event, 'invalid vote to skip attempt - a player is answering', 400);
+    return;
+  }
+  let players;
+  try {
+    players = await getPlayers(game.playerIDs);
+  } catch (e) {
+    handleError(ws, event, 'failed to get players', 500);
+    return;
+  }
+  voteToSkipActiveClue(gameID, playerID).then(() => {
+    logger.info(`${playerID} voted to skip clue ${clueID} (category ${categoryID}).`);
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_VOTED_TO_SKIP_CLUE, event.payload));
+    const numPlayers = players.filter(player => !player.spectating).length;
+    if (game.activeClue.playersVotingToSkip.length === numPlayers - 1) {
+      logger.info(`Skipping clue ${clueID} (category ${categoryID}).`);
+      updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
+        broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, {gameID, categoryID, clueID}));
+        clearTimeout(buzzTimers[gameID].timerID);
+        delete buzzTimers[gameID];
+      });
+    }
+  });
+}
+
 const eventHandlers = {
   [EventTypes.CLIENT_CONNECT]: handleClientConnect,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
@@ -467,6 +512,7 @@ const eventHandlers = {
   [EventTypes.SUBMIT_WAGER]: handleSubmitWager,
   [EventTypes.START_SPECTATING]: handleStartSpectating,
   [EventTypes.STOP_SPECTATING]: handleStopSpectating,
+  [EventTypes.VOTE_TO_SKIP_CLUE]: handleVoteToSkipClue,
 }
 
 export function handleWebsocket(ws, req) {

@@ -29,11 +29,14 @@ class ActiveClue extends React.Component {
   handleClick(event) {
     const invalidIcon = document.getElementById('invalid-icon');
     const skipIcon = document.getElementById('skip-icon');
-    if ((event.target === invalidIcon || event.target.parentNode === invalidIcon) &&
-        this.props.playersMarkingClueInvalid.indexOf(this.props.gameState.playerID) === -1) {
-      this.props.markClueAsInvalid(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+    if (event.target === invalidIcon || event.target.parentNode === invalidIcon) {
+      if (this.props.playersMarkingClueInvalid.indexOf(this.props.gameState.playerID) === -1) {
+        this.props.markClueAsInvalid(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+      }
     } else if (event.target === skipIcon || event.target.parentNode === skipIcon) {
-      this.props.skipActiveClue(event);
+      if (this.props.playersVotingToSkipClue.indexOf(this.props.gameState.playerID) === -1) {
+        this.props.voteToSkipActiveClue(event);
+      }
     } else if (this.allowBuzz()) {
       this.props.buzzIn(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
       this.props.timerRef.current.pause();

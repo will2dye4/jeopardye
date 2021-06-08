@@ -19,6 +19,7 @@ import {
   submitAnswer,
   submitWager,
   updateGameSettings,
+  voteToSkipClue,
   websocketConnect,
 } from '../actions/action_creators';
 import { MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
@@ -60,6 +61,7 @@ const actionCreators = {
   submitAnswer,
   submitWager,
   updateGameSettings,
+  voteToSkipClue,
   websocketConnect,
 };
 

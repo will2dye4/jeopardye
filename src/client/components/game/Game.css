@@ -83,15 +83,15 @@ body {
 
 .active-clue-buttons {
     bottom: 0 !important;
-    left: 93% !important;
+    right: 0 !important;
 }
 
 .active-clue-button {
     margin: 5px;
 }
 
-.active-clue-button:hover {
-    font-size: 125%;
+.selectable-clue-button:hover {
+    color: #FFCC00;
 }
 
 .countdown-timer {

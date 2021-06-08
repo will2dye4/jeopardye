@@ -1,14 +1,21 @@
 import React from 'react';
-import { Box } from '@chakra-ui/react';
+import { HStack } from '@chakra-ui/react';
 import { faFastForward, faFlag } from '@fortawesome/free-solid-svg-icons';
-import Icon from '../../../common/Icon';
+import ActiveClueButton from './ActiveClueButton';
 
 function ActiveClueButtons(props) {
+  if (!props.allowAnswers) {
+    return null;
+  }
+  const allowMarkInvalid = (props.playersMarkingClueInvalid.indexOf(props.gameState.playerID) === -1);
+  const allowVoteToSkip = (props.playersVotingToSkipClue.indexOf(props.gameState.playerID) === -1);
   return (
-    <Box className="active-clue-buttons" mb={2} position="absolute">
-      {props.allowAnswers && <Icon className="active-clue-button" id="invalid-icon" icon={faFlag} title="Mark this clue invalid" />}
-      {props.allowAnswers && <Icon className="active-clue-button" id="skip-icon" icon={faFastForward} title="Skip this clue" />}
-    </Box>
+    <HStack className="active-clue-buttons" spacing="15px" mb={2} mr={3} position="absolute">
+      <ActiveClueButton id="invalid-icon" icon={faFlag} selectable={allowMarkInvalid} title="Mark this clue invalid"
+                        badge={props.playersMarkingClueInvalid.length} />
+      <ActiveClueButton id="skip-icon" icon={faFastForward} selectable={allowVoteToSkip} title="Vote to skip this clue"
+                        badge={props.playersVotingToSkipClue.length} />
+    </HStack>
   );
 }
 
