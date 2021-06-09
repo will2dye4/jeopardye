@@ -116,6 +116,8 @@ export const EventTypes = {
   GAME_STARTING: 'game_starting',
   GAME_STARTED: 'game_started',
   GAME_SETTINGS_CHANGED: 'game_settings_changed',
+  GAME_ENDED: 'game_ended',
+  ROUND_ENDED: 'round_ended',
   /* player events */
   PLAYER_CHANGED_NAME: 'player_changed_name',
   JOIN_GAME: 'join_game',

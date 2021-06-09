@@ -1,7 +1,6 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { WebsocketEvent } from '../../utils.mjs';
 import { EventTypes, GAME_ID_KEY } from '../../constants.mjs';
-import { getUnplayedClues } from '../utils';
+import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
   FETCH_CURRENT_GAME: 'JEOPARDYE::FETCH_CURRENT_GAME',
@@ -11,7 +10,7 @@ export const ActionTypes = {
   CREATE_NEW_PLAYER: 'JEOPARDYE::CREATE_NEW_PLAYER',
   CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
-  SKIP_ACTIVE_CLUE: 'JEOPARDYE::SKIP_ACTIVE_CLUE',
+  CLEAR_ERROR: 'JEOPARDYE::CLEAR_ERROR',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -25,8 +24,25 @@ const WS_BASE = 'ws://localhost:3333/api/ws';
 const GAME_URL = `${API_BASE}/game`;
 const PLAYER_URL = `${API_BASE}/player`;
 
+function getJSON(response, errorMessage) {
+  if (response.ok) {
+    return response.json();
+  }
+  console.log(`${errorMessage}: ${response.status} ${response.statusText}`);
+  return {error: errorMessage};
+}
+
+function handleError(error, errorMessage) {
+  console.log(`${errorMessage}: ${error}`);
+  return {error: errorMessage};
+}
+
 function getGameByID(gameID) {
-  return fetch(`${GAME_URL}/${gameID}`).then(response => response.json());
+  return fetch(`${GAME_URL}/${gameID}`).then(response =>
+    getJSON(response, `Error occurred while fetching game ${gameID}.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching game ${gameID}.`)
+  );
 }
 
 function createNewGame(gameSettings = null) {
@@ -37,11 +53,19 @@ function createNewGame(gameSettings = null) {
     },
     method: 'POST',
   }
- return fetch(GAME_URL, opts).then(response => response.json());
+ return fetch(GAME_URL, opts).then(response =>
+   getJSON(response, 'Error occurred while creating game.')
+ ).catch(e =>
+   handleError(e, 'Unexpected error occurred while creating game.')
+ );
 }
 
 function getPlayerByID(playerID) {
-  return fetch(`${PLAYER_URL}/${playerID}`).then(response => response.json());
+  return fetch(`${PLAYER_URL}/${playerID}`).then(response =>
+    getJSON(response, `Error occurred while fetching player ${playerID}.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching player ${playerID}.`)
+  );
 }
 
 function createPlayer(name, preferredFontStyle) {
@@ -55,7 +79,11 @@ function createPlayer(name, preferredFontStyle) {
     },
     method: 'POST',
   }
-  return fetch(PLAYER_URL, opts).then(response => response.json());
+  return fetch(PLAYER_URL, opts).then(response =>
+    getJSON(response, 'Error occurred while creating player.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while creating player.')
+  );
 }
 
 function updatePlayerName(playerID, name, preferredFontStyle) {
@@ -68,7 +96,7 @@ function updatePlayerName(playerID, name, preferredFontStyle) {
       'Content-Type': 'application/json',
     },
     method: 'PATCH',
-  });
+  }).catch(e => handleError(e, `Unexpected error occurred while updating name for player ${playerID}.`));
 }
 
 export function fetchCurrentGame() {
@@ -76,6 +104,9 @@ export function fetchCurrentGame() {
   let payload = null;
   if (gameID) {
     payload = getGameByID(gameID).then(game => {
+      if (game.error) {
+        return game;
+      }
       return (game.finishedTime !== null || !getUnplayedClues(game.rounds[game.currentRound]).length ? null : game);
     });
   }
@@ -97,6 +128,9 @@ export function fetchGame() {
   let promise;
   if (gameID) {
     promise = getGameByID(gameID).then(game => {
+      if (game.error) {
+        return game;
+      }
       if (game.finishedTime !== null || !getUnplayedClues(game.rounds[game.currentRound]).length) {
         console.log(`Previous game ${gameID} finished. Creating a new game...`);
         return createNewGame();
@@ -187,6 +221,13 @@ export function dismissActiveClue() {
   return {
     type: ActionTypes.DISMISS_CLUE,
     payload: {},
+  }
+}
+
+export function clearError(error) {
+  return {
+    type: ActionTypes.CLEAR_ERROR,
+    payload: {error},
   }
 }
 

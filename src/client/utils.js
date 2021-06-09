@@ -47,22 +47,6 @@ export function speakText(text, delay = SPEECH_DELAY_MILLIS, volume = DEFAULT_SP
   }
 }
 
-export function getUnplayedClues(board, limit = -1) {
-  let unplayedClues = [];
-loop:
-  for (const category of Object.values(board.categories)) {
-    for (const clue of category.clues) {
-      if (!clue.played) {
-        unplayedClues.push(clue);
-        if (limit !== -1 && unplayedClues.length >= limit) {
-          break loop;
-        }
-      }
-    }
-  }
-  return unplayedClues;
-}
-
 export function markClueAsInvalid(clueID) {
   return fetch(`${INVALID_CLUE_URL}?id=${clueID}`).then(response => {
     if (response.ok) {

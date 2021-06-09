@@ -9,11 +9,14 @@ import {
 } from '../constants.mjs';
 import { GamePlayer } from '../models/player.mjs';
 import {
-  isDailyDouble,
   checkSubmittedAnswer,
   getClueReadingDelayInMillis,
   getCountdownTimeInMillis,
+  getPlaces,
+  getUnplayedClues,
   getWagerRange,
+  hasMoreRounds,
+  isDailyDouble,
   WebsocketEvent,
 } from '../utils.mjs';
 import {
@@ -62,6 +65,21 @@ function handleError(ws, event, message, status) {
   logger.error(`Error handling ${event.eventType} event: ${message} (${status})`);
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(new WebsocketEvent(EventTypes.ERROR, {eventType: event.eventType, error: message, status: status})));
+  }
+}
+
+function checkForLastClue(game) {
+  const { currentRound, gameID } = game;
+  const unplayedClues = getUnplayedClues(game.rounds[currentRound], 1);
+  if (unplayedClues.length === 0) {
+    const gameOver = !hasMoreRounds(game);
+    if (gameOver) {
+      logger.info(`Game ${gameID} ended.`);
+      updateGame(gameID, {finishedTime: new Date()}).then(() => logger.debug(`Marked game ${gameID} as finished.`));
+    } else {
+      logger.info(`Reached the end of the ${currentRound} round for game ${gameID}.`);
+    }
+    broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {gameID: gameID, round: currentRound, places: getPlaces(game.scores), gameOver: gameOver}));
   }
 }
 
@@ -179,6 +197,7 @@ function setExpirationTimerForClue(gameID, clue, delayMillis = 0) {
           const payload = {gameID: gameID, categoryID: clue.categoryID, clueID: clue.clueID};
           broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, payload));
           delete buzzTimers[gameID];
+          checkForLastClue(game);
         });
       }
     });
@@ -370,6 +389,9 @@ async function handleSubmitAnswer(ws, event) {
     broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
     if (delayMillis) {
       setExpirationTimerForClue(game.gameID, clue, delayMillis);
+    }
+    if (correct || dailyDouble) {
+      checkForLastClue(game);
     }
   });
 }

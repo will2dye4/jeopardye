@@ -6,6 +6,7 @@ import { isDailyDouble } from '../../utils.mjs';
 function newStoreData() {
   return {
     connected: false,
+    error: null,
     hostPlayerID: DEFAULT_PLAYER_ID,
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
     board: null,
@@ -24,15 +25,20 @@ function newStoreData() {
     allowAnswers: false,
     revealAnswer: false,
     responseTimerElapsed: false,
+    roundSummary: null,
   };
 }
 
 function handleError(storeData, event) {
-  console.log(`Request to ${event.payload.eventType} failed: ${event.payload.error} (${event.payload.status})`);
-  return storeData;  /* TODO - should this set an error to display to the user? */
+  const { eventType, error, status } = event.payload;
+  console.log(`Request to ${eventType} failed: ${error} (${status})`);
+  return {...storeData, error: `Failed to ${eventType.replaceAll('_', ' ')}.`};
 }
 
 function handleNewGame(storeData, newGame) {
+  if (newGame?.error) {
+    return {...storeData, error: newGame.error, gameStarting: false};
+  }
   if (!newGame || newGame.gameID === storeData.game?.gameID) {
     return storeData;
   }
@@ -77,6 +83,12 @@ function handleGameSettingsChanged(storeData, event) {
   const { settings } = event.payload;
   console.log('Game settings changed.');
   return {...storeData, gameSettings: settings};
+}
+
+function handleRoundEnded(storeData, event) {
+  const { round } = event.payload;
+  console.log(`Reached the end of the ${round} round.`);
+  return {...storeData, roundSummary: event.payload};
 }
 
 function handlePlayerChangedName(storeData, event) {
@@ -268,6 +280,7 @@ const eventHandlers = {
   [EventTypes.GAME_STARTING]: handleGameStarting,
   [EventTypes.GAME_STARTED]: handleGameStarted,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
+  [EventTypes.ROUND_ENDED]: handleRoundEnded,
   [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
@@ -309,13 +322,20 @@ export function GameReducer(storeData, action) {
     case ActionTypes.CREATE_NEW_PLAYER:
     case ActionTypes.FETCH_PLAYER:
       const player = action.payload;
+      if (player.error) {
+        return {...storeData, error: player.error};
+      }
       const newPlayers = {...storeData.players, [player.playerID]: player};
       localStorage.setItem(PLAYER_ID_KEY, player.playerID);
       return {...storeData, playerID: player.playerID, players: newPlayers};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
-    case ActionTypes.SKIP_ACTIVE_CLUE:
-      return {...storeData, allowAnswers: false, revealAnswer: true};
+    case ActionTypes.CLEAR_ERROR:
+      const { error } = action.payload;
+      if (storeData.error === error) {
+        return {...storeData, error: null};
+      }
+      return storeData;
     case ActionTypes.REDUX_WEBSOCKET_OPEN:
       return {...storeData, connected: true};
     case ActionTypes.REDUX_WEBSOCKET_CLOSED:

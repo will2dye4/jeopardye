@@ -40,6 +40,8 @@ const NUMERALS_TO_WORDS = {
   20: 'twenty',
 };
 
+const PLACE_NAMES = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+
 const stemmer = new StemmerEn();
 stemmer.stopwords = new StopwordsEn();
 
@@ -71,6 +73,44 @@ export function formatList(items) {
   return result;
 }
 
+export function getUnplayedClues(board, limit = -1) {
+  let unplayedClues = [];
+loop:
+  for (const category of Object.values(board.categories)) {
+    for (const clue of category.clues) {
+      if (!clue.played) {
+        unplayedClues.push(clue);
+        if (limit !== -1 && unplayedClues.length >= limit) {
+          break loop;
+        }
+      }
+    }
+  }
+  return unplayedClues;
+}
+
+export function getPlaces(scores) {
+  let places = {};
+  let i = 0;
+  let prevScore = null;
+  let players = [];
+  Object.entries(scores).sort(([p1, score1], [p2, score2]) => score2 - score1).forEach(([playerID, score]) => {
+    if (prevScore === null || score === prevScore) {
+      players.push(playerID);
+    } else {
+      places[PLACE_NAMES[i]] = players;
+      i += players.length;
+      prevScore = null;
+      players = [playerID];
+    }
+    prevScore = score;
+  });
+  if (players.length) {
+    places[PLACE_NAMES[i]] = players;
+  }
+  return places;
+}
+
 export function getWagerRange(currentRound, playerScore) {
   const defaultMax = DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS[currentRound];
   const maxWager = Math.max(playerScore, defaultMax);
@@ -87,6 +127,11 @@ export function getClueReadingDelayInMillis(clue) {
 
 export function getCountdownTimeInMillis(dailyDouble = false) {
   return (dailyDouble ? DAILY_DOUBLE_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS) * 1000;
+}
+
+export function hasMoreRounds(game) {
+  const roundNames = Object.keys(game.rounds);
+  return (game.currentRound !== roundNames[roundNames.length - 1]);
 }
 
 export function isDailyDouble(round, clueID) {

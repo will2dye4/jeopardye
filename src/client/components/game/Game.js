@@ -6,7 +6,7 @@ import {
   DAILY_DOUBLE_MINIMUM_WAGER,
   MAX_PLAYERS_PER_GAME,
 } from '../../../constants.mjs';
-import { formatList, isDailyDouble } from '../../../utils.mjs';
+import { formatList, getUnplayedClues, isDailyDouble } from '../../../utils.mjs';
 import {
   getBuzzInMessage,
   getCorrectAnswerMessage,
@@ -18,12 +18,13 @@ import {
   getWaitingForBuzzMessage,
 } from '../../messages';
 import JEOPARDYE_THEME from '../../theme';
-import { getUnplayedClues, markClueAsInvalid, playSound, speakAnswer, speakClue } from '../../utils';
+import { markClueAsInvalid, playSound, speakAnswer, speakClue } from '../../utils';
 import './Game.css';
 import Bold from '../common/Bold';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
 import Podiums from './podium/Podiums';
+import RoundSummary from './RoundSummary';
 import StatusBar from './status/StatusBar';
 
 const DISMISS_CLUE_DELAY_MILLIS = 5000;
@@ -416,7 +417,7 @@ class Game extends React.Component {
       this.setStatus({
         appearance: appearance,
         text: getEndOfRoundMessage(isCurrentPlayer, prevAnswerCorrect, this.props.game.currentRound),
-    });
+      });
     } else if (unplayedClues.length === 1) {
       this.setStatus({
         appearance: appearance,
@@ -469,7 +470,8 @@ class Game extends React.Component {
     const playerName = this.getPlayerName(this.props.playerInControl);
     const playerHasControl = this.playerHasControl();
     const timeElapsed = !this.props.prevAnswer;
-    const isCurrentPlayer = (playerHasControl && !timeElapsed && this.props.prevAnswer.playerID === this.props.playerID);
+    const dailyDouble = isDailyDouble(this.props.board, this.props.prevAnswer?.clueID);
+    const isCurrentPlayer = (playerHasControl && !dailyDouble && !timeElapsed && this.props.prevAnswer.playerID === this.props.playerID);
     let status;
     if (playerHasControl) {
       status = {
@@ -549,6 +551,7 @@ class Game extends React.Component {
                {...this.state} />
         <StatusBar gameState={gameState} {...this.props} {...this.state} />
         <Podiums gameState={gameState} {...this.props} />
+        {this.props.roundSummary && <RoundSummary {...this.props} />}
       </Box>
     );
   }
