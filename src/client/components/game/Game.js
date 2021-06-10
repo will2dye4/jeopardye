@@ -24,7 +24,7 @@ import Bold from '../common/Bold';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
 import Podiums from './podium/Podiums';
-import RoundSummary from './RoundSummary';
+import RoundSummary from './summary/RoundSummary';
 import StatusBar from './status/StatusBar';
 
 const DISMISS_CLUE_DELAY_MILLIS = 5000;
@@ -39,6 +39,7 @@ class Game extends React.Component {
       showActiveClue: !!props.activeClue,
       showClueAnimation: !!props.activeClue,
       showDailyDoubleWager: false,
+      showRoundSummary: false,
       status: this.getInitialStatus(props),
       timerKey: Date.now(),
       timerRef: React.createRef(),
@@ -274,6 +275,16 @@ class Game extends React.Component {
           isClosable: true,
         });
       }
+    }
+
+    if (!prevProps.roundSummary && this.props.roundSummary) {
+      setTimeout(function() {
+        this.setState({showRoundSummary: true});
+      }.bind(this), DISMISS_CLUE_DELAY_MILLIS);
+    }
+
+    if (prevProps.roundSummary && !this.props.roundSummary) {
+      this.setState({showRoundSummary: false});
     }
   }
 
@@ -551,7 +562,7 @@ class Game extends React.Component {
                {...this.state} />
         <StatusBar gameState={gameState} {...this.props} {...this.state} />
         <Podiums gameState={gameState} {...this.props} />
-        {this.props.roundSummary && <RoundSummary {...this.props} />}
+        {this.state.showRoundSummary && <RoundSummary gameState={gameState} {...this.props} />}
       </Box>
     );
   }

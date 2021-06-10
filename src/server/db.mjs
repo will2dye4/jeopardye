@@ -86,6 +86,14 @@ export async function voteToSkipActiveClue(gameID, playerID) {
   await updateGameFields(gameID, {$addToSet: {'activeClue.playersVotingToSkip': playerID}});
 }
 
+export async function markPlayerAsReadyForNextRound(gameID, playerID) {
+  await updateGameFields(gameID, {$addToSet: {playersReadyForNextRound: playerID}});
+}
+
+export async function advanceToNextRound(gameID, round, playerInControl) {
+  await updateGame(gameID, {currentRound: round, playerInControl: playerInControl, playersReadyForNextRound: []});
+}
+
 export async function createPlayer(player) {
   if (!player.playerID) {
     player.playerID = uuid.v4();

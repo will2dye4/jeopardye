@@ -117,6 +117,7 @@ export const EventTypes = {
   GAME_STARTED: 'game_started',
   GAME_SETTINGS_CHANGED: 'game_settings_changed',
   GAME_ENDED: 'game_ended',
+  ROUND_STARTED: 'round_started',
   ROUND_ENDED: 'round_ended',
   /* player events */
   PLAYER_CHANGED_NAME: 'player_changed_name',
@@ -128,6 +129,8 @@ export const EventTypes = {
   PLAYER_STARTED_SPECTATING: 'player_started_spectating',
   STOP_SPECTATING: 'stop_spectating',
   PLAYER_STOPPED_SPECTATING: 'player_stopped_spectating',
+  MARK_READY_FOR_NEXT_ROUND: 'mark_ready_for_next_round',
+  PLAYER_MARKED_READY_FOR_NEXT_ROUND: 'player_marked_ready_for_next_round',
   /* gameplay events */
   SELECT_CLUE: 'select_clue',
   PLAYER_SELECTED_CLUE: 'player_selected_clue',

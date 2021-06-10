@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from '@chakra-ui/react';
 import { DEFAULT_FONT_STYLE, MAX_PLAYER_NAME_LENGTH } from '../../../../constants.mjs';
+import { formatScore } from '../../../../utils.mjs';
 import PodiumMenu from './PodiumMenu';
 
 const FONT_SIZE_CLASSES = ['xs', 'sm', 'md', 'lg', 'xl'];
@@ -75,13 +76,10 @@ function getPodiumElement(props) {
   if (props.isCurrentPlayer) {
     wrapperClasses += ' hover-pointer';
   }
-  let score = (props.player.score || 0).toLocaleString();
+  const score = formatScore(props.player.score);
   let scoreClasses = 'podium-score';
   if (props.player.score < 0) {
-    score = '-$' + score.substring(1);
     scoreClasses += ' podium-score-negative';
-  } else {
-    score = '$' + score;
   }
   const mx = (size === 'xs' ? 6 : (size === 'sm' ? 8 : 12));
   const fontStyle = props.player.preferredFontStyle || DEFAULT_FONT_STYLE;

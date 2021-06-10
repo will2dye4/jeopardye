@@ -56,8 +56,21 @@ export function range(n) {
   return [...Array(n).keys()];
 }
 
+export function sum(values) {
+  return values.reduce((accumulator, value) => accumulator + value);
+}
+
 export function randomChoice(values) {
   return values[Math.floor(Math.random() * values.length)];
+}
+
+export function formatScore(score) {
+  score = score || 0;
+  const scoreString = score.toLocaleString();
+  if (score < 0) {
+    return '-$' + scoreString.substring(1);
+  }
+  return '$' + scoreString;
 }
 
 export function formatList(items) {
@@ -127,6 +140,14 @@ export function getClueReadingDelayInMillis(clue) {
 
 export function getCountdownTimeInMillis(dailyDouble = false) {
   return (dailyDouble ? DAILY_DOUBLE_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS) * 1000;
+}
+
+export function getNextRound(game) {
+  if (!hasMoreRounds(game)) {
+    return null;
+  }
+  const roundNames = Object.keys(game.rounds);
+  return roundNames[roundNames.indexOf(game.currentRound) + 1];
 }
 
 export function hasMoreRounds(game) {

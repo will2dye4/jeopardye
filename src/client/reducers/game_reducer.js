@@ -19,6 +19,7 @@ function newStoreData() {
     playerAnswering: null,
     playerInControl: null,
     playersMarkingClueInvalid: [],
+    playersReadyForNextRound: [],
     playersVotingToSkipClue: [],
     prevAnswer: null,
     currentWager: null,
@@ -83,6 +84,19 @@ function handleGameSettingsChanged(storeData, event) {
   const { settings } = event.payload;
   console.log('Game settings changed.');
   return {...storeData, gameSettings: settings};
+}
+
+function handleRoundStarted(storeData, event) {
+  const { round, playerInControl } = event.payload;
+  const newGame = {...storeData.game, currentRound: round};
+  return {
+    ...storeData,
+    board: storeData.game.rounds[round],
+    game: newGame,
+    playerInControl: playerInControl,
+    playersReadyForNextRound: [],
+    roundSummary: null,
+  };
 }
 
 function handleRoundEnded(storeData, event) {
@@ -246,6 +260,14 @@ function handlePlayerSpectatingStatusChanged(status) {
   };
 }
 
+function handlePlayerMarkedReadyForNextRound(storeData, event) {
+  const { playerID } = event.payload;
+  if (storeData.playersReadyForNextRound.indexOf(playerID) !== -1) {
+    return storeData;
+  }
+  return {...storeData, playersReadyForNextRound: storeData.playersReadyForNextRound.concat(playerID)};
+}
+
 function handleBuzzingPeriodEnded(storeData, event) {
   const { categoryID, clueID } = event.payload;
   if (storeData.activeClue?.clueID === clueID) {
@@ -280,6 +302,7 @@ const eventHandlers = {
   [EventTypes.GAME_STARTING]: handleGameStarting,
   [EventTypes.GAME_STARTED]: handleGameStarted,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
+  [EventTypes.ROUND_STARTED]: handleRoundStarted,
   [EventTypes.ROUND_ENDED]: handleRoundEnded,
   [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
@@ -291,6 +314,7 @@ const eventHandlers = {
   [EventTypes.PLAYER_VOTED_TO_SKIP_CLUE]: handlePlayerVotedToSkipClue,
   [EventTypes.PLAYER_STARTED_SPECTATING]: handlePlayerSpectatingStatusChanged(true),
   [EventTypes.PLAYER_STOPPED_SPECTATING]: handlePlayerSpectatingStatusChanged(false),
+  [EventTypes.PLAYER_MARKED_READY_FOR_NEXT_ROUND]: handlePlayerMarkedReadyForNextRound,
   [EventTypes.PLAYER_WENT_ACTIVE]: handlePlayerWentActive,
   [EventTypes.PLAYER_WENT_INACTIVE]: handlePlayerWentInactive,
   [EventTypes.BUZZING_PERIOD_ENDED]: handleBuzzingPeriodEnded,
@@ -330,6 +354,13 @@ export function GameReducer(storeData, action) {
       return {...storeData, playerID: player.playerID, players: newPlayers};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
+    case ActionTypes.CLEAR_CURRENT_GAME:
+      const { gameID } = action.payload;
+      if (storeData.game?.gameID === gameID) {
+        localStorage.removeItem(GAME_ID_KEY);
+        return {...storeData, game: null, board: null};
+      }
+      return storeData;
     case ActionTypes.CLEAR_ERROR:
       const { error } = action.payload;
       if (storeData.error === error) {

@@ -12,19 +12,23 @@ import {
   checkSubmittedAnswer,
   getClueReadingDelayInMillis,
   getCountdownTimeInMillis,
+  getNextRound,
   getPlaces,
   getUnplayedClues,
   getWagerRange,
   hasMoreRounds,
   isDailyDouble,
+  randomChoice,
   WebsocketEvent,
 } from '../utils.mjs';
 import {
   addPlayerToGame,
+  advanceToNextRound,
   getGame,
   getPlayer,
   getPlayers,
   markActiveClueAsInvalid,
+  markPlayerAsReadyForNextRound,
   setActiveClue,
   setPlayerAnswering,
   updateGame,
@@ -68,6 +72,17 @@ function handleError(ws, event, message, status) {
   }
 }
 
+function getCurrentPlaces(game, players) {
+  let scores = {};
+  Object.entries(game.scores).forEach(([playerID, score]) => {
+    const player = players.find(player => player.playerID === playerID);
+    if (player && !player.spectating) {
+      scores[playerID] = score;
+    }
+  });
+  return getPlaces(scores);
+}
+
 function checkForLastClue(game) {
   const { currentRound, gameID } = game;
   const unplayedClues = getUnplayedClues(game.rounds[currentRound], 1);
@@ -79,7 +94,9 @@ function checkForLastClue(game) {
     } else {
       logger.info(`Reached the end of the ${currentRound} round for game ${gameID}.`);
     }
-    broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {gameID: gameID, round: currentRound, places: getPlaces(game.scores), gameOver: gameOver}));
+    getPlayers(game.playerIDs).then(players => {
+      broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {gameID: gameID, round: currentRound, places: getCurrentPlaces(game, players), gameOver: gameOver}));
+    });
   }
 }
 
@@ -549,6 +566,54 @@ async function handleVoteToSkipClue(ws, event) {
   });
 }
 
+async function handleMarkPlayerAsReadyForNextRound(ws, event) {
+  const { gameID, playerID } = event.payload;
+  const game = await getGame(gameID);
+  if (!game) {
+    handleError(ws, event, 'game not found', 404);
+    return;
+  }
+  if (game.playerIDs.indexOf(playerID) === -1) {
+    handleError(ws, event, 'player not in game', 400);
+    return;
+  }
+  if (game.playersReadyForNextRound.indexOf(playerID) !== -1) {
+    handleError(ws, event, 'player already ready for next round', 400);
+    return;
+  }
+  if (getUnplayedClues(game.rounds[game.currentRound], 1).length) {
+    handleError(ws, event, 'current round is not over', 400);
+    return;
+  }
+  if (!hasMoreRounds(game)) {
+    handleError(ws, event, 'game does not have more rounds', 400);
+    return;
+  }
+  let players;
+  try {
+    players = await getPlayers(game.playerIDs);
+  } catch (e) {
+    handleError('failed to get players', 500);
+    return;
+  }
+  markPlayerAsReadyForNextRound(gameID, playerID).then(() => {
+    logger.info(`${playerID} is ready for the next round in game ${gameID}.`);
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_MARKED_READY_FOR_NEXT_ROUND, event.payload));
+    const numPlayers = players.filter(player => !player.spectating).length;
+    if (game.playersReadyForNextRound.length === numPlayers - 1) {
+      const round = getNextRound(game);
+      const places = getCurrentPlaces(game, players);
+      const placeKeys = Object.keys(places);
+      const lastPlacePlayers = places[placeKeys[placeKeys.length - 1]];
+      const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers));
+      advanceToNextRound(gameID, round, playerInControl).then(() => {
+        logger.info(`Advanced to the ${round} round in game ${gameID}.`);
+        broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, {gameID, round, playerInControl}));
+      });
+    }
+  });
+}
+
 const eventHandlers = {
   [EventTypes.CLIENT_CONNECT]: handleClientConnect,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
@@ -561,6 +626,7 @@ const eventHandlers = {
   [EventTypes.STOP_SPECTATING]: handleStopSpectating,
   [EventTypes.MARK_CLUE_AS_INVALID]: handleMarkClueAsInvalid,
   [EventTypes.VOTE_TO_SKIP_CLUE]: handleVoteToSkipClue,
+  [EventTypes.MARK_READY_FOR_NEXT_ROUND]: handleMarkPlayerAsReadyForNextRound,
 }
 
 export function handleWebsocket(ws, req) {

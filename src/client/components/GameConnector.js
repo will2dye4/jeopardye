@@ -4,6 +4,7 @@ import { createStandaloneToast } from '@chakra-ui/react';
 import {
   buzzIn,
   changePlayerName,
+  clearCurrentGame,
   clearError,
   clientConnect,
   createNewPlayer,
@@ -14,6 +15,7 @@ import {
   fetchPlayer,
   joinGame,
   markClueAsInvalid,
+  markPlayerAsReadyForNextRound,
   selectClue,
   startSpectating,
   stopSpectating,
@@ -49,6 +51,7 @@ function mapStateToProps(state) {
 const actionCreators = {
   buzzIn,
   changePlayerName,
+  clearCurrentGame,
   clearError,
   clientConnect,
   createNewPlayer,
@@ -59,6 +62,7 @@ const actionCreators = {
   fetchPlayer,
   joinGame,
   markClueAsInvalid,
+  markPlayerAsReadyForNextRound,
   selectClue,
   startSpectating,
   stopSpectating,

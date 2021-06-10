@@ -10,6 +10,7 @@ export const ActionTypes = {
   CREATE_NEW_PLAYER: 'JEOPARDYE::CREATE_NEW_PLAYER',
   CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
+  CLEAR_CURRENT_GAME: 'JEOPARDYE::CLEAR_CURRENT_GAME',
   CLEAR_ERROR: 'JEOPARDYE::CLEAR_ERROR',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
@@ -179,6 +180,17 @@ export function stopSpectating(playerID, gameID) {
     payload.gameID = gameID;
   }
   return send(new WebsocketEvent(EventTypes.STOP_SPECTATING, payload));
+}
+
+export function clearCurrentGame(gameID) {
+  return {
+    type: ActionTypes.CLEAR_CURRENT_GAME,
+    payload: {gameID},
+  }
+}
+
+export function markPlayerAsReadyForNextRound(gameID, playerID) {
+  return send(new WebsocketEvent(EventTypes.MARK_READY_FOR_NEXT_ROUND, {gameID, playerID}));
 }
 
 export function joinGame(gameID, playerID) {
