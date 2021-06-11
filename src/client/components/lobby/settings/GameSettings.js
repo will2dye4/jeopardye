@@ -17,7 +17,7 @@ class GameSettings extends React.Component {
     this.state = {
       creatingGame: false,
       dailyDoubles: props.gameSettings.dailyDoubles,
-      finalJeopardye: props.gameSettings.finalJeopardye,
+      finalJeopardye: false, /* TODO - revert once Final Jeopardye is implemented: props.gameSettings.finalJeopardye, */
       numRounds: props.gameSettings.numRounds,
     };
     this.createNewGame = this.createNewGame.bind(this);
@@ -47,9 +47,11 @@ class GameSettings extends React.Component {
   }
 
   onFinalJeopardyeChanged() {
+    /* TODO - uncomment this once Final Jeopardye is implemented on the frontend
     const finalJeopardye = !this.state.finalJeopardye;
     this.setState({finalJeopardye: finalJeopardye});
     this.updateGameSettings(this.state.numRounds, this.state.dailyDoubles, finalJeopardye);
+    */
   }
 
   onNumRoundsChanged(event) {

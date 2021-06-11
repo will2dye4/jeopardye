@@ -18,10 +18,10 @@ class Clue extends React.Component {
     let classes = 'clue-border';
     let text = <br />;
     if ((!this.props.clue.played && this.props.clue.value) || isActiveClue) {
-      if (this.props.gameState.playerHasControl) {
-        classes += ' selectable-clue hover-pointer';
-      } else if (isActiveClue) {
+      if (isActiveClue) {
         classes += ' selected-clue';
+      } else if (!this.props.activeClue && this.props.gameState.playerHasControl) {
+        classes += ' selectable-clue hover-pointer';
       }
       text = `$${this.props.clue.value}`;
     }

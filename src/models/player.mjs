@@ -5,6 +5,19 @@ export function validatePlayerName(name) {
   return (!!name && name?.length >= MIN_PLAYER_NAME_LENGTH && name?.length <= MAX_PLAYER_NAME_LENGTH);
 }
 
+export class PlayerStatistics {
+  constructor() {
+    this.overallScore = 0;
+    this.gamesPlayed = 0;
+    this.gamesWon = 0;
+    this.highestGameScore = 0;
+    this.cluesAnswered = 0;
+    this.cluesAnsweredCorrectly = 0;
+    this.dailyDoublesAnswered = 0;
+    this.dailyDoublesAnsweredCorrectly = 0;
+  }
+}
+
 export class Player {
   constructor(name, preferredFontStyle, spectating) {
     this.playerID = uuid.v4();
@@ -12,11 +25,9 @@ export class Player {
     this.preferredFontStyle = preferredFontStyle || DEFAULT_FONT_STYLE;
     this.spectating = spectating || false;
     this.active = true;
-    this.overallScore = 0;
-    this.gamesPlayed = 0;
-    this.gamesWon = 0;
-    this.highestGameScore = 0;
     this.createdTime = new Date();
+    this.lastConnectionTime = new Date();
+    this.stats = new PlayerStatistics();
   }
 }
 

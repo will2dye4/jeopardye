@@ -346,6 +346,11 @@ export function GameReducer(storeData, action) {
     case ActionTypes.CREATE_NEW_PLAYER:
     case ActionTypes.FETCH_PLAYER:
       const player = action.payload;
+      if (!player) {
+        console.log(`Failed to ${action.type === ActionTypes.CREATE_NEW_PLAYER ? 'create' : 'fetch'} player.`);
+        localStorage.removeItem(PLAYER_ID_KEY);
+        return {...storeData, playerID: null};
+      }
       if (player.error) {
         return {...storeData, error: player.error};
       }

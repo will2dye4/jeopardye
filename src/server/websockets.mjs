@@ -10,6 +10,7 @@ import {
 import { GamePlayer } from '../models/player.mjs';
 import {
   checkSubmittedAnswer,
+  formatList,
   getClueReadingDelayInMillis,
   getCountdownTimeInMillis,
   getNextRound,
@@ -27,9 +28,11 @@ import {
   getGame,
   getPlayer,
   getPlayers,
+  incrementPlayerStat,
   markActiveClueAsInvalid,
   markPlayerAsReadyForNextRound,
   setActiveClue,
+  setHighestGameScore,
   setPlayerAnswering,
   updateGame,
   updatePlayer,
@@ -87,15 +90,29 @@ function checkForLastClue(game) {
   const { currentRound, gameID } = game;
   const unplayedClues = getUnplayedClues(game.rounds[currentRound], 1);
   if (unplayedClues.length === 0) {
-    const gameOver = !hasMoreRounds(game);
-    if (gameOver) {
-      logger.info(`Game ${gameID} ended.`);
-      updateGame(gameID, {finishedTime: new Date()}).then(() => logger.debug(`Marked game ${gameID} as finished.`));
-    } else {
-      logger.info(`Reached the end of the ${currentRound} round for game ${gameID}.`);
-    }
     getPlayers(game.playerIDs).then(players => {
-      broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {gameID: gameID, round: currentRound, places: getCurrentPlaces(game, players), gameOver: gameOver}));
+      const gameOver = !hasMoreRounds(game);
+      const places = getCurrentPlaces(game, players);
+      if (gameOver) {
+        const winners = places[Object.keys(places)[0]];
+        logger.info(`Game ${gameID} ended. ${formatList(winners)} ${winners.length === 1 ? 'won' : 'tied'}.`);
+        updateGame(gameID, {finishedTime: new Date()}).then(() => {
+          let playerUpdates = [];
+          players.forEach(player => {
+            const { playerID } = player;
+            if (game.scores[playerID] > player.stats.highestGameScore) {
+              playerUpdates.push(setHighestGameScore(playerID, game.scores[playerID]));
+            }
+            if (winners.indexOf(playerID) !== -1) {
+              playerUpdates.push(incrementPlayerStat(playerID, 'gamesWon'));
+            }
+          });
+          return Promise.all(playerUpdates);
+        }).then(() => logger.info(`Marked game ${gameID} as finished and updated player stats.`));
+      } else {
+        logger.info(`Reached the end of the ${currentRound} round for game ${gameID}.`);
+      }
+      broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {gameID: gameID, round: currentRound, places: places, gameOver: gameOver}));
     });
   }
 }
@@ -111,7 +128,7 @@ async function handleClientConnect(ws, event) {
     handleError(ws, event, 'player not found', 404);
     return;
   }
-  updatePlayer(playerID, {active: true}).then(() => {
+  updatePlayer(playerID, {active: true, lastConnectionTime: new Date()}).then(() => {
     logger.info(`${player.name} connected.`);
     connectedClients[playerID] = ws;
     pingHandlers[ws] = setInterval(function() {
@@ -171,11 +188,14 @@ async function handleJoinGame(ws, event) {
       return;
     }
   }
-  const gamePlayer = GamePlayer.fromPlayer(player);
+  const gamePlayer = GamePlayer.fromPlayer(player, game.scores[playerID]);
   addPlayerToGame(gameID, playerID).then(() => {
     logger.info(`${player.name} joined game ${gameID}.`);
     connectedClients[playerID] = ws;
     broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player: gamePlayer}));
+    if (game.playerIDs.indexOf(playerID) === -1) {
+      incrementPlayerStat(playerID, 'gamesPlayed').then(() => logger.debug(`Incremented games played for ${playerID}.`));
+    }
   });
 }
 
@@ -351,7 +371,7 @@ async function handleBuzzIn(ws, event) {
     return;
   }
 
-  setPlayerAnswering(gameID, playerID).then(() => {
+  setPlayerAnswering(gameID, playerID).then(() => incrementPlayerStat(playerID, 'cluesAnswered')).then(() => {
     logger.info(`${playerID} buzzed in.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
     const timer = buzzTimers[gameID];
@@ -399,7 +419,7 @@ async function handleSubmitAnswer(ws, event) {
       newFields.playerInControl = playerID;
     }
   }
-  updateGame(gameID, newFields).then(() => {
+  updateGame(gameID, newFields).then(() => incrementPlayerStat(playerID, 'overallScore', (correct ? value : -value))).then(() => {
     logger.info(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
     const delayMillis = (dailyDouble || correct ? 0 : buzzTimers[gameID]?.delayMillis);
     const payload = {...event.payload, clue: clue, correct: correct, score: newScore, value: value, answerDelayMillis: delayMillis};
@@ -409,6 +429,12 @@ async function handleSubmitAnswer(ws, event) {
     }
     if (correct || dailyDouble) {
       checkForLastClue(game);
+    }
+    if (correct) {
+      incrementPlayerStat(playerID, 'cluesAnsweredCorrectly').then(() => logger.debug(`Incremented correct answer count for ${playerID}.`));
+      if (dailyDouble) {
+        incrementPlayerStat(playerID, 'dailyDoublesAnsweredCorrectly').then(() => logger.debug(`Incremented correct daily double count for ${playerID}.`));
+      }
     }
   });
 }
@@ -437,7 +463,11 @@ async function handleSubmitWager(ws, event) {
     handleError(ws, event, `invalid wager attempt - wager ${wager} is invalid (range is ${minWager} - ${maxWager})`, 400);
     return;
   }
-  updateGame(gameID, {playerAnswering: playerID, currentWager: playerWager}).then(() => {
+  updateGame(gameID, {playerAnswering: playerID, currentWager: playerWager}).then(() =>
+    incrementPlayerStat(playerID, 'cluesAnswered')
+  ).then(() =>
+    incrementPlayerStat(playerID, 'dailyDoublesAnswered')
+  ).then(() => {
     logger.info(`${playerID} wagered $${playerWager}.`);
     const payload = {playerID: playerID, wager: playerWager};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, payload));

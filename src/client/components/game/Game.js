@@ -6,7 +6,7 @@ import {
   DAILY_DOUBLE_MINIMUM_WAGER,
   MAX_PLAYERS_PER_GAME,
 } from '../../../constants.mjs';
-import { formatList, getUnplayedClues, isDailyDouble } from '../../../utils.mjs';
+import { formatList, getUnplayedClues, hasMoreRounds, isDailyDouble } from '../../../utils.mjs';
 import {
   getBuzzInMessage,
   getCorrectAnswerMessage,
@@ -14,6 +14,7 @@ import {
   getIncorrectAnswerMessage,
   getLastClueMessage,
   getSelectClueMessage,
+  getStartOfRoundMessage,
   getTimeElapsedMessage,
   getWaitingForBuzzMessage,
 } from '../../messages';
@@ -82,6 +83,10 @@ class Game extends React.Component {
     if (!prevProps.game && this.props.game && !this.props.connected) {
       console.log('Game loaded. Opening websocket connection...');
       this.props.websocketConnect();
+    }
+
+    if ((prevProps.board !== this.props.board || prevProps.game !== this.props.game) && this.state.showRoundSummary) {
+      this.setState({showRoundSummary: false, status: this.getInitialStatus()});
     }
 
     this.checkPlayerInGame();
@@ -278,9 +283,10 @@ class Game extends React.Component {
     }
 
     if (!prevProps.roundSummary && this.props.roundSummary) {
+      const delay = (this.props.prevAnswer && this.props.prevAnswer.correct ? SHOW_CLUE_DELAY_MILLIS : DISMISS_CLUE_DELAY_MILLIS);
       setTimeout(function() {
         this.setState({showRoundSummary: true});
-      }.bind(this), DISMISS_CLUE_DELAY_MILLIS);
+      }.bind(this), delay);
     }
 
     if (prevProps.roundSummary && !this.props.roundSummary) {
@@ -342,20 +348,10 @@ class Game extends React.Component {
     if (!props.game) {
       return 'Creating a new game, please wait ...';
     }
-    const isNewGame = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
+    const isNewRound = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
     const playerHasControl = this.playerHasControl();
-    const playerName = this.getPlayerName(this.props.playerInControl);
-    let status;
-    if (isNewGame) {
-      status = `Game started. ${playerName} will start the ${props.game.currentRound} Jeopardye round.`;
-    } else {
-      status = `Joined existing game in the ${props.game.currentRound} Jeopardye round.`;
-      if (playerHasControl) {
-        status += ` It's your turn!`;
-      } else {
-        status += ` It's ${playerName}'s turn.`;
-      }
-    }
+    const playerName = this.getPlayerName(props.playerInControl);
+    const status = getStartOfRoundMessage(props.game.currentRound, isNewRound, playerHasControl, playerName);
     return {
       appearance: (playerHasControl ? 'action' : 'default'),
       text: status,
@@ -425,9 +421,10 @@ class Game extends React.Component {
     const appearance = (isCurrentPlayer ? (prevAnswerCorrect ? 'correct' : 'incorrect') : 'default');
     const unplayedClues = getUnplayedClues(this.props.board, 2);
     if (unplayedClues.length === 0) {
+      const gameOver = !hasMoreRounds(this.props.game);
       this.setStatus({
         appearance: appearance,
-        text: getEndOfRoundMessage(isCurrentPlayer, prevAnswerCorrect, this.props.game.currentRound),
+        text: getEndOfRoundMessage(isCurrentPlayer, prevAnswerCorrect, this.props.game.currentRound, gameOver),
       });
     } else if (unplayedClues.length === 1) {
       this.setStatus({

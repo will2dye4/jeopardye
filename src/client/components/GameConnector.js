@@ -107,6 +107,10 @@ class Connector extends React.Component {
       this.connectAndFetchCurrentGame();
     }
 
+    if (prevProps.playerID && !this.props.playerID) {
+      this.setState({showPlayerEditor: true});
+    }
+
     if (this.props.error && this.props.error !== prevProps.error) {
       if (!toast.isActive(this.props.error)) {
         toast({

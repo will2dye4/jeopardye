@@ -1,4 +1,4 @@
-export const DEFAULT_PLAYER_ID = '2ea15eb6-aa1e-4616-a836-cbf39f92f0bb';
+export const DEFAULT_PLAYER_ID = 'd38064a4-7c20-4fb6-b076-76eada41d385';
 
 export const JSERVICE_API_BASE = 'http://jservice.io/api';
 

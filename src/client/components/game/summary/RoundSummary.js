@@ -13,6 +13,10 @@ import Card from '../../common/card/Card';
 import RoundScores from './RoundScores';
 
 function RoundSummary(props) {
+  if (!props.roundSummary) {
+    return null;
+  }
+
   const { gameOver, round } = props.roundSummary;
   const heading = (gameOver ? 'Final Scores' : `${round.toTitleCase()} Jeopardye Round Standings`);
   const buttonLabel = (gameOver ? 'Return to Lobby' : 'Ready for Next Round');
@@ -24,9 +28,9 @@ function RoundSummary(props) {
     onClick = () => props.markPlayerAsReadyForNextRound(props.gameState.gameID, props.gameState.playerID);
   }
 
-  const markedReadyForNextRound = (props.gameState.playerIsSpectating || props.playersReadyForNextRound.indexOf(props.gameState.playerID) !== -1);
+  const readyForNextRound = ((!gameOver && props.gameState.playerIsSpectating) || props.playersReadyForNextRound.indexOf(props.gameState.playerID) !== -1);
   let waitingText;
-  if (markedReadyForNextRound) {
+  if (readyForNextRound) {
     const waitingPlayers = Object.values(props.players).filter(player => props.playersReadyForNextRound.indexOf(player.playerID) === -1);
     if (waitingPlayers.length > 3) {
       waitingText = `Waiting for ${waitingPlayers.length} players...`;
@@ -44,7 +48,7 @@ function RoundSummary(props) {
             <Heading mb={8}>{heading}</Heading>
             <RoundScores {...props} />
             <Flex justify="center" mt={12} mb={3}>
-              {markedReadyForNextRound ?
+              {readyForNextRound ?
                 <Heading size="lg">{waitingText}</Heading> :
                 <Button colorScheme="jeopardyBlue" size="lg" w="25%" onClick={onClick}>{buttonLabel}</Button>
               }

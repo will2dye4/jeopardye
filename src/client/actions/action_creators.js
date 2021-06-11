@@ -63,7 +63,7 @@ function createNewGame(gameSettings = null) {
 
 function getPlayerByID(playerID) {
   return fetch(`${PLAYER_URL}/${playerID}`).then(response =>
-    getJSON(response, `Error occurred while fetching player ${playerID}.`)
+    (response.status === 404) ? null : getJSON(response, `Error occurred while fetching player ${playerID}.`)
   ).catch(e =>
     handleError(e, `Unexpected error occurred while fetching player ${playerID}.`)
   );

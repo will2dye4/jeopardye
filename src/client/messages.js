@@ -1,3 +1,4 @@
+import { Rounds } from '../constants.mjs';
 import { randomChoice } from '../utils.mjs';
 
 const PLAYER_PLACEHOLDER = '{{PLAYER}}';
@@ -59,6 +60,25 @@ const TIME_ELAPSED_RESPONSES = {
   ],
 };
 
+export function getStartOfRoundMessage(currentRound, isNewRound, playerHasControl, playerName) {
+  let response;
+  if (isNewRound) {
+    if (currentRound === Rounds.SINGLE) {
+      response = `Game started. ${playerName} will be the first to select a clue.`;
+    } else {
+      response = `Let's play the ${currentRound} Jeopardye round! ${playerName} will choose first.`;
+    }
+  } else {
+    response = `Joined existing game in the ${currentRound} Jeopardye round.`;
+    if (playerHasControl) {
+      response += ` It's your turn!`;
+    } else {
+      response += ` It's ${playerName}'s turn.`;
+    }
+  }
+  return response;
+}
+
 export function getBuzzInMessage(categoryName) {
   return `Buzz in if you know the answer in ${categoryName}!`;
 }
@@ -106,6 +126,7 @@ export function getLastClueMessage(isCurrentPlayer, prevAnswerCorrect) {
   return addPrevAnswerStatus('And now the last clue ...', isCurrentPlayer, prevAnswerCorrect);
 }
 
-export function getEndOfRoundMessage(isCurrentPlayer, prevAnswerCorrect, round) {
-  return addPrevAnswerStatus(`That's the end of the ${round} Jeopardye round.`, isCurrentPlayer, prevAnswerCorrect);
+export function getEndOfRoundMessage(isCurrentPlayer, prevAnswerCorrect, round, gameOver) {
+  const roundName = (gameOver ? 'game' : `${round} Jeopardye round`);
+  return addPrevAnswerStatus(`That's the end of the ${roundName}.`, isCurrentPlayer, prevAnswerCorrect);
 }

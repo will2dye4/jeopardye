@@ -111,7 +111,7 @@ export async function getPlayer(playerID) {
 
 export async function getPlayers(playerIDs) {
   const cursor = await playersCollection.find({_id: {$in: playerIDs}});
-  const players = cursor.toArray();
+  const players = await cursor.toArray();
   if (players.length < playerIDs.length) {
     throw new Error('Failed to find all players!');
   }
@@ -124,6 +124,15 @@ export async function updatePlayer(playerID, newFields) {
 
 export async function updatePlayerName(playerID, name, preferredFontStyle) {
   await updatePlayer(playerID, {name: name, preferredFontStyle: preferredFontStyle});
+}
+
+export async function incrementPlayerStat(playerID, statName, value = 1) {
+  const key = `stats.${statName}`;
+  await playersCollection.updateOne({_id: playerID}, {$inc: {[key]: value}});
+}
+
+export async function setHighestGameScore(playerID, score) {
+  await updatePlayer(playerID, {'stats.highestGameScore': score});
 }
 
 export default db;
