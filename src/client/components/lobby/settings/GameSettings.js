@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Flex, Heading, Progress } from '@chakra-ui/react';
+import { Badge, Box, Button, Flex, Heading, Progress } from '@chakra-ui/react';
 import { DailyDoubleSettings, MAX_NUM_ROUNDS } from '../../../../constants.mjs';
 import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { range } from '../../../../utils.mjs';
@@ -94,6 +94,7 @@ class GameSettings extends React.Component {
         <GameSetting label="Final Jeopardye">
           <ToggleSwitch name="final-jeopardye" checked={this.state.finalJeopardye} disabled={disabled}
                         onChange={this.onFinalJeopardyeChanged} />
+          <Badge colorScheme="purple" ml={4} userSelect="none">Coming Soon</Badge>
         </GameSetting>
         <Flex justify="center" mt={5} mb={3}>
           {disabled ?

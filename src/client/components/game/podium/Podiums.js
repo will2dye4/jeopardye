@@ -22,8 +22,9 @@ function Podiums(props) {
   const podiums = Object.values(props.players).map(player => {
     const isCurrentPlayer = (player.playerID === props.playerID);
     const active = (player.playerID === props.playerAnswering);
-    return <Podium key={player.playerID} player={player} playerEditor={props.playerEditor} isCurrentPlayer={isCurrentPlayer}
-                   allowSpectate={allowSpectate} startSpectating={props.startSpectating} active={active} size={size} />;
+    return <Podium key={player.playerID} player={player} playerEditor={props.playerEditor} playerStats={props.playerStats}
+                   isCurrentPlayer={isCurrentPlayer} allowSpectate={allowSpectate} startSpectating={props.startSpectating}
+                   active={active} size={size} />;
   });
   return (
     <Flex className="podium-container" justify="center">

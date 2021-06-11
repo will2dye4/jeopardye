@@ -120,7 +120,7 @@ function handlePlayerChangedName(storeData, event) {
 function handlePlayerJoined(storeData, event) {
   const { player } = event.payload;
   console.log(`${player.name} has joined the game.`);
-  let newPlayers = {...storeData.players, [player.playerID]: {...player, score: 0}};
+  let newPlayers = {...storeData.players, [player.playerID]: {...player, score: player.score || storeData.players[player.playerID]?.score}};
   let newStoreData = {...storeData, players: newPlayers};
   if (storeData.game && storeData.game.playerIDs.indexOf(player.playerID) === -1) {
     newStoreData.game = {...storeData.game, playerIDs: storeData.game.playerIDs.concat(player.playerID)};
@@ -354,8 +354,10 @@ export function GameReducer(storeData, action) {
       if (player.error) {
         return {...storeData, error: player.error};
       }
-      const newPlayers = {...storeData.players, [player.playerID]: player};
-      localStorage.setItem(PLAYER_ID_KEY, player.playerID);
+      const newPlayers = {...storeData.players, [player.playerID]: {...player, score: player.score || storeData.players[player.playerID]?.score}};
+      if (action.type === ActionTypes.CREATE_NEW_PLAYER) {
+        localStorage.setItem(PLAYER_ID_KEY, player.playerID);
+      }
       return {...storeData, playerID: player.playerID, players: newPlayers};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};

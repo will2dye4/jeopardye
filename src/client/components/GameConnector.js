@@ -30,6 +30,7 @@ import JEOPARDYE_THEME from '../theme';
 import Game from './game/Game';
 import Lobby from './lobby/Lobby';
 import PlayerEditor from './player/PlayerEditor';
+import PlayerStatistics from './player/stats/PlayerStatistics';
 
 const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
@@ -78,9 +79,12 @@ class Connector extends React.Component {
     super(props);
     this.state = {
       showPlayerEditor: !props.playerID,
+      showPlayerStats: false,
     };
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
+    this.closePlayerStats = this.closePlayerStats.bind(this);
     this.openPlayerEditor = this.openPlayerEditor.bind(this);
+    this.openPlayerStats = this.openPlayerStats.bind(this);
   }
 
   componentDidMount() {
@@ -134,8 +138,16 @@ class Connector extends React.Component {
     this.setState({showPlayerEditor: true});
   }
 
+  openPlayerStats() {
+    this.setState({showPlayerStats: true});
+  }
+
   closePlayerEditor() {
    this.setState({showPlayerEditor: false});
+  }
+
+  closePlayerStats() {
+    this.setState({showPlayerStats: false});
   }
 
   render() {
@@ -144,16 +156,21 @@ class Connector extends React.Component {
       open: this.openPlayerEditor,
       close: this.closePlayerEditor,
     };
+    const playerStats = {
+      open: this.openPlayerStats,
+      close: this.closePlayerStats,
+    };
     let content;
     if (this.props.game) {
-      content = <Game allowJoin={allowJoin} playerEditor={playerEditor} {...this.props} />;
+      content = <Game allowJoin={allowJoin} playerEditor={playerEditor} playerStats={playerStats} {...this.props} />;
     } else {
-      content = <Lobby allowJoin={allowJoin} playerEditor={playerEditor} {...this.props} />;
+      content = <Lobby allowJoin={allowJoin} playerEditor={playerEditor} playerStats={playerStats} {...this.props} />;
     }
     return (
       <React.Fragment>
         {content}
         {this.state.showPlayerEditor && <PlayerEditor playerEditor={playerEditor} {...this.props} />}
+        {this.state.showPlayerStats && <PlayerStatistics playerStats={playerStats} {...this.props} />}
       </React.Fragment>
     )
   }

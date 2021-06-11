@@ -6,11 +6,13 @@ import LogoPage from '../common/LogoPage';
 import GameSettings from './settings/GameSettings';
 import PlayerLists from './PlayerLists';
 import RoomCode from './RoomCode';
+import StatisticsButton from './StatisticsButton';
 
 class Lobby extends React.Component {
   render() {
     return (
       <LogoPage id="lobby">
+        <StatisticsButton playerStats={this.props.playerStats} />
         <GridRow cols={4} gap={8} m={4}>
           <GridItem>
             <RoomCode code="YYZ" />

@@ -22,7 +22,7 @@ function SpectatorsMenu(props) {
   return (
     <Popover>
       <PopoverTrigger>
-        <Badge variant="solid" bg="white" color="black" borderRadius="full" boxShadow="dark-lg" px={2} fontSize="lg"
+        <Badge variant="solid" bg="white" color="black" borderRadius="full" boxShadow="dark-lg" px={2} py={1} fontSize="lg"
                userSelect="none" position="fixed" bottom="5" right="5" zIndex="1000" title={title} className="hover-pointer">
           <HStack spacing="5px">
             <Icon id="spectators" icon={faEye} title={title} clickable={spectating} />

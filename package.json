@@ -24,6 +24,7 @@
     "framer-motion": "^4",
     "log": "^6.0.0",
     "log-node": "^7.0.0",
+    "moment": "^2.29.1",
     "mongodb": "^3.6.6",
     "node-fetch": "^2.6.1",
     "react": "^17.0.2",

@@ -7,7 +7,16 @@ import {
   MAX_PLAYERS_PER_GAME,
   WAGER_COUNTDOWN_SECONDS,
 } from '../constants.mjs';
-import { GamePlayer } from '../models/player.mjs';
+import {
+  CLUES_ANSWERED_STAT,
+  CLUES_ANSWERED_CORRECTLY_STAT,
+  DAILY_DOUBLES_ANSWERED_STAT,
+  DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT,
+  GAMES_PLAYED_STAT,
+  GAMES_WON_STAT,
+  OVERALL_SCORE_STAT,
+  GamePlayer,
+} from '../models/player.mjs';
 import {
   checkSubmittedAnswer,
   formatList,
@@ -104,7 +113,7 @@ function checkForLastClue(game) {
               playerUpdates.push(setHighestGameScore(playerID, game.scores[playerID]));
             }
             if (winners.indexOf(playerID) !== -1) {
-              playerUpdates.push(incrementPlayerStat(playerID, 'gamesWon'));
+              playerUpdates.push(incrementPlayerStat(playerID, GAMES_WON_STAT));
             }
           });
           return Promise.all(playerUpdates);
@@ -194,7 +203,7 @@ async function handleJoinGame(ws, event) {
     connectedClients[playerID] = ws;
     broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player: gamePlayer}));
     if (game.playerIDs.indexOf(playerID) === -1) {
-      incrementPlayerStat(playerID, 'gamesPlayed').then(() => logger.debug(`Incremented games played for ${playerID}.`));
+      incrementPlayerStat(playerID, GAMES_PLAYED_STAT).then(() => logger.debug(`Incremented games played for ${playerID}.`));
     }
   });
 }
@@ -371,7 +380,7 @@ async function handleBuzzIn(ws, event) {
     return;
   }
 
-  setPlayerAnswering(gameID, playerID).then(() => incrementPlayerStat(playerID, 'cluesAnswered')).then(() => {
+  setPlayerAnswering(gameID, playerID).then(() => incrementPlayerStat(playerID, CLUES_ANSWERED_STAT)).then(() => {
     logger.info(`${playerID} buzzed in.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
     const timer = buzzTimers[gameID];
@@ -419,7 +428,7 @@ async function handleSubmitAnswer(ws, event) {
       newFields.playerInControl = playerID;
     }
   }
-  updateGame(gameID, newFields).then(() => incrementPlayerStat(playerID, 'overallScore', (correct ? value : -value))).then(() => {
+  updateGame(gameID, newFields).then(() => incrementPlayerStat(playerID, OVERALL_SCORE_STAT, (correct ? value : -value))).then(() => {
     logger.info(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
     const delayMillis = (dailyDouble || correct ? 0 : buzzTimers[gameID]?.delayMillis);
     const payload = {...event.payload, clue: clue, correct: correct, score: newScore, value: value, answerDelayMillis: delayMillis};
@@ -431,9 +440,9 @@ async function handleSubmitAnswer(ws, event) {
       checkForLastClue(game);
     }
     if (correct) {
-      incrementPlayerStat(playerID, 'cluesAnsweredCorrectly').then(() => logger.debug(`Incremented correct answer count for ${playerID}.`));
+      incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).then(() => logger.debug(`Incremented correct answer count for ${playerID}.`));
       if (dailyDouble) {
-        incrementPlayerStat(playerID, 'dailyDoublesAnsweredCorrectly').then(() => logger.debug(`Incremented correct daily double count for ${playerID}.`));
+        incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).then(() => logger.debug(`Incremented correct daily double count for ${playerID}.`));
       }
     }
   });
@@ -464,9 +473,9 @@ async function handleSubmitWager(ws, event) {
     return;
   }
   updateGame(gameID, {playerAnswering: playerID, currentWager: playerWager}).then(() =>
-    incrementPlayerStat(playerID, 'cluesAnswered')
+    incrementPlayerStat(playerID, CLUES_ANSWERED_STAT)
   ).then(() =>
-    incrementPlayerStat(playerID, 'dailyDoublesAnswered')
+    incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_STAT)
   ).then(() => {
     logger.info(`${playerID} wagered $${playerWager}.`);
     const payload = {playerID: playerID, wager: playerWager};

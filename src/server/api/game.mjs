@@ -13,8 +13,9 @@ import {
   Rounds,
 } from '../../constants.mjs';
 import { Category, Game, Round } from '../../models/game.mjs';
+import { GAMES_PLAYED_STAT } from '../../models/player.mjs';
 import { range, WebsocketEvent } from '../../utils.mjs';
-import { createGame, getGame, getPlayers } from '../db.mjs';
+import { createGame, getGame, getPlayers, incrementPlayerStat } from '../db.mjs';
 import { fetchRandomCategories } from '../jservice.mjs';
 import { broadcast } from '../websockets.mjs';
 
@@ -136,6 +137,8 @@ async function handleCreateGame(req, res, next) {
     handleError(`Failed to save game to database: ${e}`, 500);
     return;
   }
+
+  await Promise.all(game.playerIDs.map(playerID => incrementPlayerStat(playerID, GAMES_PLAYED_STAT)));
 
   res.json(game);
   broadcast(new WebsocketEvent(EventTypes.GAME_STARTED, {game}));
