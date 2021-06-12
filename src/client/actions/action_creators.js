@@ -1,11 +1,12 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { EventTypes, GAME_ID_KEY } from '../../constants.mjs';
+import { EventTypes, GAME_ID_KEY, PLAYER_ID_KEY } from '../../constants.mjs';
 import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
   FETCH_CURRENT_GAME: 'JEOPARDYE::FETCH_CURRENT_GAME',
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   FETCH_NEW_GAME: 'JEOPARDYE::FETCH_NEW_GAME',
+  FETCH_CURRENT_PLAYER: 'JEOPARDYE::FETCH_CURRENT_PLAYER',
   FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
   CREATE_NEW_PLAYER: 'JEOPARDYE::CREATE_NEW_PLAYER',
   CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
@@ -146,6 +147,18 @@ export function fetchGame() {
   return {
     type: ActionTypes.FETCH_GAME,
     payload: promise,
+  };
+}
+
+export function fetchCurrentPlayer() {
+  const playerID = localStorage.getItem(PLAYER_ID_KEY);
+  let payload = null;
+  if (playerID) {
+    payload = getPlayerByID(playerID);
+  }
+  return {
+    type: ActionTypes.FETCH_CURRENT_PLAYER,
+    payload: payload,
   };
 }
 

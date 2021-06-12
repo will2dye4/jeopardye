@@ -344,6 +344,7 @@ export function GameReducer(storeData, action) {
       const newGame = action.payload;
       return handleNewGame(storeData, newGame);
     case ActionTypes.CREATE_NEW_PLAYER:
+    case ActionTypes.FETCH_CURRENT_PLAYER:
     case ActionTypes.FETCH_PLAYER:
       const player = action.payload;
       if (!player) {
@@ -355,10 +356,12 @@ export function GameReducer(storeData, action) {
         return {...storeData, error: player.error};
       }
       const newPlayers = {...storeData.players, [player.playerID]: {...player, score: player.score || storeData.players[player.playerID]?.score}};
+      let newStore = {...storeData, players: newPlayers};
       if (action.type === ActionTypes.CREATE_NEW_PLAYER) {
         localStorage.setItem(PLAYER_ID_KEY, player.playerID);
+        newStore.playerID = player.playerID;
       }
-      return {...storeData, playerID: player.playerID, players: newPlayers};
+      return newStore;
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
     case ActionTypes.CLEAR_CURRENT_GAME:

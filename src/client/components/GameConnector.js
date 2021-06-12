@@ -10,6 +10,7 @@ import {
   createNewPlayer,
   dismissActiveClue,
   fetchCurrentGame,
+  fetchCurrentPlayer,
   fetchGame,
   fetchNewGame,
   fetchPlayer,
@@ -58,6 +59,7 @@ const actionCreators = {
   createNewPlayer,
   dismissActiveClue,
   fetchCurrentGame,
+  fetchCurrentPlayer,
   fetchGame,
   fetchNewGame,
   fetchPlayer,
@@ -94,7 +96,7 @@ class Connector extends React.Component {
     }
 
     if (this.props.playerID) {
-      this.props.fetchPlayer(this.props.playerID);
+      this.props.fetchCurrentPlayer();
     }
   }
 
@@ -102,13 +104,13 @@ class Connector extends React.Component {
     if ((!prevProps.connected && this.props.connected && this.props.playerID) ||
         (!prevProps.playerID && this.props.playerID && this.props.connected)) {
       console.log('Establishing connection to server...');
-      this.connectAndFetchCurrentGame();
+      this.connectAndFetchCurrentState();
     }
 
     if (prevProps.connected && !this.props.connected && this.props.playerID) {
       /* TODO - show message to user? */
       console.log('Websocket connection lost. Attempting to reconnect...');
-      this.connectAndFetchCurrentGame();
+      this.connectAndFetchCurrentState();
     }
 
     if (prevProps.playerID && !this.props.playerID) {
@@ -129,9 +131,10 @@ class Connector extends React.Component {
     }
   }
 
-  connectAndFetchCurrentGame() {
+  connectAndFetchCurrentState() {
     this.props.clientConnect(this.props.playerID);
     this.props.fetchCurrentGame();
+    this.props.fetchCurrentPlayer();
   }
 
   openPlayerEditor() {
