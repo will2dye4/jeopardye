@@ -86,8 +86,9 @@ class StatusBar extends React.Component {
     let content;
     if (this.shouldShowAnswerInput() || this.shouldShowWagerInput()) {
       if (this.shouldShowAnswerInput()) {
+        const label = (this.props.currentWager ? `For $${this.props.currentWager.toLocaleString()}: ` : '') + 'What is ...';
         content = <StatusBarInput id="answer-input"
-                                  label="What is ..."
+                                  label={label}
                                   validate={this.validateAnswer}
                                   onSubmit={this.handleSubmitAnswer} />;
       } else {
@@ -100,7 +101,6 @@ class StatusBar extends React.Component {
         );
         content = <StatusBarInput id="wager-input"
                                   label={label}
-                                  largeLabel={true}
                                   submitText="Wager"
                                   validate={this.validateWager}
                                   onSubmit={this.handleSubmitWager} />;

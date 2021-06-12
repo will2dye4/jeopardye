@@ -38,12 +38,13 @@ class StatusBarInput extends React.Component {
   }
 
   render() {
-    const largeLabel = this.props.largeLabel || false;
-    const width = (largeLabel ? '100%' : '75%');
-    const inputWidth = (largeLabel ? '10%' : '100%');
+    const labelSize = this.props.labelSize || (this.props.label.length < 12 ? 'sm' : (this.props.label.length < 26 ? 'md' : 'lg'));
+    const width = (labelSize === 'lg' ? '100%' : (labelSize === 'md' ? '90%' : '75%'));
+    const inputWidth = (labelSize === 'lg' ? '10%' : '100%');
+    const minLabelWidth = (labelSize === 'sm' ? 120 : 260);
     return (
       <Flex align="center" justify="center" px={4} w={width}>
-        <Text as="label" htmlFor={this.props.id} minWidth={120} mr={5}>{this.props.label}</Text>
+        <Text as="label" htmlFor={this.props.id} minWidth={minLabelWidth} mr={5}>{this.props.label}</Text>
         <Input id={this.props.id} value={this.state.value} isInvalid={this.state.invalid} size="lg" bg="white" mr={8} w={inputWidth}
                focusBorderColor="jeopardyBlue.500" autoFocus={true} onChange={this.handleChange} onKeyUp={this.handleKeyUp} />
         <Button colorScheme="jeopardyBlue" size="lg" type="submit" onClick={this.handleSubmit}>
