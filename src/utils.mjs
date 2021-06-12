@@ -107,16 +107,16 @@ export function getPlaces(scores) {
   let i = 0;
   let prevScore = null;
   let players = [];
-  Object.entries(scores).sort(([p1, score1], [p2, score2]) => score2 - score1).forEach(([playerID, score]) => {
-    if (prevScore === null || score === prevScore) {
-      players.push(playerID);
+  scores.sort((player1, player2) => player2.score - player1.score).forEach(player => {
+    const playerScore = {playerID: player.playerID, name: player.name, score: player.score};
+    if (prevScore === null || player.score === prevScore) {
+      players.push(playerScore);
     } else {
       places[PLACE_NAMES[i]] = players;
       i += players.length;
-      prevScore = null;
-      players = [playerID];
+      players = [playerScore];
     }
-    prevScore = score;
+    prevScore = player.score;
   });
   if (players.length) {
     places[PLACE_NAMES[i]] = players;

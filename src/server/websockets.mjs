@@ -85,11 +85,11 @@ function handleError(ws, event, message, status) {
 }
 
 function getCurrentPlaces(game, players) {
-  let scores = {};
+  let scores = [];
   Object.entries(game.scores).forEach(([playerID, score]) => {
     const player = players.find(player => player.playerID === playerID);
     if (player && !player.spectating) {
-      scores[playerID] = score;
+      scores.push({...player, score: score});
     }
   });
   return getPlaces(scores);
