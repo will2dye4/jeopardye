@@ -1,7 +1,7 @@
 import express from 'express';
 import log from 'log';
 import { createPlayer, getPlayer, updatePlayerName } from '../db.mjs';
-import { broadcast } from '../websockets.mjs';
+import { broadcast, playerNames } from '../websockets.mjs';
 import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, StatusCodes } from '../../constants.mjs';
 import { Player, validatePlayerName } from '../../models/player.mjs';
 import { WebsocketEvent } from '../../utils.mjs';
@@ -96,7 +96,8 @@ async function handleUpdatePlayer(req, res, next) {
     return;
   }
 
-  logger.info(`Updated player ${player.playerID}'s name to "${name}" (font: ${preferredFontStyle}).`);
+  logger.info(`Updated player ${playerID}'s name to "${name}" (font: ${preferredFontStyle}).`);
+  playerNames[playerID] = name;
   broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME, {playerID, name, preferredFontStyle}));
   res.status(StatusCodes.NO_CONTENT).end();
 }

@@ -54,6 +54,8 @@ const PING_INTERVAL_MILLIS = 30_000;
 const logger = log.get('ws');
 
 export let connectedClients = {};
+export let playerNames = {};
+
 let pingHandlers = {};
 
 let buzzTimers = {};
@@ -96,6 +98,10 @@ function getCurrentPlaces(game, players) {
   return getPlaces(scores);
 }
 
+function getPlayerName(playerID) {
+  return playerNames[playerID] || playerID;
+}
+
 function checkForLastClue(game) {
   const { currentRound, gameID } = game;
   const unplayedClues = getUnplayedClues(game.rounds[currentRound], 1);
@@ -105,7 +111,7 @@ function checkForLastClue(game) {
       const places = getCurrentPlaces(game, players);
       const roundSummary = {round: currentRound, places: places, gameOver: gameOver};
       if (gameOver) {
-        const winners = places[Object.keys(places)[0]];
+        const winners = places[Object.keys(places)[0]].map(getPlayerName);
         logger.info(`Game ${gameID} ended. ${formatList(winners)} ${winners.length === 1 ? 'won' : 'tied'}.`);
         updateGame(gameID, {finishedTime: new Date(), roundSummary: roundSummary}).then(() => {
           let playerUpdates = [];
@@ -145,7 +151,7 @@ async function handleClientConnect(ws, event) {
     logger.info(`${player.name} connected.`);
     connectedClients[playerID] = ws;
     pingHandlers[ws] = setInterval(function() {
-      logger.debug(`Pinging websocket for ${playerID}...`);
+      logger.debug(`Pinging websocket for ${getPlayerName(playerID)}...`);
       try {
         if (ws.readyState === WebSocket.OPEN) {
           ws.ping('jeopardye');
@@ -154,6 +160,7 @@ async function handleClientConnect(ws, event) {
         logger.error(`Unexpected error while pinging websocket: ${e}`);
       }
     }, PING_INTERVAL_MILLIS);
+    playerNames[playerID] = player.name;
     return getPlayers(Object.keys(connectedClients));
   }).then(players => {
     let newPlayers = {};
@@ -269,7 +276,7 @@ function setResponseTimerForClue(game, clue, playerID, wagering = false) {
     getGame(game.gameID).then(game => {
       const expectedPlayerID = (wagering ? game.playerInControl : game.playerAnswering);
       if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID && expectedPlayerID === playerID) {
-        logger.info(`${wagering ? 'Wagering' : 'Response'} time expired for ${playerID}.`);
+        logger.info(`${wagering ? 'Wagering' : 'Response'} time expired for ${getPlayerName(playerID)}.`);
         let newScore = game.scores[playerID];
         let newFields = {currentWager: null};
         if (!wagering) {
@@ -385,7 +392,7 @@ async function handleBuzzIn(ws, event) {
   }
 
   setPlayerAnswering(gameID, playerID).then(() => incrementPlayerStat(playerID, CLUES_ANSWERED_STAT)).then(() => {
-    logger.info(`${playerID} buzzed in.`);
+    logger.info(`${getPlayerName(playerID)} buzzed in.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_BUZZED, event.payload));
     const timer = buzzTimers[gameID];
     if (timer && timer.categoryID === categoryID && timer.clueID === clueID && timer.running) {
@@ -433,7 +440,8 @@ async function handleSubmitAnswer(ws, event) {
     }
   }
   updateGame(gameID, newFields).then(() => incrementPlayerStat(playerID, OVERALL_SCORE_STAT, (correct ? value : -value))).then(() => {
-    logger.info(`${playerID} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
+    const name = getPlayerName(playerID);
+    logger.info(`${name} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
     const delayMillis = (dailyDouble || correct ? 0 : buzzTimers[gameID]?.delayMillis);
     const payload = {...event.payload, clue: clue, correct: correct, score: newScore, value: value, answerDelayMillis: delayMillis};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
@@ -444,9 +452,9 @@ async function handleSubmitAnswer(ws, event) {
       checkForLastClue(game);
     }
     if (correct) {
-      incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).then(() => logger.debug(`Incremented correct answer count for ${playerID}.`));
+      incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).then(() => logger.debug(`Incremented correct answer count for ${name}.`));
       if (dailyDouble) {
-        incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).then(() => logger.debug(`Incremented correct daily double count for ${playerID}.`));
+        incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).then(() => logger.debug(`Incremented correct daily double count for ${name}.`));
       }
     }
   });
@@ -481,7 +489,7 @@ async function handleSubmitWager(ws, event) {
   ).then(() =>
     incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_STAT)
   ).then(() => {
-    logger.info(`${playerID} wagered $${playerWager}.`);
+    logger.info(`${getPlayerName(playerID)} wagered $${playerWager.toLocaleString()}.`);
     const payload = {playerID: playerID, wager: playerWager};
     broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, payload));
     const timer = responseTimers[gameID];
@@ -500,7 +508,7 @@ async function handleStartSpectating(ws, event) {
     return;
   }
   updatePlayer(playerID, {spectating: true}).then(() => {
-    logger.info(`${playerID} started spectating.`);
+    logger.info(`${getPlayerName(playerID)} started spectating.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_STARTED_SPECTATING, event.payload));
   });
 }
@@ -536,7 +544,7 @@ async function handleStopSpectating(ws, event) {
     }
   }
   updatePlayer(playerID, {spectating: false}).then(() => {
-    logger.info(`${playerID} stopped spectating.`);
+    logger.info(`${getPlayerName(playerID)} stopped spectating.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, {playerID}));
   });
 }
@@ -560,7 +568,7 @@ async function handleMarkClueAsInvalid(ws, event) {
     return;
   }
   markActiveClueAsInvalid(gameID, playerID).then(() => {
-    logger.info(`${playerID} marked clue ${clueID} (category ${categoryID}) as invalid.`);
+    logger.info(`${getPlayerName(playerID)} marked clue ${clueID} (category ${categoryID}) as invalid.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_MARKED_CLUE_AS_INVALID, event.payload));
   });
 }
@@ -595,7 +603,7 @@ async function handleVoteToSkipClue(ws, event) {
     return;
   }
   voteToSkipActiveClue(gameID, playerID).then(() => {
-    logger.info(`${playerID} voted to skip clue ${clueID} (category ${categoryID}).`);
+    logger.info(`${getPlayerName(playerID)} voted to skip clue ${clueID} (category ${categoryID}).`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_VOTED_TO_SKIP_CLUE, event.payload));
     const numPlayers = players.filter(player => !player.spectating).length;
     if (game.activeClue.playersVotingToSkip.length === numPlayers - 1) {
@@ -604,6 +612,7 @@ async function handleVoteToSkipClue(ws, event) {
         broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, {gameID, categoryID, clueID}));
         clearTimeout(buzzTimers[gameID].timerID);
         delete buzzTimers[gameID];
+        checkForLastClue(game);
       });
     }
   });
@@ -640,7 +649,7 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
     return;
   }
   markPlayerAsReadyForNextRound(gameID, playerID).then(() => {
-    logger.info(`${playerID} is ready for the next round in game ${gameID}.`);
+    logger.info(`${getPlayerName(playerID)} is ready for the next round in game ${gameID}.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_MARKED_READY_FOR_NEXT_ROUND, event.payload));
     const numPlayers = players.filter(player => !player.spectating).length;
     if (game.playersReadyForNextRound.length === numPlayers - 1) {
@@ -649,7 +658,7 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
       const placeKeys = Object.keys(places);
       const lastPlacePlayers = places[placeKeys[placeKeys.length - 1]];
       const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers));
-      advanceToNextRound(gameID, round, playerInControl).then(() => {
+      advanceToNextRound(gameID, round, playerInControl.playerID).then(() => {
         logger.info(`Advanced to the ${round} round in game ${gameID}.`);
         broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, {gameID, round, playerInControl}));
       });
@@ -704,19 +713,19 @@ export function handleWebsocket(ws, req) {
   });
 
   ws.on('close', function(code, reason) {
-    logger.info(`Websocket closed: ${reason} (${code})`);
+    logger.debug(`Websocket closed: ${reason} (${code})`);
     if (pingHandlers.hasOwnProperty(ws)) {
-      logger.info('Removing ping handler.');
+      logger.debug('Removing ping handler.');
       const interval = pingHandlers[ws];
       clearInterval(interval);
       delete pingHandlers[ws];
     } else {
-      logger.info('Ping handler not found; skipping.');
+      logger.debug('Ping handler not found; skipping.');
     }
     Object.entries(connectedClients).forEach(([playerID, socket]) => {
       if (socket === ws) {
         updatePlayer(playerID, {active: false}).then(() => {
-          logger.info(`${playerID} went inactive.`);
+          logger.info(`${getPlayerName(playerID)} went inactive.`);
           broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_INACTIVE, {player: new GamePlayer(playerID, null)}));
           delete connectedClients[playerID];
         });

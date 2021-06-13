@@ -40,7 +40,7 @@ class Game extends React.Component {
       showActiveClue: !!props.activeClue,
       showClueAnimation: !!props.activeClue,
       showDailyDoubleWager: false,
-      showRoundSummary: false,
+      showRoundSummary: !!props.roundSummary,
       status: this.getInitialStatus(props),
       timerKey: Date.now(),
       timerRef: React.createRef(),
@@ -348,12 +348,21 @@ class Game extends React.Component {
     if (!props.game) {
       return 'Creating a new game, please wait ...';
     }
-    const isNewRound = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
-    const playerHasControl = this.playerHasControl();
-    const playerName = this.getPlayerName(props.playerInControl);
-    const status = getStartOfRoundMessage(props.game.currentRound, isNewRound, playerHasControl, playerName);
+    let appearance = 'default';
+    let status;
+    if (props.roundSummary) {
+      status = getEndOfRoundMessage(false, false, props.roundSummary.round, props.roundSummary.gameOver);
+    } else {
+      const isNewRound = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
+      const playerHasControl = this.playerHasControl();
+      const playerName = this.getPlayerName(props.playerInControl);
+      status = getStartOfRoundMessage(props.game.currentRound, isNewRound, playerHasControl, playerName);
+      if (playerHasControl) {
+        appearance = 'action';
+      }
+    }
     return {
-      appearance: (playerHasControl ? 'action' : 'default'),
+      appearance: appearance,
       text: status,
     };
   }

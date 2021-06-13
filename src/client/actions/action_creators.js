@@ -109,7 +109,10 @@ export function fetchCurrentGame() {
       if (game.error) {
         return game;
       }
-      return (game.finishedTime !== null || !getUnplayedClues(game.rounds[game.currentRound]).length ? null : game);
+      if (game.finishedTime !== null || (!game.roundSummary && !getUnplayedClues(game.rounds[game.currentRound]).length)) {
+        return null;
+      }
+      return game;
     });
   }
   return {

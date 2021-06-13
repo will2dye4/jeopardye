@@ -34,8 +34,10 @@ function RoundSummary(props) {
     const waitingPlayers = Object.values(props.players).filter(player => props.playersReadyForNextRound.indexOf(player.playerID) === -1);
     if (waitingPlayers.length > 3) {
       waitingText = `Waiting for ${waitingPlayers.length} players...`;
-    } else {
+    } else if (waitingPlayers.length) {
       waitingText = `Waiting for ${formatList(waitingPlayers.map(player => player.name))}...`;
+    } else {
+      waitingText = 'Starting next round...';
     }
   }
 

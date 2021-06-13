@@ -6,7 +6,7 @@ import {
 } from '../constants.mjs';
 
 const DEFAULT_SOUND_EFFECT_VOLUME = 0.5;
-const DEFAULT_SPEECH_VOLUME = 0.5;
+const DEFAULT_SPEECH_VOLUME = 0.4;
 
 const INVALID_CLUE_URL =`${JSERVICE_API_BASE}/invalid`;
 

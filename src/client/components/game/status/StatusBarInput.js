@@ -67,7 +67,7 @@ class StatusBarInput extends React.Component {
       input = <Input size="lg" w={inputWidth} {...inputProps} />;
     }
     return (
-      <Flex align="center" justify="center" px={4} w={width}>
+      <Flex align="center" justify="center" textAlign="center" px={4} w={width}>
         <Text as="label" htmlFor={this.props.id} minWidth={minLabelWidth} mr={5}>{this.props.label}</Text>
         {input}
         <Button colorScheme="jeopardyBlue" size="lg" type="submit" onClick={this.handleSubmit}>
