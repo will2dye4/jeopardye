@@ -1,11 +1,18 @@
 import { ActionTypes } from '../actions/action_creators';
-import { DEFAULT_PLAYER_ID, EventTypes, GAME_ID_KEY, PLAYER_ID_KEY, StatusCodes } from '../../constants.mjs';
+import {
+  DEFAULT_PLAYER_ID,
+  EventTypes,
+  GAME_HISTORY_EVENT_TYPES,
+  GAME_ID_KEY,
+  PLAYER_ID_KEY,
+  StatusCodes,
+} from '../../constants.mjs';
 import { GameSettings } from '../../models/game.mjs';
 import { isDailyDouble } from '../../utils.mjs';
 
 let playerNames = {};
 
-function getPlayerName(playerID) {
+export function getPlayerName(playerID) {
   return playerNames[playerID] || playerID;
 }
 
@@ -13,6 +20,7 @@ function newStoreData() {
   return {
     connected: false,
     error: null,
+    eventHistory: [],
     hostPlayerID: DEFAULT_PLAYER_ID,
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
     board: null,
@@ -69,6 +77,7 @@ function handleNewGame(storeData, newGame) {
   localStorage.setItem(GAME_ID_KEY, newGame.gameID);
   return {
     ...storeData,
+    eventHistory: [],
     game: newGame,
     gameStarting: false,
     board: newBoard,
@@ -351,7 +360,11 @@ function handleWebsocketEvent(storeData, event) {
   const eventType = event.eventType;
   if (eventHandlers.hasOwnProperty(eventType)) {
     const handler = eventHandlers[eventType];
-    return handler(storeData, event);
+    let newStore = handler(storeData, event);
+    if (GAME_HISTORY_EVENT_TYPES.has(event.eventType)) {
+      newStore.eventHistory = storeData.eventHistory.concat({...event, timestamp: Date.now()});
+    }
+    return newStore;
   } else {
     console.log(`Ignoring event with unknown type: ${eventType} (${JSON.stringify(event)})`);
     return storeData || newStoreData();

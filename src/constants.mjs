@@ -152,6 +152,26 @@ export const EventTypes = {
   CLIENT_CONNECT: 'client_connect',
 }
 
+export const GAME_HISTORY_EVENT_TYPES = new Set([
+  /* game events */
+  EventTypes.GAME_STARTED,
+  EventTypes.GAME_ENDED,
+  EventTypes.ROUND_STARTED,
+  EventTypes.ROUND_ENDED,
+  /* player events */
+  EventTypes.PLAYER_JOINED,
+  /* gameplay events */
+  EventTypes.PLAYER_SELECTED_CLUE,
+  EventTypes.PLAYER_BUZZED,
+  EventTypes.PLAYER_ANSWERED,
+  EventTypes.PLAYER_WAGERED,
+  EventTypes.PLAYER_MARKED_CLUE_AS_INVALID,
+  EventTypes.PLAYER_VOTED_TO_SKIP_CLUE,
+  /* server timing events */
+  EventTypes.BUZZING_PERIOD_ENDED,
+  EventTypes.RESPONSE_PERIOD_ENDED,
+]);
+
 export const StatusCodes = {
   /* success codes */
   NO_CONTENT: 204,

@@ -24,6 +24,7 @@ import './Game.css';
 import Bold from '../common/Bold';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
+import GameHistory from './history/GameHistory';
 import Podiums from './podium/Podiums';
 import RoundSummary from './summary/RoundSummary';
 import StatusBar from './status/StatusBar';
@@ -40,14 +41,17 @@ class Game extends React.Component {
       showActiveClue: !!props.activeClue,
       showClueAnimation: !!props.activeClue,
       showDailyDoubleWager: false,
+      showGameHistory: false,
       showRoundSummary: !!props.roundSummary,
       status: this.getInitialStatus(props),
       timerKey: Date.now(),
       timerRef: React.createRef(),
     };
+    this.closeGameHistory = this.closeGameHistory.bind(this);
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
     this.handleClueClick = this.handleClueClick.bind(this);
     this.markActiveClueAsInvalid = this.markActiveClueAsInvalid.bind(this);
+    this.openGameHistory = this.openGameHistory.bind(this);
     this.revealAnswer = this.revealAnswer.bind(this);
     this.voteToSkipActiveClue = this.voteToSkipActiveClue.bind(this);
   }
@@ -537,7 +541,19 @@ class Game extends React.Component {
     this.props.voteToSkipClue(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
   }
 
+  openGameHistory() {
+    this.setState({showGameHistory: true});
+  }
+
+  closeGameHistory() {
+    this.setState({showGameHistory: false});
+  }
+
   render() {
+    const gameHistory = {
+      open: this.openGameHistory,
+      close: this.closeGameHistory,
+    };
     const gameState = {
       gameID: this.props.game?.gameID,
       currentRound: this.props.game?.currentRound,
@@ -568,7 +584,8 @@ class Game extends React.Component {
                voteToSkipActiveClue={this.voteToSkipActiveClue}
                {...this.state} />
         <StatusBar gameState={gameState} {...this.props} {...this.state} />
-        <Podiums gameState={gameState} {...this.props} />
+        <Podiums gameHistory={gameHistory} gameState={gameState} {...this.props} />
+        {this.state.showGameHistory && <GameHistory gameHistory={gameHistory} gameState={gameState} {...this.props} />}
         {this.state.showRoundSummary && <RoundSummary gameState={gameState} {...this.props} />}
       </Box>
     );

@@ -1,4 +1,5 @@
 import React from 'react';
+import moment from 'moment';
 import {
   Flex,
   Heading,
@@ -11,7 +12,6 @@ import {
   StatGroup,
   Text,
 } from '@chakra-ui/react';
-import moment from 'moment';
 import { formatScore } from '../../../../utils.mjs';
 import Card from '../../common/card/Card';
 import PlayerStatistic from './PlayerStatistic';

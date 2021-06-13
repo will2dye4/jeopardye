@@ -1,6 +1,6 @@
 import React from 'react';
 import { Flex, Text } from '@chakra-ui/react';
-import { faChartLine, faEye, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faEye, faHistory, faPen } from '@fortawesome/free-solid-svg-icons';
 import Icon from '../../common/Icon';
 import Card from '../../common/card/Card';
 
@@ -23,6 +23,11 @@ function PodiumMenu(props) {
       icon: faChartLine,
       label: 'Statistics',
       onClick: props.playerStats.open,
+    },
+    {
+      icon: faHistory,
+      label: 'History',
+      onClick: props.gameHistory.open,
     },
     {
       icon: faEye,
