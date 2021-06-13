@@ -362,7 +362,7 @@ function handleWebsocketEvent(storeData, event) {
     const handler = eventHandlers[eventType];
     let newStore = handler(storeData, event);
     if (GAME_HISTORY_EVENT_TYPES.has(event.eventType)) {
-      newStore.eventHistory = storeData.eventHistory.concat({...event, timestamp: Date.now()});
+      newStore.eventHistory = storeData.eventHistory.concat({...event, clue: newStore.activeClue, timestamp: Date.now()});
     }
     return newStore;
   } else {

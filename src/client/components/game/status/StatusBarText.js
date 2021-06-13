@@ -1,25 +1,6 @@
 import React from 'react';
 import { Text } from '@chakra-ui/react';
-
-const BELL_EMOJI = '\uD83D\uDD14';
-const CHECK_MARK_EMOJI = '\u2705';
-const CROSS_MARK_EMOJI = '\u274C';
-const EXCLAMATION_MARK_EMOJI = '\u2757';
-const HOURGLASS_EMOJI = '\u23F3';
-const QUESTION_MARK_EMOJI = '\u2753';
-const SKIP_FORWARD_EMOJI = '\u23ED';
-const TIMER_CLOCK_EMOJI = '\u23F2';
-
-const EMOJI_NAME_TO_EMOJI = {
-  'bell': BELL_EMOJI,
-  'check_mark': CHECK_MARK_EMOJI,
-  'cross_mark': CROSS_MARK_EMOJI,
-  'exclamation': EXCLAMATION_MARK_EMOJI,
-  'hourglass': HOURGLASS_EMOJI,
-  'question': QUESTION_MARK_EMOJI,
-  'skip_forward': SKIP_FORWARD_EMOJI,
-  'timer_clock': TIMER_CLOCK_EMOJI,
-}
+import { Emoji, EMOJI_NAME_TO_EMOJI } from '../../../../constants.mjs';
 
 class StatusBarText extends React.Component {
   getAppearance() {
@@ -35,11 +16,11 @@ class StatusBarText extends React.Component {
     }
     switch (this.getAppearance()) {
       case 'action':
-        return EXCLAMATION_MARK_EMOJI;
+        return Emoji.EXCLAMATION_MARK;
       case 'correct':
-        return CHECK_MARK_EMOJI;
+        return Emoji.CHECK_MARK;
       case 'incorrect':
-        return CROSS_MARK_EMOJI;
+        return Emoji.CROSS_MARK;
       default:
         return null;
     }

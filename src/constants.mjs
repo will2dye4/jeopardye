@@ -172,6 +172,41 @@ export const GAME_HISTORY_EVENT_TYPES = new Set([
   EventTypes.RESPONSE_PERIOD_ENDED,
 ]);
 
+export const Emoji = {
+  BELL: '\uD83D\uDD14',
+  BUST_IN_SILHOUETTE: '\uD83D\uDC64',
+  CHECK_MARK: '\u2705',
+  CHECKERED_FLAG: '\uD83C\uDFC1',
+  CROSS_MARK: '\u274C',
+  END_ARROW: '\uD83D\uDD1A',
+  EXCLAMATION_MARK: '\u2757',
+  HOURGLASS: '\u23F3',
+
+  INTERROBANG: '\u2049\uFE0F',
+  MONEY_WITH_WINGS: '\uD83D\uDCB8',
+  PLAY_BUTTON: '\u25B6\uFE0F',
+  QUESTION_MARK: '\u2753',
+  SKIP_FORWARD: '\u23ED',
+  TIMER_CLOCK: '\u23F2',
+};
+
+export const EMOJI_NAME_TO_EMOJI = {
+  'bell': Emoji.BELL,
+  'bust': Emoji.BUST_IN_SILHOUETTE,
+  'check_mark': Emoji.CHECK_MARK,
+  'checkered_flag': Emoji.CHECKERED_FLAG,
+  'cross_mark': Emoji.CROSS_MARK,
+  'end': Emoji.END_ARROW,
+  'exclamation': Emoji.EXCLAMATION_MARK,
+  'hourglass': Emoji.HOURGLASS,
+  'interrobang': Emoji.INTERROBANG,
+  'money_with_wings': Emoji.MONEY_WITH_WINGS,
+  'play_button': Emoji.PLAY_BUTTON,
+  'question': Emoji.QUESTION_MARK,
+  'skip_forward': Emoji.SKIP_FORWARD,
+  'timer_clock': Emoji.TIMER_CLOCK,
+};
+
 export const StatusCodes = {
   /* success codes */
   NO_CONTENT: 204,
