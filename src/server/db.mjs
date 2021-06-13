@@ -91,7 +91,12 @@ export async function markPlayerAsReadyForNextRound(gameID, playerID) {
 }
 
 export async function advanceToNextRound(gameID, round, playerInControl) {
-  await updateGame(gameID, {currentRound: round, playerInControl: playerInControl, playersReadyForNextRound: []});
+  await updateGame(gameID, {
+    currentRound: round,
+    playerInControl: playerInControl,
+    playersReadyForNextRound: [],
+    roundSummary: null,
+  });
 }
 
 export async function createPlayer(player) {

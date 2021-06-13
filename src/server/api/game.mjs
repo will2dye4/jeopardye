@@ -11,6 +11,7 @@ import {
   MIN_NUM_ROUNDS,
   MAX_PLAYERS_PER_GAME,
   Rounds,
+  StatusCodes,
 } from '../../constants.mjs';
 import { Category, Game, Round } from '../../models/game.mjs';
 import { GAMES_PLAYED_STAT } from '../../models/player.mjs';
@@ -64,7 +65,7 @@ async function handleCreateGame(req, res, next) {
   if (req.body.hasOwnProperty('numRounds')) {
     numRounds = parseInt(req.body.numRounds);
     if (isNaN(numRounds) || numRounds < MIN_NUM_ROUNDS || numRounds > MAX_NUM_ROUNDS) {
-      handleError(`Invalid number of rounds "${req.body.numRounds}"`, 400);
+      handleError(`Invalid number of rounds "${req.body.numRounds}"`, StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -73,7 +74,7 @@ async function handleCreateGame(req, res, next) {
   if (req.body.hasOwnProperty('dailyDoubles')) {
     dailyDoubles = req.body.dailyDoubles;
     if (!DailyDoubleSettings.hasOwnProperty(dailyDoubles)) {
-      handleError(`Invalid daily double setting "${dailyDoubles}"`, 400);
+      handleError(`Invalid daily double setting "${dailyDoubles}"`, StatusCodes.BAD_REQUEST);
       return;
     }
     dailyDoubles = DailyDoubleSettings[dailyDoubles];
@@ -83,7 +84,7 @@ async function handleCreateGame(req, res, next) {
   if (req.body.hasOwnProperty('finalJeopardye')) {
     finalJeopardye = req.body.finalJeopardye;
     if (typeof finalJeopardye !== 'boolean') {
-      handleError(`Invalid final Jeopardye setting "${finalJeopardye}"`, 400);
+      handleError(`Invalid final Jeopardye setting "${finalJeopardye}"`, StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -95,12 +96,12 @@ async function handleCreateGame(req, res, next) {
     try {
       players = await getPlayers(playerIDs);
     } catch (e) {
-      handleError(`Failed to get players: ${e}`, 404);
+      handleError(`Failed to get players: ${e}`, StatusCodes.NOT_FOUND);
       return;
     }
     const numPlayers = players.filter(player => !player.spectating).length;
     if (numPlayers > MAX_PLAYERS_PER_GAME) {
-      handleError(`Maximum number of players (${MAX_PLAYERS_PER_GAME}) exceeded`, 400);
+      handleError(`Maximum number of players (${MAX_PLAYERS_PER_GAME}) exceeded`, StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -108,7 +109,7 @@ async function handleCreateGame(req, res, next) {
   if (req.body.hasOwnProperty('playerInControl') && req.body.playerInControl !== null) {
     playerInControl = req.body.playerInControl;
     if (playerIDs.indexOf(playerInControl) === -1) {
-      handleError(`Invalid player in control "${playerInControl}"`, 400);
+      handleError(`Invalid player in control "${playerInControl}"`, StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -121,7 +122,7 @@ async function handleCreateGame(req, res, next) {
     try {
       rounds[round] = await createRound(round, dailyDoubles);
     } catch (e) {
-      handleError(`Failed to fetch ${round} round categories from JService: ${e}`, 500);
+      handleError(`Failed to fetch ${round} round categories from JService: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
       return;
     }
   }
@@ -134,7 +135,7 @@ async function handleCreateGame(req, res, next) {
   try {
     await createGame(game);
   } catch (e) {
-    handleError(`Failed to save game to database: ${e}`, 500);
+    handleError(`Failed to save game to database: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
     return;
   }
 
@@ -152,7 +153,7 @@ async function handleGetGame(req, res, next) {
     res.json(game);
   } else {
     let err = new Error(`Game "${gameID}" not found`);
-    err.status = 404;
+    err.status = StatusCodes.NOT_FOUND;
     next(err);
   }
 }

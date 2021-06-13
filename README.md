@@ -30,6 +30,6 @@ Your app is ready to be deployed!
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
 
-### `make server`
+### `yarn server`
 
 Runs the server at `http://localhost:3333`. Expects MongoDB to be running.

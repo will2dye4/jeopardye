@@ -101,6 +101,7 @@ class StatusBar extends React.Component {
         );
         content = <StatusBarInput id="wager-input"
                                   label={label}
+                                  leftElement="$"
                                   submitText="Wager"
                                   validate={this.validateWager}
                                   onSubmit={this.handleSubmitWager} />;

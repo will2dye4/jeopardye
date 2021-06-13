@@ -17,7 +17,6 @@ class ActiveClue extends React.Component {
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (!prevProps.revealAnswer && this.props.revealAnswer) {
       this.setState({text: this.props.activeClue.answer});
-      this.props.timerRef.current.reset();
     }
   }
 
@@ -39,7 +38,6 @@ class ActiveClue extends React.Component {
       }
     } else if (this.allowBuzz()) {
       this.props.buzzIn(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
-      this.props.timerRef.current.pause();
     }
   }
 

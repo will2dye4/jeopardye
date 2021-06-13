@@ -151,3 +151,14 @@ export const EventTypes = {
   /* connection events */
   CLIENT_CONNECT: 'client_connect',
 }
+
+export const StatusCodes = {
+  /* success codes */
+  NO_CONTENT: 204,
+  /* client error codes */
+  BAD_REQUEST: 400,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  /* server error codes */
+  INTERNAL_SERVER_ERROR: 500,
+};

@@ -1,5 +1,5 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { EventTypes, GAME_ID_KEY, PLAYER_ID_KEY } from '../../constants.mjs';
+import { EventTypes, GAME_ID_KEY, PLAYER_ID_KEY, StatusCodes } from '../../constants.mjs';
 import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
@@ -64,7 +64,7 @@ function createNewGame(gameSettings = null) {
 
 function getPlayerByID(playerID) {
   return fetch(`${PLAYER_URL}/${playerID}`).then(response =>
-    (response.status === 404) ? null : getJSON(response, `Error occurred while fetching player ${playerID}.`)
+    (response.status === StatusCodes.NOT_FOUND) ? null : getJSON(response, `Error occurred while fetching player ${playerID}.`)
   ).catch(e =>
     handleError(e, `Unexpected error occurred while fetching player ${playerID}.`)
   );

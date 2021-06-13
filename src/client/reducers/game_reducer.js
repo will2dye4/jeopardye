@@ -1,5 +1,5 @@
 import { ActionTypes } from '../actions/action_creators';
-import { DEFAULT_PLAYER_ID, EventTypes, GAME_ID_KEY, PLAYER_ID_KEY } from '../../constants.mjs';
+import { DEFAULT_PLAYER_ID, EventTypes, GAME_ID_KEY, PLAYER_ID_KEY, StatusCodes } from '../../constants.mjs';
 import { GameSettings } from '../../models/game.mjs';
 import { isDailyDouble } from '../../utils.mjs';
 
@@ -30,9 +30,16 @@ function newStoreData() {
   };
 }
 
+function shouldIgnoreError(eventType, status) {
+  return (eventType === EventTypes.BUZZ_IN && status === StatusCodes.CONFLICT);
+}
+
 function handleError(storeData, event) {
   const { eventType, error, status } = event.payload;
   console.log(`Request to ${eventType} failed: ${error} (${status})`);
+  if (shouldIgnoreError(eventType, status)) {
+    return storeData;
+  }
   return {...storeData, error: `Failed to ${eventType.replaceAll('_', ' ')}.`};
 }
 
@@ -66,6 +73,7 @@ function handleNewGame(storeData, newGame) {
     playerAnswering: newGame.playerAnswering,
     playerInControl: newGame.playerInControl,
     prevAnswer: null,
+    roundSummary: newGame.roundSummary || null,
   };
 }
 

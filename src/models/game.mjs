@@ -106,6 +106,7 @@ export class Game {
     this.activeClue = activeClue || null;
     this.currentWager = currentWager || null;
     this.playersReadyForNextRound = [];
+    this.roundSummary = null;
     this.createdTime = new Date();
     this.finishedTime = null;
 

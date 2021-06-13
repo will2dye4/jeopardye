@@ -1,17 +1,15 @@
 import React from 'react';
-import { createStandaloneToast, Text } from '@chakra-ui/react';
+import { createStandaloneToast, useClipboard, Text } from '@chakra-ui/react';
 import JEOPARDYE_THEME from '../../theme';
-import { copyToClipboard } from '../../utils';
 import Card from '../common/card/Card';
 import CardHeader from '../common/card/CardHeader';
 
-const BASE_URL = 'http://localhost:3000';
 const COPY_TOAST_ID = 'link-copied-toast';
 
 const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
-async function copyCodeToClipboard(code) {
-  await copyToClipboard(`${BASE_URL}/p/${code}`);
+async function copyCodeToClipboard(onCopy) {
+  onCopy();
   if (!toast.isActive(COPY_TOAST_ID)) {
     toast({
       id: COPY_TOAST_ID,
@@ -23,11 +21,13 @@ async function copyCodeToClipboard(code) {
 }
 
 function RoomCode(props) {
+  const roomURL = `${window.location.origin}/p/${props.code}`;
+  const { onCopy } = useClipboard(roomURL);
   return (
     <Card mb={5} textAlign="center">
       <CardHeader>Room Code</CardHeader>
       <Text className="room-code hover-blue hover-pointer" py={3} title="Click to copy link"
-            onClick={() => copyCodeToClipboard(props.code)}>
+            onClick={() => copyCodeToClipboard(onCopy)}>
         {props.code}
       </Text>
     </Card>

@@ -2,7 +2,7 @@ import express from 'express';
 import log from 'log';
 import { createPlayer, getPlayer, updatePlayerName } from '../db.mjs';
 import { broadcast } from '../websockets.mjs';
-import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes } from '../../constants.mjs';
+import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, StatusCodes } from '../../constants.mjs';
 import { Player, validatePlayerName } from '../../models/player.mjs';
 import { WebsocketEvent } from '../../utils.mjs';
 
@@ -18,7 +18,7 @@ async function handleCreatePlayer(req, res, next) {
 
   const name = req.body.name?.toString().trim();
   if (!validatePlayerName(name)) {
-    handleError(`Invalid name "${name}"`, 400);
+    handleError(`Invalid name "${name}"`, StatusCodes.BAD_REQUEST);
     return;
   }
 
@@ -26,7 +26,7 @@ async function handleCreatePlayer(req, res, next) {
   if (req.body.hasOwnProperty('preferredFontStyle')) {
     preferredFontStyle = req.body.preferredFontStyle;
     if (ALL_FONT_STYLES.indexOf(preferredFontStyle) === -1) {
-      handleError(`Invalid font style "${preferredFontStyle}"`, 400);
+      handleError(`Invalid font style "${preferredFontStyle}"`, StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -35,7 +35,7 @@ async function handleCreatePlayer(req, res, next) {
   try {
     await createPlayer(player);
   } catch (e) {
-    handleError(`Failed to save player to database: ${e}`, 500);
+    handleError(`Failed to save player to database: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
     return;
   }
 
@@ -51,7 +51,7 @@ async function handleGetPlayer(req, res, next) {
     res.json(player);
   } else {
     let err = new Error(`Player ${playerID} not found`);
-    err.status = 404;
+    err.status = StatusCodes.NOT_FOUND;
     next(err);
   }
 }
@@ -67,7 +67,7 @@ async function handleUpdatePlayer(req, res, next) {
   const playerID = req.params.playerID;
   const player = await getPlayer(playerID);
   if (!player) {
-    handleError(`Player ${playerID} not found`, 404);
+    handleError(`Player ${playerID} not found`, StatusCodes.NOT_FOUND);
     return;
   }
 
@@ -75,7 +75,7 @@ async function handleUpdatePlayer(req, res, next) {
   if (req.body.hasOwnProperty('name')) {
     name = req.body.name.toString().trim();
     if (!validatePlayerName(name)) {
-      handleError(`Invalid name "${name}"`, 400);
+      handleError(`Invalid name "${name}"`, StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -84,7 +84,7 @@ async function handleUpdatePlayer(req, res, next) {
   if (req.body.hasOwnProperty('preferredFontStyle')) {
     preferredFontStyle = req.body.preferredFontStyle;
     if (ALL_FONT_STYLES.indexOf(preferredFontStyle) === -1) {
-      handleError(`Invalid font style "${preferredFontStyle}"`, 400);
+      handleError(`Invalid font style "${preferredFontStyle}"`, StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -92,13 +92,13 @@ async function handleUpdatePlayer(req, res, next) {
   try {
     await updatePlayerName(playerID, name, preferredFontStyle);
   } catch (e) {
-    handleError(`Failed to update player name in database: ${e}`, 500);
+    handleError(`Failed to update player name in database: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
     return;
   }
 
   logger.info(`Updated player ${player.playerID}'s name to "${name}" (font: ${preferredFontStyle}).`);
   broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME, {playerID, name, preferredFontStyle}));
-  res.status(204).end();
+  res.status(StatusCodes.NO_CONTENT).end();
 }
 
 const router = express.Router();

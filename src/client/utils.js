@@ -57,11 +57,3 @@ export function markClueAsInvalid(clueID) {
     return response;
   });
 }
-
-export async function copyToClipboard(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch (e) {
-    console.log(`Failed to copy to clipboard: ${e}`);
-  }
-}

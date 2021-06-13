@@ -181,7 +181,7 @@ class Game extends React.Component {
         this.getTimerRef()?.startResponseTimer();
       } else {
         this.setStatus({
-          emoji: "hourglass",
+          emoji: 'hourglass',
           text: `Waiting for ${this.getPlayerName(this.props.playerAnswering)} to answer...`,
         });
       }
@@ -469,6 +469,7 @@ class Game extends React.Component {
         text: status,
       };
     }
+    this.getTimerRef()?.reset();
     this.setState(newState);
     speakAnswer(this.props.activeClue.answer, SHOW_CLUE_DELAY_MILLIS);
     setTimeout(this.dismissActiveClue, DISMISS_CLUE_DELAY_MILLIS);

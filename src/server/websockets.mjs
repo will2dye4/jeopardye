@@ -5,6 +5,7 @@ import {
   DEFAULT_COUNTDOWN_SECONDS,
   EventTypes,
   MAX_PLAYERS_PER_GAME,
+  StatusCodes,
   WAGER_COUNTDOWN_SECONDS,
 } from '../constants.mjs';
 import {
@@ -102,10 +103,11 @@ function checkForLastClue(game) {
     getPlayers(game.playerIDs).then(players => {
       const gameOver = !hasMoreRounds(game);
       const places = getCurrentPlaces(game, players);
+      const roundSummary = {round: currentRound, places: places, gameOver: gameOver};
       if (gameOver) {
         const winners = places[Object.keys(places)[0]];
         logger.info(`Game ${gameID} ended. ${formatList(winners)} ${winners.length === 1 ? 'won' : 'tied'}.`);
-        updateGame(gameID, {finishedTime: new Date()}).then(() => {
+        updateGame(gameID, {finishedTime: new Date(), roundSummary: roundSummary}).then(() => {
           let playerUpdates = [];
           players.forEach(player => {
             const { playerID } = player;
@@ -119,9 +121,11 @@ function checkForLastClue(game) {
           return Promise.all(playerUpdates);
         }).then(() => logger.info(`Marked game ${gameID} as finished and updated player stats.`));
       } else {
-        logger.info(`Reached the end of the ${currentRound} round for game ${gameID}.`);
+        updateGame(gameID, {roundSummary: roundSummary}).then(() => {
+          logger.info(`Reached the end of the ${currentRound} round for game ${gameID}.`);
+        });
       }
-      broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {gameID: gameID, round: currentRound, places: places, gameOver: gameOver}));
+      broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {...roundSummary, gameID: gameID}));
     });
   }
 }
@@ -129,12 +133,12 @@ function checkForLastClue(game) {
 async function handleClientConnect(ws, event) {
   const { playerID } = event.payload;
   if (!playerID) {
-    handleError(ws, event, 'missing player ID', 400);
+    handleError(ws, event, 'missing player ID', StatusCodes.BAD_REQUEST);
     return;
   }
   const player = await getPlayer(playerID);
   if (!player) {
-    handleError(ws, event, 'player not found', 404);
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
     return;
   }
   updatePlayer(playerID, {active: true, lastConnectionTime: new Date()}).then(() => {
@@ -166,21 +170,21 @@ async function handleGameSettingsChanged(ws, event) {
 async function handleJoinGame(ws, event) {
   const { gameID, playerID } = event.payload;
   if (!gameID) {
-    handleError(ws, event, 'missing game ID', 400);
+    handleError(ws, event, 'missing game ID', StatusCodes.BAD_REQUEST);
     return;
   }
   if (!playerID) {
-    handleError(ws, event, 'missing player ID', 400);
+    handleError(ws, event, 'missing player ID', StatusCodes.BAD_REQUEST);
     return;
   }
   const game = await getGame(gameID);
   if (!game) {
-    handleError(ws, event, 'game not found', 404);
+    handleError(ws, event, 'game not found', StatusCodes.NOT_FOUND);
     return;
   }
   const player = await getPlayer(playerID);
   if (!player) {
-    handleError(ws, event, 'player not found', 404);
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
     return;
   }
   if (!player.spectating) {
@@ -188,12 +192,12 @@ async function handleJoinGame(ws, event) {
     try {
       players = await getPlayers(game.playerIDs);
     } catch (e) {
-      handleError('failed to get players', 500);
+      handleError('failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
       return;
     }
     const numPlayers = players.filter(player => !player.spectating).length;
     if (numPlayers >= MAX_PLAYERS_PER_GAME) {
-      handleError(ws, event, 'max players exceeded', 400);
+      handleError(ws, event, 'max players exceeded', StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -212,20 +216,20 @@ async function validateGamePlayerAndClue(ws, event) {
   const { gameID, playerID, categoryID, clueID } = event.payload;
   const game = await getGame(gameID);
   if (!game) {
-    handleError(ws, event, `game ${gameID} not found`, 404);
+    handleError(ws, event, `game ${gameID} not found`, StatusCodes.NOT_FOUND);
     return null;
   }
   if (game.playerIDs.indexOf(playerID) === -1) {
-    handleError(ws, event, `player ${playerID} not in game ${gameID}`, 400);
+    handleError(ws, event, `player ${playerID} not in game ${gameID}`, StatusCodes.BAD_REQUEST);
     return null;
   }
   const categories = game.rounds[game.currentRound].categories;
   if (!categories.hasOwnProperty(categoryID)) {
-    handleError(ws, event, `invalid category ${categoryID}`, 400);
+    handleError(ws, event, `invalid category ${categoryID}`, StatusCodes.BAD_REQUEST);
     return null;
   }
   if (categories[categoryID].clues.map(clue => clue.clueID).indexOf(clueID) === -1) {
-    handleError(ws, event, `invalid clue ${clueID} (category ${categoryID})`, 400);
+    handleError(ws, event, `invalid clue ${clueID} (category ${categoryID})`, StatusCodes.BAD_REQUEST);
     return null;
   }
   return game;
@@ -331,13 +335,13 @@ async function handleSelectClue(ws, event) {
     return;
   }
   if (game.activeClue) {
-    handleError(ws, event, 'invalid select clue attempt - there is already an active clue', 400);
+    handleError(ws, event, 'invalid select clue attempt - there is already an active clue', StatusCodes.BAD_REQUEST);
     return;
   }
 
   const { categoryID, clueID, playerID } = event.payload;
   if (playerID !== game.playerInControl) {
-    handleError(ws, event, 'invalid select clue attempt - not in control', 400);
+    handleError(ws, event, 'invalid select clue attempt - not in control', StatusCodes.BAD_REQUEST);
     return;
   }
 
@@ -346,7 +350,7 @@ async function handleSelectClue(ws, event) {
   const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
   const clue = clues[clueIndex];
   if (clue.played) {
-    handleError(ws, event, `invalid clue ${clueID} (category ${categoryID}) - already played`, 400);
+    handleError(ws, event, `invalid clue ${clueID} (category ${categoryID}) - already played`, StatusCodes.BAD_REQUEST);
     return;
   }
 
@@ -363,20 +367,20 @@ async function handleBuzzIn(ws, event) {
     return;
   }
   if (!game.activeClue) {
-    handleError(ws, event, 'invalid buzz attempt - no active clue', 400);
+    handleError(ws, event, 'invalid buzz attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
   const { gameID, playerID, categoryID, clueID } = event.payload;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
-    handleError(ws, event, `invalid buzz attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    handleError(ws, event, `invalid buzz attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
   if (game.activeClue.playersAttempted.indexOf(playerID) !== -1) {
-    handleError(ws, event, `invalid buzz attempt - player ${playerID} has already buzzed in`, 400);
+    handleError(ws, event, `invalid buzz attempt - player ${playerID} has already buzzed in`, StatusCodes.BAD_REQUEST);
     return;
   }
   if (game.playerAnswering) {
-    handleError(ws, event, `invalid buzz attempt - another player is already answering`, 400);
+    handleError(ws, event, `invalid buzz attempt - another player is already answering`, StatusCodes.CONFLICT);
     return;
   }
 
@@ -401,16 +405,16 @@ async function handleSubmitAnswer(ws, event) {
     return;
   }
   if (!game.activeClue) {
-    handleError(ws, event, 'invalid answer attempt - no active clue', 400);
+    handleError(ws, event, 'invalid answer attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
   const { gameID, playerID, categoryID, clueID, answer } = event.payload;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
-    handleError(ws, event, `invalid answer attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    handleError(ws, event, `invalid answer attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
   if (game.playerAnswering.toString() !== playerID.toString()) {
-    handleError(ws, event, `invalid answer attempt - player ${playerID} is not currently answering`, 400);
+    handleError(ws, event, `invalid answer attempt - player ${playerID} is not currently answering`, StatusCodes.BAD_REQUEST);
     return;
   }
   const clues = game.rounds[game.currentRound].categories[categoryID].clues;
@@ -454,22 +458,22 @@ async function handleSubmitWager(ws, event) {
     return;
   }
   if (!game.activeClue) {
-    handleError(ws, event, 'invalid wager attempt - no active clue', 400);
+    handleError(ws, event, 'invalid wager attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
   const { gameID, playerID, categoryID, clueID, wager } = event.payload;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
-    handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
   if (!isDailyDouble(game.rounds[game.currentRound], clueID)) {
-    handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not a daily double`, 400);
+    handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not a daily double`, StatusCodes.BAD_REQUEST);
     return;
   }
   const [minWager, maxWager] = getWagerRange(game.currentRound, game.scores[playerID]);
   const playerWager = parseInt(wager);
   if (isNaN(playerWager) || playerWager < minWager || playerWager > maxWager) {
-    handleError(ws, event, `invalid wager attempt - wager ${wager} is invalid (range is ${minWager} - ${maxWager})`, 400);
+    handleError(ws, event, `invalid wager attempt - wager ${wager} is invalid (range is ${minWager} - ${maxWager})`, StatusCodes.BAD_REQUEST);
     return;
   }
   updateGame(gameID, {playerAnswering: playerID, currentWager: playerWager}).then(() =>
@@ -492,7 +496,7 @@ async function handleStartSpectating(ws, event) {
   const { playerID } = event.payload;
   const player = await getPlayer(playerID);
   if (!player) {
-    handleError(ws, event, 'player not found', 404);
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
     return;
   }
   updatePlayer(playerID, {spectating: true}).then(() => {
@@ -505,29 +509,29 @@ async function handleStopSpectating(ws, event) {
   const { gameID, playerID } = event.payload;
   const player = await getPlayer(playerID);
   if (!player) {
-    handleError(ws, event, 'player not found', 404);
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
     return;
   }
   if (gameID) {
     const game = await getGame(gameID);
     if (!game) {
-      handleError(ws, event, 'game not found', 404);
+      handleError(ws, event, 'game not found', StatusCodes.NOT_FOUND);
       return;
     }
     if (game.playerIDs.indexOf(playerID) === -1) {
-      handleError(ws, event, 'player not in game', 400);
+      handleError(ws, event, 'player not in game', StatusCodes.BAD_REQUEST);
       return;
     }
     let players;
     try {
       players = await getPlayers(game.playerIDs);
     } catch (e) {
-      handleError(ws, event, 'failed to get players', 500);
+      handleError(ws, event, 'failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
       return;
     }
     const numPlayers = players.filter(player => !player.spectating).length;
     if (numPlayers >= MAX_PLAYERS_PER_GAME) {
-      handleError(ws, event, 'max players exceeded', 400);
+      handleError(ws, event, 'max players exceeded', StatusCodes.BAD_REQUEST);
       return;
     }
   }
@@ -543,16 +547,16 @@ async function handleMarkClueAsInvalid(ws, event) {
     return;
   }
   if (!game.activeClue) {
-    handleError(ws, event, 'invalid mark invalid attempt - no active clue', 400);
+    handleError(ws, event, 'invalid mark invalid attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
   const { gameID, playerID, categoryID, clueID } = event.payload;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
-    handleError(ws, event, `invalid mark invalid attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    handleError(ws, event, `invalid mark invalid attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
   if (game.activeClue.playersMarkingInvalid.indexOf(playerID) !== -1) {
-    handleError(ws, event, `invalid mark invalid attempt - player ${playerID} has already marked clue ${clueID}`, 400);
+    handleError(ws, event, `invalid mark invalid attempt - player ${playerID} has already marked clue ${clueID}`, StatusCodes.BAD_REQUEST);
     return;
   }
   markActiveClueAsInvalid(gameID, playerID).then(() => {
@@ -567,27 +571,27 @@ async function handleVoteToSkipClue(ws, event) {
     return;
   }
   if (!game.activeClue) {
-    handleError(ws, event, 'invalid vote to skip attempt - no active clue', 400);
+    handleError(ws, event, 'invalid vote to skip attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
   const { gameID, playerID, categoryID, clueID } = event.payload;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
-    handleError(ws, event, `invalid vote to skip attempt - clue ${clueID} (category ${categoryID}) is not currently active`, 400);
+    handleError(ws, event, `invalid vote to skip attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
   if (game.activeClue.playersVotingToSkip.indexOf(playerID) !== -1) {
-    handleError(ws, event, `invalid vote to skip attempt - player ${playerID} has already voted to skip clue ${clueID}`, 400);
+    handleError(ws, event, `invalid vote to skip attempt - player ${playerID} has already voted to skip clue ${clueID}`, StatusCodes.BAD_REQUEST);
     return;
   }
   if (game.playerAnswering) {
-    handleError(ws, event, 'invalid vote to skip attempt - a player is answering', 400);
+    handleError(ws, event, 'invalid vote to skip attempt - a player is answering', StatusCodes.BAD_REQUEST);
     return;
   }
   let players;
   try {
     players = await getPlayers(game.playerIDs);
   } catch (e) {
-    handleError(ws, event, 'failed to get players', 500);
+    handleError(ws, event, 'failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
     return;
   }
   voteToSkipActiveClue(gameID, playerID).then(() => {
@@ -609,30 +613,30 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
   const { gameID, playerID } = event.payload;
   const game = await getGame(gameID);
   if (!game) {
-    handleError(ws, event, 'game not found', 404);
+    handleError(ws, event, 'game not found', StatusCodes.NOT_FOUND);
     return;
   }
   if (game.playerIDs.indexOf(playerID) === -1) {
-    handleError(ws, event, 'player not in game', 400);
+    handleError(ws, event, 'player not in game', StatusCodes.BAD_REQUEST);
     return;
   }
   if (game.playersReadyForNextRound.indexOf(playerID) !== -1) {
-    handleError(ws, event, 'player already ready for next round', 400);
+    handleError(ws, event, 'player already ready for next round', StatusCodes.BAD_REQUEST);
     return;
   }
   if (getUnplayedClues(game.rounds[game.currentRound], 1).length) {
-    handleError(ws, event, 'current round is not over', 400);
+    handleError(ws, event, 'current round is not over', StatusCodes.BAD_REQUEST);
     return;
   }
   if (!hasMoreRounds(game)) {
-    handleError(ws, event, 'game does not have more rounds', 400);
+    handleError(ws, event, 'game does not have more rounds', StatusCodes.BAD_REQUEST);
     return;
   }
   let players;
   try {
     players = await getPlayers(game.playerIDs);
   } catch (e) {
-    handleError('failed to get players', 500);
+    handleError('failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
     return;
   }
   markPlayerAsReadyForNextRound(gameID, playerID).then(() => {
