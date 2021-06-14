@@ -4,6 +4,8 @@ import { Box, HStack, ListItem, Text } from '@chakra-ui/react';
 import { Emoji, EventTypes } from '../../../../constants.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
 import Bold from '../../common/Bold';
+import GameHistoryEventAccordion from './GameHistoryEventAccordion';
+import GameHistoryEventDescription from './GameHistoryEventDescription';
 import PlayerName from './PlayerName';
 
 const RECENT_EVENT_THRESHOLD_MILLIS = 2000;
@@ -20,7 +22,7 @@ function getEventDescription(props) {
   const timestamp = getRelativeEventTime(event.timestamp);
   const playerID = event.payload.playerID;
   const playerName = (playerID === props.gameState.playerID ? 'You' : getPlayerName(playerID));
-  let eventConfig;
+  let eventConfig, heading, emoji;
   switch (event.eventType) {
     case EventTypes.GAME_STARTED:
       eventConfig = {
@@ -46,6 +48,7 @@ function getEventDescription(props) {
       };
       break;
     case EventTypes.ROUND_ENDED:
+      /* TODO - show scores in accordion */
       if (event.payload.gameOver) {
         eventConfig = {
           description: <Bold>The game has ended.</Bold>,
@@ -65,14 +68,19 @@ function getEventDescription(props) {
       };
       break;
     case EventTypes.PLAYER_SELECTED_CLUE:
-      /* TODO - show clue text */
+      heading = (
+        <React.Fragment>
+          <PlayerName>{playerName}</PlayerName> played <Bold>{event.clue.category}</Bold> for <Bold>${event.clue.value.toLocaleString()}</Bold>.
+        </React.Fragment>
+      );
       eventConfig = {
         description: (
-          <React.Fragment>
-            <PlayerName>{playerName}</PlayerName> played <Bold>{event.clue.category}</Bold> for <Bold>${event.clue.value.toLocaleString()}</Bold>.
-          </React.Fragment>
+          <GameHistoryEventAccordion heading={heading} timestamp={timestamp}>
+            {event.clue.question}
+          </GameHistoryEventAccordion>
         ),
         emoji: Emoji.QUESTION_MARK,
+        isAccordion: true,
       };
       break;
     case EventTypes.PLAYER_BUZZED:
@@ -84,8 +92,8 @@ function getEventDescription(props) {
     case EventTypes.PLAYER_ANSWERED:
       const { answer, correct, value } = event.payload;
       const amount = (correct ? '+' : '-') + `$${value.toLocaleString()}`;
-      const emoji = (correct ? Emoji.CHECK_MARK : Emoji.CROSS_MARK);
       const color = (correct ? 'green' : 'red');
+      emoji = (correct ? Emoji.CHECK_MARK : Emoji.CROSS_MARK);
       eventConfig = {
         description: (
           <React.Fragment>
@@ -118,10 +126,21 @@ function getEventDescription(props) {
       };
       break;
     case EventTypes.BUZZING_PERIOD_ENDED:
-      /* TODO - show correct answer, handle skipping the clue */
+      if (event.payload.skipped) {
+        heading = 'Skipped the clue.';
+        emoji = Emoji.SKIP_FORWARD;
+      } else {
+        heading = 'Time ran out before anyone answered correctly.';
+        emoji = Emoji.TIMER_CLOCK;
+      }
       eventConfig = {
-        description: 'Time ran out before anyone answered correctly.',
-        emoji: Emoji.TIMER_CLOCK,
+        description: (
+          <GameHistoryEventAccordion heading={heading} timestamp={timestamp}>
+            <Bold>Answer:</Bold> {event.clue.answer}
+          </GameHistoryEventAccordion>
+        ),
+        emoji: emoji,
+        isAccordion: true,
       };
       break;
     case EventTypes.RESPONSE_PERIOD_ENDED:
@@ -139,10 +158,7 @@ function getEventDescription(props) {
   return (
     <HStack spacing={4}>
       <Box>{eventConfig.emoji}</Box>
-      <Box lineHeight="short">
-        <Text as="span" mr={2}>{eventConfig.description}</Text>
-        <Text as="span" d="inline-block" fontSize="sm" fontStyle="italic" opacity="0.8">{timestamp}</Text>
-      </Box>
+      <GameHistoryEventDescription {...eventConfig} showTimestamp={!eventConfig.isAccordion} timestamp={timestamp} />
     </HStack>
   );
 }

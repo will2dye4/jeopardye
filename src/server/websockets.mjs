@@ -251,7 +251,7 @@ function setExpirationTimerForClue(gameID, clue, delayMillis = 0) {
       if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID) {
         logger.info('Time expired.');
         updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
-          const payload = {gameID: gameID, categoryID: clue.categoryID, clueID: clue.clueID};
+          const payload = {gameID: gameID, categoryID: clue.categoryID, clueID: clue.clueID, skipped: false};
           broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, payload));
           delete buzzTimers[gameID];
           checkForLastClue(game);
@@ -609,7 +609,7 @@ async function handleVoteToSkipClue(ws, event) {
     if (game.activeClue.playersVotingToSkip.length === numPlayers - 1) {
       logger.info(`Skipping clue ${clueID} (category ${categoryID}).`);
       updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
-        broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, {gameID, categoryID, clueID}));
+        broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, {gameID, categoryID, clueID, skipped: true}));
         clearTimeout(buzzTimers[gameID].timerID);
         delete buzzTimers[gameID];
         checkForLastClue(game);
