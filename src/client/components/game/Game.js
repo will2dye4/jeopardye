@@ -4,6 +4,9 @@ import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
   DAILY_DOUBLE_MINIMUM_WAGER,
+  GAME_HISTORY_SCROLL_KEY,
+  GAME_HISTORY_SIDE_KEY,
+  GAME_HISTORY_SIZE_KEY,
   MAX_PLAYERS_PER_GAME,
 } from '../../../constants.mjs';
 import { formatList, getUnplayedClues, hasMoreRounds, isDailyDouble } from '../../../utils.mjs';
@@ -19,7 +22,7 @@ import {
   getWaitingForBuzzMessage,
 } from '../../messages';
 import JEOPARDYE_THEME from '../../theme';
-import { markClueAsInvalid, playSound, speakAnswer, speakClue } from '../../utils';
+import {isLocalStorageSettingEnabled, markClueAsInvalid, playSound, speakAnswer, speakClue} from '../../utils';
 import './Game.css';
 import Bold from '../common/Bold';
 import Board from './board/Board';
@@ -38,6 +41,9 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      gameHistoryScroll: (localStorage.getItem(GAME_HISTORY_SCROLL_KEY) ? isLocalStorageSettingEnabled(GAME_HISTORY_SCROLL_KEY) : true),
+      gameHistorySide: localStorage.getItem(GAME_HISTORY_SIDE_KEY) || 'right',
+      gameHistorySize: localStorage.getItem(GAME_HISTORY_SIZE_KEY) || 'xs',
       showActiveClue: !!props.activeClue,
       showClueAnimation: !!props.activeClue,
       showDailyDoubleWager: false,
@@ -53,6 +59,9 @@ class Game extends React.Component {
     this.markActiveClueAsInvalid = this.markActiveClueAsInvalid.bind(this);
     this.openGameHistory = this.openGameHistory.bind(this);
     this.revealAnswer = this.revealAnswer.bind(this);
+    this.toggleGameHistoryScroll = this.toggleGameHistoryScroll.bind(this);
+    this.toggleGameHistorySide = this.toggleGameHistorySide.bind(this);
+    this.toggleGameHistorySize = this.toggleGameHistorySize.bind(this);
     this.voteToSkipActiveClue = this.voteToSkipActiveClue.bind(this);
   }
 
@@ -549,10 +558,34 @@ class Game extends React.Component {
     this.setState({showGameHistory: false});
   }
 
+  toggleGameHistoryScroll() {
+    const scroll = !this.state.gameHistoryScroll;
+    localStorage.setItem(GAME_HISTORY_SCROLL_KEY, scroll.toString());
+    this.setState({gameHistoryScroll: scroll});
+  }
+
+  toggleGameHistorySide() {
+    const side = (this.state.gameHistorySide === 'left' ? 'right' : 'left');
+    localStorage.setItem(GAME_HISTORY_SIDE_KEY, side);
+    this.setState({gameHistorySide: side});
+  }
+
+  toggleGameHistorySize() {
+    const size = (this.state.gameHistorySize === 'xs' ? 'md' : 'xs');
+    localStorage.setItem(GAME_HISTORY_SIZE_KEY, size);
+    this.setState({gameHistorySize: size});
+  }
+
   render() {
     const gameHistory = {
       open: this.openGameHistory,
       close: this.closeGameHistory,
+      scroll: this.state.gameHistoryScroll,
+      side: this.state.gameHistorySide,
+      size: this.state.gameHistorySize,
+      toggleScroll: this.toggleGameHistoryScroll,
+      toggleSide: this.toggleGameHistorySide,
+      toggleSize: this.toggleGameHistorySize,
     };
     const gameState = {
       gameID: this.props.game?.gameID,

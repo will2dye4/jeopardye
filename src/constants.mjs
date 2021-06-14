@@ -69,6 +69,9 @@ export const ALL_FONT_STYLES = [
 
 export const PLACEHOLDER_PLAYER_NAME = 'Alex';
 
+export const GAME_HISTORY_SCROLL_KEY = 'gameHistoryScroll';
+export const GAME_HISTORY_SIDE_KEY = 'gameHistorySide';
+export const GAME_HISTORY_SIZE_KEY = 'gameHistorySize';
 export const GAME_ID_KEY = 'gameID';
 export const PLAYER_ID_KEY = 'playerID';
 export const SOUND_EFFECTS_ENABLED_KEY = 'soundEffectsEnabled';

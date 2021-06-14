@@ -5,8 +5,10 @@ import {
   AccordionIcon,
   AccordionItem,
   AccordionPanel,
+  Flex,
+  Spacer,
 } from '@chakra-ui/react';
-import GameHistoryEventDescription from "./GameHistoryEventDescription";
+import GameHistoryEventDescription from './GameHistoryEventDescription';
 
 function GameHistoryEventAccordion(props) {
   return (
@@ -14,9 +16,12 @@ function GameHistoryEventAccordion(props) {
       <AccordionItem border={0} userSelect="none">
         <h2>
           <AccordionButton fontSize="lg" p={0} textAlign="left" _hover={{background: 'inherit'}}>
-            <GameHistoryEventDescription className="hover-pointer" description={props.heading} isAccordion={false}
-                                         showTimestamp={true} timestamp={props.timestamp} />
-            <AccordionIcon />
+            <Flex w="100%">
+              <GameHistoryEventDescription className="hover-pointer" description={props.heading} isAccordion={false}
+                                           showTimestamp={true} timestamp={props.timestamp} />
+              <Spacer />
+              <AccordionIcon />
+            </Flex>
           </AccordionButton>
         </h2>
         <AccordionPanel cursor="default" fontSize="md" py={2}>

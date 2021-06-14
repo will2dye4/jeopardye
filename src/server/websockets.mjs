@@ -657,10 +657,10 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
       const places = getCurrentPlaces(game, players);
       const placeKeys = Object.keys(places);
       const lastPlacePlayers = places[placeKeys[placeKeys.length - 1]];
-      const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers));
-      advanceToNextRound(gameID, round, playerInControl.playerID).then(() => {
+      const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers)).playerID;
+      advanceToNextRound(gameID, round, playerInControl).then(() => {
         logger.info(`Advanced to the ${round} round in game ${gameID}.`);
-        broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, {gameID, round, playerInControl}));
+        broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, {gameID, round, playerInControl: playerInControl}));
       });
     }
   });

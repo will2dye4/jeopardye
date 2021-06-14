@@ -130,7 +130,7 @@ function getEventDescription(props) {
         heading = 'Skipped the clue.';
         emoji = Emoji.SKIP_FORWARD;
       } else {
-        heading = 'Time ran out before anyone answered correctly.';
+        heading = 'Buzzing time expired.';
         emoji = Emoji.TIMER_CLOCK;
       }
       eventConfig = {
