@@ -2,6 +2,7 @@ import React from 'react';
 import moment from 'moment';
 import { Box, HStack, ListItem, Text } from '@chakra-ui/react';
 import { Emoji, EventTypes } from '../../../../constants.mjs';
+import { isDailyDouble } from '../../../../utils.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
 import Bold from '../../common/Bold';
 import GameHistoryEventAccordion from './GameHistoryEventAccordion';
@@ -48,39 +49,57 @@ function getEventDescription(props) {
       };
       break;
     case EventTypes.ROUND_ENDED:
-      /* TODO - show scores in accordion */
-      if (event.payload.gameOver) {
+      eventConfig = {
+        description: <Bold>The {event.payload.gameOver ? 'game' : `${event.payload.round} Jeopardye round`} has ended.</Bold>,
+        emoji: (event.payload.gameOver ? Emoji.CHECKERED_FLAG : Emoji.END_ARROW),
+      };
+      break;
+    case EventTypes.PLAYER_CHANGED_NAME:
+      if (event.payload.name !== event.payload.prevName) {
         eventConfig = {
-          description: <Bold>The game has ended.</Bold>,
-          emoji: Emoji.CHECKERED_FLAG,
-        };
-      } else {
-        eventConfig = {
-          description: <Bold>The {event.payload.round} Jeopardye round has ended.</Bold>,
-          emoji: Emoji.END_ARROW,
+          description: <React.Fragment><PlayerName>{event.payload.prevName}</PlayerName> is now known as <PlayerName>{event.payload.name}</PlayerName>.</React.Fragment>,
+          emoji: Emoji.NAME_BADGE,
         };
       }
       break;
     case EventTypes.PLAYER_JOINED:
+      const name = (event.payload.player.playerID === props.gameState.playerID ? 'You' : event.payload.player.name);
       eventConfig = {
-        description: <React.Fragment><PlayerName>{event.payload.player.name}</PlayerName> joined the game.</React.Fragment>,
+        description: <React.Fragment><PlayerName>{name}</PlayerName> joined the game.</React.Fragment>,
         emoji: Emoji.BUST_IN_SILHOUETTE,
       };
       break;
+    case EventTypes.PLAYER_STARTED_SPECTATING:
+    case EventTypes.PLAYER_STOPPED_SPECTATING:
+      const started = (event.eventType === EventTypes.PLAYER_STARTED_SPECTATING);
+      const verb = (playerName === 'You' ? 'are' : 'is');
+      eventConfig = {
+        description: <React.Fragment><PlayerName>{playerName}</PlayerName> {verb} now a {started ? 'spectator' : 'player'}.</React.Fragment>,
+        emoji: (started ? Emoji.EYE : Emoji.BUST_IN_SILHOUETTE),
+      };
+      break;
     case EventTypes.PLAYER_SELECTED_CLUE:
+      const dailyDouble = (!!props.game && isDailyDouble(props.game.rounds[event.round], event.clue.clueID));
+      const showQuestion = (!dailyDouble || !!props.eventHistory.slice(props.index + 1).find(event => event.eventType === EventTypes.PLAYER_WAGERED));
       heading = (
         <React.Fragment>
           <PlayerName>{playerName}</PlayerName> played <Bold>{event.clue.category}</Bold> for <Bold>${event.clue.value.toLocaleString()}</Bold>.
         </React.Fragment>
       );
-      eventConfig = {
-        description: (
+      let description;
+      if (showQuestion) {
+        description = (
           <GameHistoryEventAccordion heading={heading} timestamp={timestamp}>
             {event.clue.question}
           </GameHistoryEventAccordion>
-        ),
+        );
+      } else {
+        description = heading;
+      }
+      eventConfig = {
+        description: description,
         emoji: Emoji.QUESTION_MARK,
-        isAccordion: true,
+        isAccordion: showQuestion,
       };
       break;
     case EventTypes.PLAYER_BUZZED:
@@ -164,8 +183,12 @@ function getEventDescription(props) {
 }
 
 function GameHistoryEvent(props) {
+  const description = getEventDescription(props);
+  if (!description) {
+    return null;
+  }
   return (
-    <ListItem className="list-group-item" px={4} py={3} fontSize="lg">{getEventDescription(props)}</ListItem>
+    <ListItem className="list-group-item" px={4} py={3} fontSize="lg">{description}</ListItem>
   );
 }
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { HStack } from '@chakra-ui/react';
 import { faEye, faPen, faUserPlus } from '@fortawesome/free-solid-svg-icons';
-import Icon from '../Icon';
+import ActionIcon from '../ActionIcon';
 
 function getSpectatingStateIcon(props) {
   if (!props.changeSpectatingStatus) {
@@ -12,7 +12,7 @@ function getSpectatingStateIcon(props) {
     iconProps = {
       id: 'stop-spectating',
       icon: faUserPlus,
-      title: 'Join Game',
+      title: 'Join game',
     };
   } else {
     iconProps = {
@@ -21,14 +21,14 @@ function getSpectatingStateIcon(props) {
       title: 'Spectate',
     };
   }
-  return <Icon className="hover-blue" onClick={() => props.changeSpectatingStatus(props.player.playerID)} {...iconProps} />;
+  return <ActionIcon onClick={() => props.changeSpectatingStatus(props.player.playerID)} {...iconProps} />;
 }
 
 function PlayerListItemIcons(props) {
   return (
     <HStack spacing="15px">
       {getSpectatingStateIcon(props)}
-      <Icon className="hover-blue" id="edit-player" icon={faPen} title="Edit" onClick={props.edit} />
+      <ActionIcon id="edit-player" icon={faPen} title="Edit" onClick={props.edit} />
     </HStack>
   );
 }

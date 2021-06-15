@@ -50,7 +50,7 @@ class GameHistory extends React.Component {
     if (this.props.eventHistory.length) {
       history = (
         <List className="list-group">
-          {this.props.eventHistory.map((event, i) => <GameHistoryEvent key={i} event={event} {...this.props} />)}
+          {this.props.eventHistory.map((event, i) => <GameHistoryEvent key={i} index={i} event={event} {...this.props} />)}
         </List>
       );
     } else {

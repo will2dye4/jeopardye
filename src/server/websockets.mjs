@@ -305,6 +305,10 @@ function setResponseTimerForClue(game, clue, playerID, wagering = false) {
           if (answerDelayMillis) {
             setExpirationTimerForClue(game.gameID, clue, answerDelayMillis);
           }
+          if (dailyDouble) {
+            game.scores[playerID] = newScore;
+            checkForLastClue(game);
+          }
         });
       }
     });
@@ -429,8 +433,8 @@ async function handleSubmitAnswer(ws, event) {
   const clue = clues[clueIndex];
   const correct = checkSubmittedAnswer(clue.answer, answer);
   const value = game.currentWager || clue.value;
-  let score = game.scores[playerID];
-  let newScore = (correct ? score + value : score - value);
+  const score = game.scores[playerID];
+  const newScore = (correct ? score + value : score - value);
   let newFields = {playerAnswering: null, currentWager: null, [`scores.${playerID}`]: newScore};
   const dailyDouble = isDailyDouble(game.rounds[game.currentRound], clue.clueID);
   if (correct || dailyDouble) {
@@ -449,6 +453,7 @@ async function handleSubmitAnswer(ws, event) {
       setExpirationTimerForClue(game.gameID, clue, delayMillis);
     }
     if (correct || dailyDouble) {
+      game.scores[playerID] = newScore;
       checkForLastClue(game);
     }
     if (correct) {

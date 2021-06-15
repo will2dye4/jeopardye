@@ -120,6 +120,10 @@ html, body {
     color: #1D08A3;
 }
 
+.hover-yellow:hover {
+    color: #FFCC00;
+}
+
 .list-group {
     display: flex;
     flex-direction: column;

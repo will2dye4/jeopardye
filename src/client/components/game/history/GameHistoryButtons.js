@@ -1,7 +1,7 @@
 import React from 'react';
-import { Flex, HStack, IconButton } from '@chakra-ui/react';
+import { Flex, HStack } from '@chakra-ui/react';
 import { faArrowLeft, faArrowRight, faCompressAlt, faExpandAlt, faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
-import Icon from '../../common/Icon';
+import ActionIcon from '../../common/ActionIcon';
 
 function GameHistoryButtons(props) {
   const expandButton = {
@@ -22,14 +22,11 @@ function GameHistoryButtons(props) {
     icon: (props.gameHistory.scroll ? faPause : faPlay),
     onClick: props.toggleScroll,
   };
-  const buttons = (props.gameHistory.side === 'left' ? [scrollButton, expandButton, moveButton] : [moveButton, expandButton, scrollButton]);
+  const buttonIcons = (props.gameHistory.side === 'left' ? [scrollButton, expandButton, moveButton] : [moveButton, expandButton, scrollButton]);
   return (
     <Flex mt={3}>
-      <HStack spacing={3}>
-        {buttons.map(buttonConfig =>
-          <IconButton key={buttonConfig.id} colorScheme="jeopardyBlue" icon={<Icon {...buttonConfig} />}
-                      aria-label={buttonConfig.title} title={buttonConfig.title} onClick={buttonConfig.onClick} />
-        )}
+      <HStack spacing={8}>
+        {buttonIcons.map(iconConfig => <ActionIcon key={iconConfig.id} {...iconConfig} />)}
       </HStack>
     </Flex>
   );

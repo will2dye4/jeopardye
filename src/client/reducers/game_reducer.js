@@ -130,12 +130,12 @@ function handleRoundEnded(storeData, event) {
 }
 
 function handlePlayerChangedName(storeData, event) {
-  const { playerID, name, preferredFontStyle } = event.payload;
+  const { playerID, name, preferredFontStyle, prevName } = event.payload;
   if (!storeData.players.hasOwnProperty(playerID)) {
     console.log(`Cannot change name of unknown player "${playerID}".`);
     return storeData;
   }
-  console.log(`Player ${playerID} has changed name to "${name}" (font: ${preferredFontStyle}).`);
+  console.log(`Player changed name from "${prevName}" to "${name}" (font: ${preferredFontStyle}).`);
   playerNames[playerID] = name;
   const newPlayer = {...storeData.players[playerID], name: name, preferredFontStyle: preferredFontStyle};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
@@ -362,7 +362,12 @@ function handleWebsocketEvent(storeData, event) {
     const handler = eventHandlers[eventType];
     let newStore = handler(storeData, event);
     if (GAME_HISTORY_EVENT_TYPES.has(event.eventType)) {
-      newStore.eventHistory = storeData.eventHistory.concat({...event, clue: newStore.activeClue, timestamp: Date.now()});
+      newStore.eventHistory = storeData.eventHistory.concat({
+        ...event,
+        clue: newStore.activeClue,
+        round: newStore.game?.currentRound || null,
+        timestamp: Date.now(),
+      });
     }
     return newStore;
   } else {

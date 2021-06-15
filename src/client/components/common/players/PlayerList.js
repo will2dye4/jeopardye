@@ -1,4 +1,5 @@
 import React from 'react';
+import { List, ListItem } from '@chakra-ui/react';
 import Card from '../card/Card';
 import CardHeader from '../card/CardHeader';
 import PlayerListItem from './PlayerListItem';
@@ -13,14 +14,15 @@ function PlayerList(props) {
                                                            isSpectator={props.spectators}
                                                            changeSpectatingStatus={props.changeSpectatingStatus} />);
   } else {
-    players = <li key="empty" className="list-group-item empty-list">No {listType}</li>;
+    players = <ListItem key="empty" className="list-group-item empty-list">No {listType}</ListItem>;
   }
   return (
     <Card className="player-list" mb={props.mb ?? 5} boxShadow={props.boxShadow}>
       <CardHeader>{listType}</CardHeader>
-      <ul className="list-group">
+      <List className="list-group">
         {players}
-      </ul>
+        {props.children}
+      </List>
     </Card>
   );
 }

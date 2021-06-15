@@ -69,16 +69,14 @@ class Game extends React.Component {
     this.checkPlayerInGame();
 
     document.addEventListener('keyup', function handleKeyUp(event) {
-      if (this.playerIsSpectating()) {
-        return;
-      }
+      const spectating = this.playerIsSpectating();
       const key = event.key.toLowerCase();
-      if ((key === ' ' || key === 'enter') && this.state.showActiveClue) {
+      if ((key === ' ' || key === 'enter') && this.state.showActiveClue && !spectating) {
         if (this.props.allowAnswers && !this.props.playerAnswering) {
           event.preventDefault();
           this.props.buzzIn(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
         }
-      } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager) {
+      } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager && !spectating) {
         if (key === 's' && this.props.playersVotingToSkipClue.indexOf(this.props.playerID) === -1) {
           console.log('Voting to skip the current clue...');
           event.preventDefault();
@@ -87,6 +85,16 @@ class Game extends React.Component {
           console.log('Marking the current clue as invalid...');
           event.preventDefault();
           this.markActiveClueAsInvalid();
+        }
+      } else if (this.props.playerAnswering !== this.props.playerID) {
+        if (key === 'h') {
+          console.log('Opening game history');
+          event.preventDefault();
+          this.openGameHistory();
+        } else if (key === 't') {
+          console.log('Opening player stats');
+          event.preventDefault();
+          this.props.playerStats.open();
         }
       }
     }.bind(this));
