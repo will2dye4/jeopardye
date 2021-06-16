@@ -2,6 +2,7 @@ import log from 'log';
 import WebSocket from 'ws';
 import {
   DAILY_DOUBLE_COUNTDOWN_SECONDS,
+  DAILY_DOUBLE_MINIMUM_WAGER,
   DEFAULT_COUNTDOWN_SECONDS,
   EventTypes,
   MAX_PLAYERS_PER_GAME,
@@ -20,6 +21,7 @@ import {
 } from '../models/player.mjs';
 import {
   checkSubmittedAnswer,
+  EventContext,
   formatList,
   getClueReadingDelayInMillis,
   getCountdownTimeInMillis,
@@ -120,7 +122,7 @@ function checkForLastClue(game) {
             if (game.scores[playerID] > player.stats.highestGameScore) {
               playerUpdates.push(setHighestGameScore(playerID, game.scores[playerID]));
             }
-            if (winners.indexOf(playerID) !== -1) {
+            if (winners.includes(playerID)) {
               playerUpdates.push(incrementPlayerStat(playerID, GAMES_WON_STAT));
             }
           });
@@ -175,7 +177,7 @@ async function handleGameSettingsChanged(ws, event) {
 }
 
 async function handleJoinGame(ws, event) {
-  const { gameID, playerID } = event.payload;
+  const { gameID, playerID } = event.payload.context;
   if (!gameID) {
     handleError(ws, event, 'missing game ID', StatusCodes.BAD_REQUEST);
     return;
@@ -213,20 +215,20 @@ async function handleJoinGame(ws, event) {
     logger.info(`${player.name} joined game ${gameID}.`);
     connectedClients[playerID] = ws;
     broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player: gamePlayer}));
-    if (game.playerIDs.indexOf(playerID) === -1) {
+    if (!game.playerIDs.includes(playerID)) {
       incrementPlayerStat(playerID, GAMES_PLAYED_STAT).then(() => logger.debug(`Incremented games played for ${playerID}.`));
     }
   });
 }
 
-async function validateGamePlayerAndClue(ws, event) {
-  const { gameID, playerID, categoryID, clueID } = event.payload;
+async function validateEventContext(ws, event) {
+  const { gameID, playerID, categoryID, clueID } = event.payload.context;
   const game = await getGame(gameID);
   if (!game) {
     handleError(ws, event, `game ${gameID} not found`, StatusCodes.NOT_FOUND);
     return null;
   }
-  if (game.playerIDs.indexOf(playerID) === -1) {
+  if (!game.playerIDs.includes(playerID)) {
     handleError(ws, event, `player ${playerID} not in game ${gameID}`, StatusCodes.BAD_REQUEST);
     return null;
   }
@@ -235,7 +237,7 @@ async function validateGamePlayerAndClue(ws, event) {
     handleError(ws, event, `invalid category ${categoryID}`, StatusCodes.BAD_REQUEST);
     return null;
   }
-  if (categories[categoryID].clues.map(clue => clue.clueID).indexOf(clueID) === -1) {
+  if (!categories[categoryID].clues.find(clue => clue.clueID === clueID)) {
     handleError(ws, event, `invalid clue ${clueID} (category ${categoryID})`, StatusCodes.BAD_REQUEST);
     return null;
   }
@@ -277,27 +279,21 @@ function setResponseTimerForClue(game, clue, playerID, wagering = false) {
       const expectedPlayerID = (wagering ? game.playerInControl : game.playerAnswering);
       if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID && expectedPlayerID === playerID) {
         logger.info(`${wagering ? 'Wagering' : 'Response'} time expired for ${getPlayerName(playerID)}.`);
-        let newScore = game.scores[playerID];
-        let newFields = {currentWager: null};
-        if (!wagering) {
-          const value = game.currentWager || clue.value;
-          newScore -= value;
-          newFields[`scores.${playerID}`] = newScore;
-          newFields.playerAnswering = null;
-          if (dailyDouble) {
-            newFields.activeClue = null;
-            newFields.currentWager = null;
-          }
+        if (wagering) {
+          submitWager(game, clue.categoryID, clue.clueID, playerID, DAILY_DOUBLE_MINIMUM_WAGER);
+          return;
+        }
+        const value = game.currentWager || clue.value;
+        const newScore = game.scores[playerID] - value;
+        let newFields = {currentWager: null, playerAnswering: null, [`scores.${playerID}`]: newScore};
+        if (dailyDouble) {
+          newFields.activeClue = null;
         }
         updateGame(game.gameID, newFields).then(() => {
-          const answerDelayMillis = (dailyDouble || wagering ? 0 : buzzTimers[game.gameID]?.delayMillis);
+          const answerDelayMillis = (dailyDouble ? 0 : buzzTimers[game.gameID]?.delayMillis);
           const payload = {
-            gameID: game.gameID,
-            playerID: playerID,
-            categoryID: clue.categoryID,
-            clueID: clue.clueID,
+            context: new EventContext(game.gameID, playerID, clue.categoryID, clue.clueID),
             score: newScore,
-            wagering: wagering,
             answerDelayMillis: answerDelayMillis,
           };
           broadcast(new WebsocketEvent(EventTypes.RESPONSE_PERIOD_ENDED, payload));
@@ -318,7 +314,6 @@ function setResponseTimerForClue(game, clue, playerID, wagering = false) {
     categoryID: clue.categoryID,
     clueID: clue.clueID,
     timerID: timerID,
-    running: true,
     wagering: wagering,
   };
 }
@@ -341,7 +336,7 @@ function setTimerForActiveClue(game, clue, playerID) {
 }
 
 async function handleSelectClue(ws, event) {
-  const game = await validateGamePlayerAndClue(ws, event);
+  const game = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -350,7 +345,7 @@ async function handleSelectClue(ws, event) {
     return;
   }
 
-  const { categoryID, clueID, playerID } = event.payload;
+  const { categoryID, clueID, playerID } = event.payload.context;
   if (playerID !== game.playerInControl) {
     handleError(ws, event, 'invalid select clue attempt - not in control', StatusCodes.BAD_REQUEST);
     return;
@@ -358,8 +353,7 @@ async function handleSelectClue(ws, event) {
 
   const category = game.rounds[game.currentRound].categories[categoryID];
   const clues = category.clues;
-  const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
-  const clue = clues[clueIndex];
+  const clue = clues.find(clue => clue.clueID === clueID);
   if (clue.played) {
     handleError(ws, event, `invalid clue ${clueID} (category ${categoryID}) - already played`, StatusCodes.BAD_REQUEST);
     return;
@@ -373,7 +367,7 @@ async function handleSelectClue(ws, event) {
 }
 
 async function handleBuzzIn(ws, event) {
-  const game = await validateGamePlayerAndClue(ws, event);
+  const game = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -381,12 +375,12 @@ async function handleBuzzIn(ws, event) {
     handleError(ws, event, 'invalid buzz attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
-  const { gameID, playerID, categoryID, clueID } = event.payload;
+  const { gameID, playerID, categoryID, clueID } = event.payload.context;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
     handleError(ws, event, `invalid buzz attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
-  if (game.activeClue.playersAttempted.indexOf(playerID) !== -1) {
+  if (game.activeClue.playersAttempted.includes(playerID)) {
     handleError(ws, event, `invalid buzz attempt - player ${playerID} has already buzzed in`, StatusCodes.BAD_REQUEST);
     return;
   }
@@ -411,7 +405,7 @@ async function handleBuzzIn(ws, event) {
 }
 
 async function handleSubmitAnswer(ws, event) {
-  const game = await validateGamePlayerAndClue(ws, event);
+  const game = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -419,7 +413,8 @@ async function handleSubmitAnswer(ws, event) {
     handleError(ws, event, 'invalid answer attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
-  const { gameID, playerID, categoryID, clueID, answer } = event.payload;
+  const { gameID, playerID, categoryID, clueID } = event.payload.context;
+  const answer = event.payload.answer;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
     handleError(ws, event, `invalid answer attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
@@ -429,8 +424,7 @@ async function handleSubmitAnswer(ws, event) {
     return;
   }
   const clues = game.rounds[game.currentRound].categories[categoryID].clues;
-  const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
-  const clue = clues[clueIndex];
+  const clue = clues.find(clue => clue.clueID === clueID);
   const correct = checkSubmittedAnswer(clue.answer, answer);
   const value = game.currentWager || clue.value;
   const score = game.scores[playerID];
@@ -465,8 +459,24 @@ async function handleSubmitAnswer(ws, event) {
   });
 }
 
+function submitWager(game, categoryID, clueID, playerID, wager) {
+  updateGame(game.gameID, {playerAnswering: playerID, currentWager: wager}).then(() =>
+    incrementPlayerStat(playerID, CLUES_ANSWERED_STAT)
+  ).then(() =>
+    incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_STAT)
+  ).then(() => {
+    logger.info(`${getPlayerName(playerID)} wagered $${wager.toLocaleString()}.`);
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, {playerID, wager}));
+    const timer = responseTimers[game.gameID];
+    if (timer && timer.categoryID === categoryID && timer.clueID === clueID && timer.playerID === playerID && timer.wagering) {
+      clearTimeout(timer.timerID);
+    }
+    setResponseTimerForClue(game, game.activeClue, playerID);
+  });
+}
+
 async function handleSubmitWager(ws, event) {
-  const game = await validateGamePlayerAndClue(ws, event);
+  const game = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -474,7 +484,8 @@ async function handleSubmitWager(ws, event) {
     handleError(ws, event, 'invalid wager attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
-  const { gameID, playerID, categoryID, clueID, wager } = event.payload;
+  const { playerID, categoryID, clueID } = event.payload.context;
+  const wager = event.payload.wager;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
     handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
@@ -489,20 +500,7 @@ async function handleSubmitWager(ws, event) {
     handleError(ws, event, `invalid wager attempt - wager ${wager} is invalid (range is ${minWager} - ${maxWager})`, StatusCodes.BAD_REQUEST);
     return;
   }
-  updateGame(gameID, {playerAnswering: playerID, currentWager: playerWager}).then(() =>
-    incrementPlayerStat(playerID, CLUES_ANSWERED_STAT)
-  ).then(() =>
-    incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_STAT)
-  ).then(() => {
-    logger.info(`${getPlayerName(playerID)} wagered $${playerWager.toLocaleString()}.`);
-    const payload = {playerID: playerID, wager: playerWager};
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, payload));
-    const timer = responseTimers[gameID];
-    if (timer && timer.categoryID === categoryID && timer.clueID === clueID && timer.playerID === playerID && timer.wagering && timer.running) {
-      clearTimeout(timer.timerID);
-    }
-    setResponseTimerForClue(game, game.activeClue, playerID);
-  });
+  submitWager(game, categoryID, clueID, playerID, playerWager);
 }
 
 async function handleStartSpectating(ws, event) {
@@ -531,7 +529,7 @@ async function handleStopSpectating(ws, event) {
       handleError(ws, event, 'game not found', StatusCodes.NOT_FOUND);
       return;
     }
-    if (game.playerIDs.indexOf(playerID) === -1) {
+    if (!game.playerIDs.includes(playerID)) {
       handleError(ws, event, 'player not in game', StatusCodes.BAD_REQUEST);
       return;
     }
@@ -555,7 +553,7 @@ async function handleStopSpectating(ws, event) {
 }
 
 async function handleMarkClueAsInvalid(ws, event) {
-  const game = await validateGamePlayerAndClue(ws, event);
+  const game = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -563,12 +561,12 @@ async function handleMarkClueAsInvalid(ws, event) {
     handleError(ws, event, 'invalid mark invalid attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
-  const { gameID, playerID, categoryID, clueID } = event.payload;
+  const { gameID, playerID, categoryID, clueID } = event.payload.context;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
     handleError(ws, event, `invalid mark invalid attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
-  if (game.activeClue.playersMarkingInvalid.indexOf(playerID) !== -1) {
+  if (game.activeClue.playersMarkingInvalid.includes(playerID)) {
     handleError(ws, event, `invalid mark invalid attempt - player ${playerID} has already marked clue ${clueID}`, StatusCodes.BAD_REQUEST);
     return;
   }
@@ -579,7 +577,7 @@ async function handleMarkClueAsInvalid(ws, event) {
 }
 
 async function handleVoteToSkipClue(ws, event) {
-  const game = await validateGamePlayerAndClue(ws, event);
+  const game = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -587,12 +585,12 @@ async function handleVoteToSkipClue(ws, event) {
     handleError(ws, event, 'invalid vote to skip attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
-  const { gameID, playerID, categoryID, clueID } = event.payload;
+  const { gameID, playerID, categoryID, clueID } = event.payload.context;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
     handleError(ws, event, `invalid vote to skip attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
-  if (game.activeClue.playersVotingToSkip.indexOf(playerID) !== -1) {
+  if (game.activeClue.playersVotingToSkip.includes(playerID)) {
     handleError(ws, event, `invalid vote to skip attempt - player ${playerID} has already voted to skip clue ${clueID}`, StatusCodes.BAD_REQUEST);
     return;
   }
@@ -624,17 +622,17 @@ async function handleVoteToSkipClue(ws, event) {
 }
 
 async function handleMarkPlayerAsReadyForNextRound(ws, event) {
-  const { gameID, playerID } = event.payload;
+  const { gameID, playerID } = event.payload.context;
   const game = await getGame(gameID);
   if (!game) {
     handleError(ws, event, 'game not found', StatusCodes.NOT_FOUND);
     return;
   }
-  if (game.playerIDs.indexOf(playerID) === -1) {
+  if (!game.playerIDs.includes(playerID)) {
     handleError(ws, event, 'player not in game', StatusCodes.BAD_REQUEST);
     return;
   }
-  if (game.playersReadyForNextRound.indexOf(playerID) !== -1) {
+  if (game.playersReadyForNextRound.includes(playerID)) {
     handleError(ws, event, 'player already ready for next round', StatusCodes.BAD_REQUEST);
     return;
   }

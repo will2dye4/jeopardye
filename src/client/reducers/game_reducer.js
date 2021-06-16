@@ -147,14 +147,14 @@ function handlePlayerJoined(storeData, event) {
   console.log(`${player.name} has joined the game.`);
   let newPlayers = {...storeData.players, [player.playerID]: {...player, score: player.score || storeData.players[player.playerID]?.score}};
   let newStoreData = {...storeData, players: newPlayers};
-  if (storeData.game && storeData.game.playerIDs.indexOf(player.playerID) === -1) {
+  if (storeData.game && !storeData.game.playerIDs.includes(player.playerID)) {
     newStoreData.game = {...storeData.game, playerIDs: storeData.game.playerIDs.concat(player.playerID)};
   }
   return newStoreData;
 }
 
 function handlePlayerSelectedClue(storeData, event) {
-  const { categoryID, clueID } = event.payload;
+  const { categoryID, clueID } = event.payload.context;
   const category = storeData.board.categories[categoryID];
   const clues = category.clues;
   const clueIndex = clues.map(clue => clue.clueID).indexOf(clueID);
@@ -179,13 +179,15 @@ function handlePlayerSelectedClue(storeData, event) {
 }
 
 function handlePlayerBuzzed(storeData, event) {
-  console.log(`${getPlayerName(event.payload.playerID)} buzzed in.`);
-  const activeClue = {...storeData.activeClue, playersAttempted: storeData.activeClue.playersAttempted.concat(event.payload.playerID)};
-  return {...storeData, activeClue: activeClue, playerAnswering: event.payload.playerID, prevAnswer: null, responseTimerElapsed: false};
+  const { playerID } = event.payload.context;
+  console.log(`${getPlayerName(playerID)} buzzed in.`);
+  const activeClue = {...storeData.activeClue, playersAttempted: storeData.activeClue.playersAttempted.concat(playerID)};
+  return {...storeData, activeClue: activeClue, playerAnswering: playerID, prevAnswer: null, responseTimerElapsed: false};
 }
 
 function handlePlayerAnswered(storeData, event) {
-  const { answer, answerDelayMillis, clueID, correct, playerID, score } = event.payload;
+  const { answer, answerDelayMillis, correct, score } = event.payload;
+  const { clueID, playerID } = event.payload.context;
   const dailyDouble = isDailyDouble(storeData.board, clueID);
   const allowAnswers = (!correct && !dailyDouble && playerID !== storeData.playerID);
   console.log(`${getPlayerName(playerID)} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
@@ -219,13 +221,13 @@ function handlePlayerWagered(storeData, event) {
 }
 
 function handlePlayerMarkedClueAsInvalid(storeData, event) {
-  const { playerID, categoryID, clueID } = event.payload;
+  const { categoryID, clueID, playerID } = event.payload.context;
   const name = getPlayerName(playerID);
   if (storeData.activeClue.categoryID !== categoryID || storeData.activeClue.clueID !== clueID) {
     console.log(`Ignoring player marking non-active clue ${clueID} (category ${categoryID}) as invalid.`);
     return storeData;
   }
-  if (storeData.playersMarkingClueInvalid.indexOf(playerID) !== -1) {
+  if (storeData.playersMarkingClueInvalid.includes(playerID)) {
     console.log(`Ignoring player marking active clue as invalid because ${name} already marked this clue.`);
     return storeData;
   }
@@ -234,13 +236,13 @@ function handlePlayerMarkedClueAsInvalid(storeData, event) {
 }
 
 function handlePlayerVotedToSkipClue(storeData, event) {
-  const { playerID, categoryID, clueID } = event.payload;
+  const { categoryID, clueID, playerID } = event.payload.context;
   const name = getPlayerName(playerID);
   if (storeData.activeClue.categoryID !== categoryID || storeData.activeClue.clueID !== clueID) {
     console.log(`Ignoring vote to skip non-active clue ${clueID} (category ${categoryID}).`);
     return storeData;
   }
-  if (storeData.playersVotingToSkipClue.indexOf(playerID) !== -1) {
+  if (storeData.playersVotingToSkipClue.includes(playerID)) {
     console.log(`Ignoring vote to skip active clue because ${name} already voted for this clue.`);
     return storeData;
   }
@@ -291,8 +293,8 @@ function handlePlayerSpectatingStatusChanged(status) {
 }
 
 function handlePlayerMarkedReadyForNextRound(storeData, event) {
-  const { playerID } = event.payload;
-  if (storeData.playersReadyForNextRound.indexOf(playerID) !== -1) {
+  const { playerID } = event.payload.context;
+  if (storeData.playersReadyForNextRound.includes(playerID)) {
     return storeData;
   }
   console.log(`${getPlayerName(playerID)} is ready for the next round.`);
@@ -309,17 +311,20 @@ function handleBuzzingPeriodEnded(storeData, event) {
 }
 
 function handleResponsePeriodEnded(storeData, event) {
-  const { answerDelayMillis, clueID, playerID, score, wagering } = event.payload;
+  const { answerDelayMillis, score } = event.payload;
+  const { clueID, playerID } = event.payload.context;
+  console.log(`Response time expired for ${getPlayerName(playerID)}.`);
   const dailyDouble = isDailyDouble(storeData.board, clueID);
-  const revealAnswer = (dailyDouble && !wagering);
-  console.log(`${wagering ? 'Wagering' : 'Response'} time expired for ${getPlayerName(playerID)}.`);
-  let newStoreData = {...storeData, responseTimerElapsed: true, revealAnswer: revealAnswer, answerDelayMillis: answerDelayMillis};
-  if (!wagering) {
-    const newPlayer = {...storeData.players[playerID], score: score};
-    newStoreData.players = {...storeData.players, [playerID]: newPlayer};
-    newStoreData.playerAnswering = null;
-  }
-  return newStoreData;
+  const newPlayer = {...storeData.players[playerID], score: score};
+  return {
+    ...storeData,
+    currentWager: null,
+    responseTimerElapsed: true,
+    revealAnswer: dailyDouble,
+    answerDelayMillis: answerDelayMillis,
+    players: {...storeData.players, [playerID]: newPlayer},
+    playerAnswering: null,
+  };
 }
 
 function handleWaitingPeriodEnded(storeData, event) {

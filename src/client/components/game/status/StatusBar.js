@@ -1,6 +1,6 @@
 import React from 'react';
 import { Flex } from '@chakra-ui/react';
-import { getWagerRange } from '../../../../utils.mjs';
+import { EventContext, getWagerRange } from '../../../../utils.mjs';
 import Bold from '../../common/Bold';
 import Card from '../../common/card/Card';
 import StatusBarInput from './StatusBarInput';
@@ -53,8 +53,7 @@ class StatusBar extends React.Component {
   }
 
   handleSubmitAnswer(answer) {
-    this.props.submitAnswer(this.props.gameState.gameID, this.props.gameState.playerID,
-                            this.props.activeClue.categoryID, this.props.activeClue.clueID, answer);
+    this.props.submitAnswer(EventContext.fromProps(this.props), answer);
   }
 
   parseWager(inputValue) {
@@ -69,8 +68,7 @@ class StatusBar extends React.Component {
 
   handleSubmitWager(inputValue) {
     const wager = this.parseWager(inputValue);
-    this.props.submitWager(this.props.gameState.gameID, this.props.gameState.playerID,
-                           this.props.activeClue.categoryID, this.props.activeClue.clueID, wager);
+    this.props.submitWager(EventContext.fromProps(this.props), wager);
   }
 
   shouldShowAnswerInput() {

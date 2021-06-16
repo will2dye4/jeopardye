@@ -7,8 +7,8 @@ function ActiveClueButtons(props) {
   if (!props.allowAnswers) {
     return null;
   }
-  const allowMarkInvalid = (props.playersMarkingClueInvalid.indexOf(props.gameState.playerID) === -1);
-  const allowVoteToSkip = (props.playersVotingToSkipClue.indexOf(props.gameState.playerID) === -1);
+  const allowMarkInvalid = !props.playersMarkingClueInvalid.includes(props.gameState.playerID);
+  const allowVoteToSkip = !props.playersVotingToSkipClue.includes(props.gameState.playerID);
   return (
     <HStack className="active-clue-buttons" spacing="15px" mb={2} mr={3} position="absolute">
       <ActiveClueButton id="invalid-icon" icon={faFlag} selectable={allowMarkInvalid} title="Mark this clue invalid"

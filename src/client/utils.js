@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   JSERVICE_API_BASE,
   SOUND_EFFECTS_ENABLED_KEY,
@@ -11,6 +12,14 @@ const DEFAULT_SPEECH_VOLUME = 0.4;
 const INVALID_CLUE_URL =`${JSERVICE_API_BASE}/invalid`;
 
 const SPEECH_DELAY_MILLIS = 500;
+
+export function formatElementList(items) {
+  return (
+    <React.Fragment>
+      {items.map((item, i) => <React.Fragment key={i}>{item}{(i < items.length - 2) && ', '}{(i === items.length - 2) && ' and '}</React.Fragment>)}
+    </React.Fragment>
+  );
+}
 
 export function isLocalStorageSettingEnabled(key) {
   return (localStorage.getItem(key) === 'true');
@@ -26,13 +35,13 @@ export function playSound(url, volume = DEFAULT_SOUND_EFFECT_VOLUME) {
 
 export function speakClue(clue, delay = SPEECH_DELAY_MILLIS, volume = DEFAULT_SPEECH_VOLUME) {
   if (isLocalStorageSettingEnabled(SPEAK_CLUES_ENABLED_KEY)) {
-    speakText(clue?.question, delay);
+    speakText(clue?.question, delay, volume);
   }
 }
 
 export function speakAnswer(text, delay = SPEECH_DELAY_MILLIS, volume = DEFAULT_SPEECH_VOLUME) {
   if (isLocalStorageSettingEnabled(SPEAK_ANSWERS_ENABLED_KEY)) {
-    speakText(text, delay);
+    speakText(text, delay, volume);
   }
 }
 

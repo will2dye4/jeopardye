@@ -108,7 +108,7 @@ async function handleCreateGame(req, res, next) {
   let playerInControl = null;
   if (req.body.hasOwnProperty('playerInControl') && req.body.playerInControl !== null) {
     playerInControl = req.body.playerInControl;
-    if (playerIDs.indexOf(playerInControl) === -1) {
+    if (!playerIDs.includes(playerInControl)) {
       handleError(`Invalid player in control "${playerInControl}"`, StatusCodes.BAD_REQUEST);
       return;
     }

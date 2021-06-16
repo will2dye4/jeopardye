@@ -28,11 +28,11 @@ const SMALL_FONTS = [
 ];
 
 function isLargeFont(font) {
-  return (LARGE_FONTS.indexOf(font) !== -1);
+  return LARGE_FONTS.includes(font);
 }
 
 function isSmallFont(font) {
-  return (SMALL_FONTS.indexOf(font) !== -1);
+  return SMALL_FONTS.includes(font);
 }
 
 function getNameClasses(name, font, size) {

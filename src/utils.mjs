@@ -52,6 +52,25 @@ export class WebsocketEvent {
   }
 }
 
+export class EventContext {
+  static fromProps(props) {
+    const gameID = props.gameState?.gameID || props.game.gameID;
+    const playerID = props.gameState?.playerID || props.playerID;
+    return new EventContext(gameID, playerID, props.activeClue?.categoryID, props.activeClue?.clueID);
+  }
+
+  constructor(gameID, playerID, categoryID, clueID) {
+    this.gameID = gameID;
+    this.playerID = playerID;
+    if (categoryID) {
+      this.categoryID = categoryID;
+    }
+    if (clueID) {
+      this.clueID = clueID;
+    }
+  }
+}
+
 export function range(n) {
   return [...Array(n).keys()];
 }
@@ -156,7 +175,7 @@ export function hasMoreRounds(game) {
 }
 
 export function isDailyDouble(round, clueID) {
-  return (round.dailyDoubles.indexOf(clueID) !== -1);
+  return round.dailyDoubles.includes(clueID);
 }
 
 export function titleizeCategoryName(categoryName) {
@@ -212,7 +231,7 @@ export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
     return true;
   }
   /* Try removing parenthesized information, e.g., '(william) shakespeare' --> 'shakespeare' */
-  if (correctAnswer.indexOf('(') !== -1) {
+  if (correctAnswer.includes('(')) {
     const simplifiedCorrectAnswer = normalizeAnswerText(correctAnswer.replaceAll(/\(.+?\)/g, ''));
     if (isCloseEnough(simplifiedCorrectAnswer, normalizedSubmittedAnswer)) {
       return true;
@@ -239,7 +258,7 @@ export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
     }
   }
   /* Try checking either answer if there's a slash, e.g., 'snake/serpent' --> 'snake' or 'serpent' */
-  if (correctAnswer.indexOf('/') !== -1) {
+  if (correctAnswer.includes('/')) {
     const possibleCorrectAnswers = correctAnswer.split('/').map(normalizeAnswerText);
     for (const answer of possibleCorrectAnswers) {
       if (isCloseEnough(answer, normalizedSubmittedAnswer)) {
@@ -253,5 +272,5 @@ export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
     return true;
   }
   /* Try checking if the correct answer is a substring of the submitted answer, e.g., 'salinger' vs. 'j.d. salinger' */
-  return (removeWhitespace(normalizedSubmittedAnswer).indexOf(removeWhitespace(normalizedCorrectAnswer)) !== -1);
+  return removeWhitespace(normalizedSubmittedAnswer).includes(removeWhitespace(normalizedCorrectAnswer));
 }

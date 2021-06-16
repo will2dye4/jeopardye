@@ -8,7 +8,7 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@chakra-ui/react';
-import { formatList } from '../../../../utils.mjs';
+import { EventContext, formatList } from '../../../../utils.mjs';
 import Card from '../../common/card/Card';
 import RoundScores from './RoundScores';
 
@@ -25,13 +25,13 @@ function RoundSummary(props) {
   if (gameOver) {
     onClick = () => props.clearCurrentGame(props.gameState.gameID);
   } else {
-    onClick = () => props.markPlayerAsReadyForNextRound(props.gameState.gameID, props.gameState.playerID);
+    onClick = () => props.markPlayerAsReadyForNextRound(EventContext.fromProps(props));
   }
 
-  const readyForNextRound = ((!gameOver && props.gameState.playerIsSpectating) || props.playersReadyForNextRound.indexOf(props.gameState.playerID) !== -1);
+  const readyForNextRound = ((!gameOver && props.gameState.playerIsSpectating) || props.playersReadyForNextRound.includes(props.gameState.playerID));
   let waitingText;
   if (readyForNextRound) {
-    const waitingPlayers = Object.values(props.players).filter(player => props.playersReadyForNextRound.indexOf(player.playerID) === -1);
+    const waitingPlayers = Object.values(props.players).filter(player => !props.playersReadyForNextRound.includes(player.playerID));
     if (waitingPlayers.length > 3) {
       waitingText = `Waiting for ${waitingPlayers.length} players...`;
     } else if (waitingPlayers.length) {

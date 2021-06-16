@@ -205,36 +205,36 @@ export function clearCurrentGame(gameID) {
   }
 }
 
-export function markPlayerAsReadyForNextRound(gameID, playerID) {
-  return send(new WebsocketEvent(EventTypes.MARK_READY_FOR_NEXT_ROUND, {gameID, playerID}));
+export function markPlayerAsReadyForNextRound(context) {
+  return send(new WebsocketEvent(EventTypes.MARK_READY_FOR_NEXT_ROUND, {context}));
 }
 
-export function joinGame(gameID, playerID) {
-  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {gameID, playerID}));
+export function joinGame(context) {
+  return send(new WebsocketEvent(EventTypes.JOIN_GAME, {context}));
 }
 
-export function selectClue(gameID, playerID, categoryID, clueID) {
-  return send(new WebsocketEvent(EventTypes.SELECT_CLUE, {gameID, playerID, categoryID, clueID}));
+export function selectClue(context) {
+  return send(new WebsocketEvent(EventTypes.SELECT_CLUE, {context}));
 }
 
-export function buzzIn(gameID, playerID, categoryID, clueID) {
-  return send(new WebsocketEvent(EventTypes.BUZZ_IN, {gameID, playerID, categoryID, clueID}));
+export function buzzIn(context) {
+  return send(new WebsocketEvent(EventTypes.BUZZ_IN, {context}));
 }
 
-export function submitAnswer(gameID, playerID, categoryID, clueID, answer) {
-  return send(new WebsocketEvent(EventTypes.SUBMIT_ANSWER, {gameID, playerID, categoryID, clueID, answer}));
+export function submitAnswer(context, answer) {
+  return send(new WebsocketEvent(EventTypes.SUBMIT_ANSWER, {context, answer}));
 }
 
-export function submitWager(gameID, playerID, categoryID, clueID, wager) {
-  return send(new WebsocketEvent(EventTypes.SUBMIT_WAGER, {gameID, playerID, categoryID, clueID, wager}));
+export function submitWager(context, wager) {
+  return send(new WebsocketEvent(EventTypes.SUBMIT_WAGER, {context, wager}));
 }
 
-export function markClueAsInvalid(gameID, playerID, categoryID, clueID) {
-  return send(new WebsocketEvent(EventTypes.MARK_CLUE_AS_INVALID, {gameID, playerID, categoryID, clueID}));
+export function markClueAsInvalid(context) {
+  return send(new WebsocketEvent(EventTypes.MARK_CLUE_AS_INVALID, {context}));
 }
 
-export function voteToSkipClue(gameID, playerID, categoryID, clueID) {
-  return send(new WebsocketEvent(EventTypes.VOTE_TO_SKIP_CLUE, {gameID, playerID, categoryID, clueID}));
+export function voteToSkipClue(context) {
+  return send(new WebsocketEvent(EventTypes.VOTE_TO_SKIP_CLUE, {context}));
 }
 
 export function clientConnect(playerID) {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Flex, Image } from '@chakra-ui/react';
+import { EventContext } from '../../../../../utils.mjs';
 import ActiveClueButtons from './ActiveClueButtons';
 
 const LONG_CLUE_LENGTH_THRESHOLD = 150;
@@ -22,22 +23,22 @@ class ActiveClue extends React.Component {
 
   allowBuzz() {
     return (this.props.allowAnswers && !this.props.playerAnswering && !this.props.gameState.playerIsSpectating &&
-            this.props.activeClue.playersAttempted.indexOf(this.props.gameState.playerID) === -1);
+            !this.props.activeClue.playersAttempted.includes(this.props.gameState.playerID));
   }
 
   handleClick(event) {
     const invalidIcon = document.getElementById('invalid-icon');
     const skipIcon = document.getElementById('skip-icon');
     if (event.target === invalidIcon || event.target.parentNode === invalidIcon) {
-      if (this.props.playersMarkingClueInvalid.indexOf(this.props.gameState.playerID) === -1) {
+      if (!this.props.playersMarkingClueInvalid.includes(this.props.gameState.playerID)) {
         this.props.markActiveClueAsInvalid(event);
       }
     } else if (event.target === skipIcon || event.target.parentNode === skipIcon) {
-      if (this.props.playersVotingToSkipClue.indexOf(this.props.gameState.playerID) === -1) {
+      if (!this.props.playersVotingToSkipClue.includes(this.props.gameState.playerID)) {
         this.props.voteToSkipActiveClue(event);
       }
     } else if (this.allowBuzz()) {
-      this.props.buzzIn(this.props.gameState.gameID, this.props.gameState.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+      this.props.buzzIn(EventContext.fromProps(this.props));
     }
   }
 

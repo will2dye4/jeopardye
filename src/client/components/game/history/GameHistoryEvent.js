@@ -1,10 +1,12 @@
 import React from 'react';
 import moment from 'moment';
-import { Box, HStack, ListItem, Text } from '@chakra-ui/react';
+import { Box, GridItem, HStack, ListItem, Text } from '@chakra-ui/react';
 import { Emoji, EventTypes } from '../../../../constants.mjs';
-import { isDailyDouble } from '../../../../utils.mjs';
+import { formatScore, isDailyDouble } from '../../../../utils.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
+import { formatElementList } from '../../../utils';
 import Bold from '../../common/Bold';
+import GridRow from '../../common/GridRow';
 import GameHistoryEventAccordion from './GameHistoryEventAccordion';
 import GameHistoryEventDescription from './GameHistoryEventDescription';
 import PlayerName from './PlayerName';
@@ -18,12 +20,32 @@ function getRelativeEventTime(timestamp) {
   return moment(timestamp).fromNow();
 }
 
+function getRoundStandings(round, places) {
+  return (
+    <Box>
+      <GridRow key="heading" cols={4}>
+        <GridItem colSpan={4} pb={2} textAlign="center"><Bold>{round.toTitleCase()} Round Standings</Bold></GridItem>
+      </GridRow>
+      {Object.entries(places).map(([place, players]) => {
+        const playerNames = formatElementList(players.map(player => <PlayerName>{player.name}</PlayerName>));
+        const score = formatScore(players[0].score);
+        return (
+          <GridRow key={place} cols={4}>
+            <GridItem pr={3} textAlign="right"><Bold>{place}</Bold></GridItem>
+            <GridItem colSpan={3}>{playerNames} ({score})</GridItem>
+          </GridRow>
+        );
+      })}
+    </Box>
+  );
+}
+
 function getEventDescription(props) {
   const event = props.event;
   const timestamp = getRelativeEventTime(event.timestamp);
-  const playerID = event.payload.playerID;
+  const playerID = event.payload.context?.playerID || event.payload.playerID;
   const playerName = (playerID === props.gameState.playerID ? 'You' : getPlayerName(playerID));
-  let eventConfig, heading, emoji;
+  let dailyDouble, description, eventConfig, heading, emoji;
   switch (event.eventType) {
     case EventTypes.GAME_STARTED:
       eventConfig = {
@@ -41,17 +63,26 @@ function getEventDescription(props) {
       eventConfig = {
         description: (
           <Bold>
-            The {event.payload.round} Jeopardye round has started.
-            <PlayerName>{getPlayerName(event.payload.playerInControl)}</PlayerName> is in control.
+            The {event.payload.round} Jeopardye round has started. <PlayerName>{getPlayerName(event.payload.playerInControl)}</PlayerName> is in control.
           </Bold>
         ),
         emoji: Emoji.PLAY_BUTTON,
       };
       break;
     case EventTypes.ROUND_ENDED:
+      if (event.payload.gameOver) {
+        heading = <Bold>The game has ended.</Bold>;
+      } else {
+        heading = (
+          <GameHistoryEventAccordion heading={<Bold>The {event.payload.round} Jeopardye round has ended.</Bold>} timestamp={timestamp}>
+            {getRoundStandings(event.payload.round, event.payload.places)}
+          </GameHistoryEventAccordion>
+        );
+      }
       eventConfig = {
-        description: <Bold>The {event.payload.gameOver ? 'game' : `${event.payload.round} Jeopardye round`} has ended.</Bold>,
+        description: heading,
         emoji: (event.payload.gameOver ? Emoji.CHECKERED_FLAG : Emoji.END_ARROW),
+        isAccordion: !event.payload.gameOver,
       };
       break;
     case EventTypes.PLAYER_CHANGED_NAME:
@@ -79,14 +110,13 @@ function getEventDescription(props) {
       };
       break;
     case EventTypes.PLAYER_SELECTED_CLUE:
-      const dailyDouble = (!!props.game && isDailyDouble(props.game.rounds[event.round], event.clue.clueID));
+      dailyDouble = (!!props.game && isDailyDouble(props.game.rounds[event.round], event.clue.clueID));
       const showQuestion = (!dailyDouble || !!props.eventHistory.slice(props.index + 1).find(event => event.eventType === EventTypes.PLAYER_WAGERED));
       heading = (
         <React.Fragment>
           <PlayerName>{playerName}</PlayerName> played <Bold>{event.clue.category}</Bold> for <Bold>${event.clue.value.toLocaleString()}</Bold>.
         </React.Fragment>
       );
-      let description;
       if (showQuestion) {
         description = (
           <GameHistoryEventAccordion heading={heading} timestamp={timestamp}>
@@ -109,17 +139,29 @@ function getEventDescription(props) {
       };
       break;
     case EventTypes.PLAYER_ANSWERED:
-      const { answer, correct, value } = event.payload;
+      const { answer, clue, correct, value } = event.payload;
       const amount = (correct ? '+' : '-') + `$${value.toLocaleString()}`;
       const color = (correct ? 'green' : 'red');
-      emoji = (correct ? Emoji.CHECK_MARK : Emoji.CROSS_MARK);
+      dailyDouble = (!!props.game && isDailyDouble(props.game.rounds[event.round], clue.clueID));
+      const showAnswer = (dailyDouble && !correct);
+      heading = (
+        <React.Fragment>
+          <PlayerName>{playerName}</PlayerName> answered "{answer.trim()}" (<Text as="span" fontWeight="bold" textColor={color} whiteSpace="nowrap">{amount}</Text>).
+        </React.Fragment>
+      );
+      if (showAnswer) {
+        description = (
+          <GameHistoryEventAccordion heading={heading} timestamp={timestamp}>
+            <Bold>Answer:</Bold> {clue.answer}
+          </GameHistoryEventAccordion>
+        );
+      } else {
+        description = heading;
+      }
       eventConfig = {
-        description: (
-          <React.Fragment>
-            <PlayerName>{playerName}</PlayerName> answered "{answer.trim()}" (<Text as="span" fontWeight="bold" textColor={color} whiteSpace="nowrap">{amount}</Text>).
-          </React.Fragment>
-        ),
-        emoji: emoji,
+        description: description,
+        emoji: (correct ? Emoji.CHECK_MARK : Emoji.CROSS_MARK),
+        isAccordion: showAnswer,
       };
       break;
     case EventTypes.PLAYER_WAGERED:

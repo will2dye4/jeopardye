@@ -25,7 +25,7 @@ async function handleCreatePlayer(req, res, next) {
   let preferredFontStyle = DEFAULT_FONT_STYLE;
   if (req.body.hasOwnProperty('preferredFontStyle')) {
     preferredFontStyle = req.body.preferredFontStyle;
-    if (ALL_FONT_STYLES.indexOf(preferredFontStyle) === -1) {
+    if (!ALL_FONT_STYLES.includes(preferredFontStyle)) {
       handleError(`Invalid font style "${preferredFontStyle}"`, StatusCodes.BAD_REQUEST);
       return;
     }
@@ -83,7 +83,7 @@ async function handleUpdatePlayer(req, res, next) {
   let preferredFontStyle = player.preferredFontStyle;
   if (req.body.hasOwnProperty('preferredFontStyle')) {
     preferredFontStyle = req.body.preferredFontStyle;
-    if (ALL_FONT_STYLES.indexOf(preferredFontStyle) === -1) {
+    if (!ALL_FONT_STYLES.includes(preferredFontStyle)) {
       handleError(`Invalid font style "${preferredFontStyle}"`, StatusCodes.BAD_REQUEST);
       return;
     }

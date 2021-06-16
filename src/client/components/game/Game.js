@@ -3,13 +3,12 @@ import { Box, Text, createStandaloneToast } from '@chakra-ui/react';
 import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
-  DAILY_DOUBLE_MINIMUM_WAGER,
   GAME_HISTORY_SCROLL_KEY,
   GAME_HISTORY_SIDE_KEY,
   GAME_HISTORY_SIZE_KEY,
   MAX_PLAYERS_PER_GAME,
 } from '../../../constants.mjs';
-import { formatList, getUnplayedClues, hasMoreRounds, isDailyDouble } from '../../../utils.mjs';
+import { EventContext, formatList, getUnplayedClues, hasMoreRounds, isDailyDouble } from '../../../utils.mjs';
 import {
   getBuzzInMessage,
   getCorrectAnswerMessage,
@@ -22,7 +21,7 @@ import {
   getWaitingForBuzzMessage,
 } from '../../messages';
 import JEOPARDYE_THEME from '../../theme';
-import {isLocalStorageSettingEnabled, markClueAsInvalid, playSound, speakAnswer, speakClue} from '../../utils';
+import { isLocalStorageSettingEnabled, markClueAsInvalid, playSound, speakAnswer, speakClue } from '../../utils';
 import './Game.css';
 import Bold from '../common/Bold';
 import Board from './board/Board';
@@ -74,14 +73,14 @@ class Game extends React.Component {
       if ((key === ' ' || key === 'enter') && this.state.showActiveClue && !spectating) {
         if (this.props.allowAnswers && !this.props.playerAnswering) {
           event.preventDefault();
-          this.props.buzzIn(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+          this.props.buzzIn(EventContext.fromProps(this.props));
         }
       } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager && !spectating) {
-        if (key === 's' && this.props.playersVotingToSkipClue.indexOf(this.props.playerID) === -1) {
+        if (key === 's' && !this.props.playersVotingToSkipClue.includes(this.props.playerID)) {
           console.log('Voting to skip the current clue...');
           event.preventDefault();
           this.voteToSkipActiveClue();
-        } else if (key === 'i' && this.props.playersMarkingClueInvalid.indexOf(this.props.playerID) === -1) {
+        } else if (key === 'i' && !this.props.playersMarkingClueInvalid.includes(this.props.playerID)) {
           console.log('Marking the current clue as invalid...');
           event.preventDefault();
           this.markActiveClueAsInvalid();
@@ -153,8 +152,9 @@ class Game extends React.Component {
 
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
       this.getTimerRef()?.resetResponseTimer();
-      const isCurrentPlayer = (this.props.prevAnswer.playerID === this.props.playerID);
-      const playerName = this.getPlayerName(this.props.prevAnswer.playerID);
+      const playerID = this.props.prevAnswer.context.playerID;
+      const isCurrentPlayer = (playerID === this.props.playerID);
+      const playerName = this.getPlayerName(playerID);
       if (this.props.prevAnswer.correct) {
         const tookControl = this.props.playerInControl !== prevProps.playerInControl;
         this.handleCorrectAnswer(isCurrentPlayer, tookControl, playerName);
@@ -162,7 +162,7 @@ class Game extends React.Component {
         this.handleIncorrectAnswer(isCurrentPlayer, false, playerName);
       }
       if (!isCurrentPlayer) {
-        const { playerID, answer, correct, value } = this.props.prevAnswer;
+        const { answer, correct, value } = this.props.prevAnswer;
         const prefix = (correct ? '+' : '-');
         const amount = `${prefix}$${value.toLocaleString()}`;
         const title = (
@@ -211,7 +211,7 @@ class Game extends React.Component {
     if (!prevProps.allowAnswers && this.props.allowAnswers) {
       const spectating = this.playerIsSpectating();
       let status;
-      if (!spectating && this.props.activeClue.playersAttempted.indexOf(this.props.playerID) === -1) {
+      if (!spectating && !this.props.activeClue.playersAttempted.includes(this.props.playerID)) {
         status = {
           appearance: 'action',
           emoji: 'bell',
@@ -228,22 +228,16 @@ class Game extends React.Component {
     }
 
     if (!prevProps.responseTimerElapsed && this.props.responseTimerElapsed) {
-      if (this.state.showDailyDoubleWager) {
-        /* TODO - only do this for the player in control? */
-        this.props.submitWager(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID,
-                               this.props.activeClue.clueID, DAILY_DOUBLE_MINIMUM_WAGER);
+      let playerID;
+      if (this.isActiveDailyDouble()) {
+        playerID = this.props.playerInControl;
       } else {
-        let playerID;
-        if (this.isActiveDailyDouble()) {
-          playerID = this.props.playerInControl;
-        } else {
-          const playersAttempted = this.props.activeClue.playersAttempted;
-          playerID = playersAttempted[playersAttempted.length - 1];
-        }
-        const isCurrentPlayer = (playerID === this.props.playerID);
-        const playerName = this.getPlayerName(playerID);
-        this.handleIncorrectAnswer(isCurrentPlayer, true, playerName);
+        const playersAttempted = this.props.activeClue.playersAttempted;
+        playerID = playersAttempted[playersAttempted.length - 1];
       }
+      const isCurrentPlayer = (playerID === this.props.playerID);
+      const playerName = this.getPlayerName(playerID);
+      this.handleIncorrectAnswer(isCurrentPlayer, true, playerName);
     }
 
     if (this.props.game && prevProps.players !== this.props.players &&
@@ -269,7 +263,7 @@ class Game extends React.Component {
         this.props.playersVotingToSkipClue.length !== Object.keys(this.props.players).length) {
       let newVoters = [];
       this.props.playersVotingToSkipClue.forEach(playerID => {
-        if (prevProps.playersVotingToSkipClue.indexOf(playerID) === -1) {
+        if (!prevProps.playersVotingToSkipClue.includes(playerID)) {
           const name = (playerID === this.props.playerID ? 'You' : this.getPlayerName(playerID));
           newVoters.push(name);
         }
@@ -288,7 +282,7 @@ class Game extends React.Component {
       this.props.playersMarkingClueInvalid.length > prevProps.playersMarkingClueInvalid.length) {
       let newPlayers = [];
       this.props.playersMarkingClueInvalid.forEach(playerID => {
-        if (prevProps.playersMarkingClueInvalid.indexOf(playerID) === -1) {
+        if (!prevProps.playersMarkingClueInvalid.includes(playerID)) {
           const name = (playerID === this.props.playerID ? 'You' : this.getPlayerName(playerID));
           newPlayers.push(name);
         }
@@ -316,13 +310,13 @@ class Game extends React.Component {
   }
 
   checkPlayerInGame() {
-    if (this.props.game && this.props.playerID && this.props.game.playerIDs.indexOf(this.props.playerID) === -1) {
+    if (this.props.game && this.props.playerID && !this.props.game.playerIDs.includes(this.props.playerID)) {
       if (Object.keys(this.props.players).length >= MAX_PLAYERS_PER_GAME) {
         console.log('Game is full. Becoming a spectator.');
         this.props.startSpectating(this.props.playerID);
       }
       console.log('Joining game...');
-      this.props.joinGame(this.props.game.gameID, this.props.playerID);
+      this.props.joinGame(new EventContext(this.props.game.gameID, this.props.playerID));
     }
   }
 
@@ -416,7 +410,7 @@ class Game extends React.Component {
         appearance: 'incorrect',
         text: response,
       };
-    } else if (!spectating && this.props.activeClue.playersAttempted.indexOf(this.props.playerID) === -1) {
+    } else if (!spectating && !this.props.activeClue.playersAttempted.includes(this.props.playerID)) {
       status = {
         appearance: 'action',
         emoji: 'bell',
@@ -509,8 +503,8 @@ class Game extends React.Component {
     const playerName = this.getPlayerName(this.props.playerInControl);
     const playerHasControl = this.playerHasControl();
     const timeElapsed = !this.props.prevAnswer;
-    const dailyDouble = isDailyDouble(this.props.board, this.props.prevAnswer?.clueID);
-    const isCurrentPlayer = (playerHasControl && !dailyDouble && !timeElapsed && this.props.prevAnswer.playerID === this.props.playerID);
+    const dailyDouble = isDailyDouble(this.props.board, this.props.prevAnswer?.context?.clueID);
+    const isCurrentPlayer = (playerHasControl && !dailyDouble && !timeElapsed && this.props.prevAnswer?.context?.playerID === this.props.playerID);
     let status;
     if (playerHasControl) {
       status = {
@@ -536,7 +530,7 @@ class Game extends React.Component {
 
   handleClueClick(clue) {
     if (this.playerHasControl()) {
-      this.props.selectClue(this.props.game.gameID, this.props.playerID, clue.categoryID, clue.clueID);
+      this.props.selectClue(new EventContext(this.props.game.gameID, this.props.playerID, clue.categoryID, clue.clueID));
     }
   }
 
@@ -546,7 +540,7 @@ class Game extends React.Component {
     }
     markClueAsInvalid(this.props.activeClue.clueID).then(response => {
       if (response.ok) {
-        this.props.markClueAsInvalid(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+        this.props.markClueAsInvalid(EventContext.fromProps(this.props));
       }
     });
   }
@@ -555,7 +549,7 @@ class Game extends React.Component {
     if (event) {
       event.stopPropagation();
     }
-    this.props.voteToSkipClue(this.props.game.gameID, this.props.playerID, this.props.activeClue.categoryID, this.props.activeClue.clueID);
+    this.props.voteToSkipClue(EventContext.fromProps(this.props));
   }
 
   openGameHistory() {
