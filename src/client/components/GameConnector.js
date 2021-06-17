@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-dom';
 import { createStandaloneToast } from '@chakra-ui/react';
 import {
   buzzIn,
@@ -21,6 +22,7 @@ import {
   markClueAsInvalid,
   markPlayerAsReadyForNextRound,
   selectClue,
+  setRoomCode,
   startSpectating,
   stopSpectating,
   submitAnswer,
@@ -31,11 +33,10 @@ import {
 } from '../actions/action_creators';
 import { MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
 import JEOPARDYE_THEME from '../theme';
-import Game from './game/Game';
 import Home from './home/Home';
-import Lobby from './lobby/Lobby';
 import PlayerEditor from './player/PlayerEditor';
 import PlayerStatistics from './player/stats/PlayerStatistics';
+import Room from './Room';
 
 const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
@@ -74,6 +75,7 @@ const actionCreators = {
   markClueAsInvalid,
   markPlayerAsReadyForNextRound,
   selectClue,
+  setRoomCode,
   startSpectating,
   stopSpectating,
   submitAnswer,
@@ -103,11 +105,11 @@ class Connector extends React.Component {
       this.props.websocketConnect();
     }
 
-    if (this.props.playerID) {
+    if (this.props.playerID && !this.props.players.hasOwnProperty(this.props.playerID) && !this.props.spectators.hasOwnProperty(this.props.playerID)) {
       this.props.fetchCurrentPlayer();
     }
 
-    if (this.props.roomID) {
+    if (this.props.roomID && !this.props.room) {
       this.props.fetchRoom(this.props.roomID);
     }
 
@@ -128,7 +130,7 @@ class Connector extends React.Component {
     }
 
     if (!prevProps.roomID && this.props.roomID) {
-      this.props.fetchRoom(this.props.roomID);
+      this.connectAndFetchCurrentState();
     }
 
     if (!prevProps.room && this.props.room && this.props.room.currentGameID && this.props.room.currentGameID !== this.props.game?.gameID) {
@@ -171,7 +173,10 @@ class Connector extends React.Component {
   }
 
   openPlayerEditor(onClose = null) {
-    this.setState({onPlayerEditorClose: onClose, showPlayerEditor: true});
+    this.setState({
+      onPlayerEditorClose: (onClose === null || (typeof onClose === 'function') ? onClose : null),
+      showPlayerEditor: true,
+    });
   }
 
   openPlayerStats() {
@@ -200,21 +205,24 @@ class Connector extends React.Component {
       open: this.openPlayerStats,
       close: this.closePlayerStats,
     };
-    let content;
-    if (this.props.game) {
-      content = <Game allowJoin={allowJoin} playerEditor={playerEditor} playerStats={playerStats} {...this.props} />;
-    } else if (this.props.room) {
-      content = <Lobby allowJoin={allowJoin} playerEditor={playerEditor} playerStats={playerStats} {...this.props} />;
-    } else {
-      content = <Home playerEditor={playerEditor} {...this.props} />;
-    }
     return (
       <React.Fragment>
-        {content}
+        <Router>
+          <Switch>
+            <Route exact path="/">
+              {this.props.room ?
+                <Redirect to={`/p/${this.props.room.roomCode}`} /> :
+                <Home playerEditor={playerEditor} {...this.props} />}
+            </Route>
+            <Route path="/p/:roomCode">
+              <Room allowJoin={allowJoin} playerEditor={playerEditor} playerStats={playerStats} {...this.props} />
+            </Route>
+          </Switch>
+        </Router>
         {this.state.showPlayerEditor && <PlayerEditor playerEditor={playerEditor} {...this.props} />}
         {this.state.showPlayerStats && <PlayerStatistics playerStats={playerStats} {...this.props} />}
       </React.Fragment>
-    )
+    );
   }
 }
 

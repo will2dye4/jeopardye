@@ -18,8 +18,10 @@ function newStoreData() {
   return {
     connected: false,
     error: null,
+    errorContext: null,
     eventHistory: [],
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
+    roomCode: null,
     roomID: null,
     room: null,
     board: null,
@@ -47,11 +49,18 @@ function shouldIgnoreError(eventType, status) {
   return (eventType === EventTypes.BUZZ_IN && status === StatusCodes.CONFLICT);
 }
 
+function shouldPropagateError(eventType) {
+  return (eventType === EventTypes.JOIN_ROOM_WITH_CODE);
+}
+
 function handleError(storeData, event) {
   const { eventType, error, status } = event.payload;
   console.log(`Request to ${eventType} failed: ${error} (${status})`);
   if (shouldIgnoreError(eventType, status)) {
     return storeData;
+  }
+  if (shouldPropagateError(eventType)) {
+    return {...storeData, errorContext: event.payload};
   }
   return {...storeData, error: `Failed to ${eventType.replaceAll('_', ' ')}.`};
 }
@@ -404,7 +413,7 @@ function handleWebsocketEvent(storeData, event) {
 
 export function GameReducer(storeData, action) {
   switch (action.type) {
-    case ActionTypes.FETCH_CURRENT_ROOM:
+    case ActionTypes.FETCH_ROOM:
       const room = action.payload;
       if (!room) {
         console.log('Failed to fetch room.');
@@ -414,6 +423,8 @@ export function GameReducer(storeData, action) {
         return {...storeData, error: room.error};
       }
       return {...storeData, roomID: room.roomID, room: room};
+    case ActionTypes.SET_ROOM_CODE:
+      return {...storeData, roomCode: action.payload.roomCode};
     case ActionTypes.FETCH_CURRENT_GAME:
     case ActionTypes.FETCH_GAME:
     case ActionTypes.FETCH_NEW_GAME:
@@ -450,6 +461,9 @@ export function GameReducer(storeData, action) {
       const { error } = action.payload;
       if (storeData.error === error) {
         return {...storeData, error: null};
+      }
+      if (storeData.errorContext === error) {
+        return {...storeData, errorContext: null};
       }
       return storeData;
     case ActionTypes.REDUX_WEBSOCKET_OPEN:

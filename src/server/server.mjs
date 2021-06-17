@@ -4,7 +4,7 @@ import express from 'express';
 import expressWs from 'express-ws';
 import log from 'log';
 import logNode from 'log-node';
-import db from './db.mjs';
+import db, { markAllPlayersInactive } from './db.mjs';
 import game from './api/game.mjs';
 import player from './api/player.mjs';
 import room from './api/room.mjs';
@@ -28,3 +28,4 @@ app.ws('/api/ws', handleWebsocket);
 app.listen(PORT, () => logger.info(`API server running on port ${PORT}...`));
 
 db.command({ping: 1}, {}, err => err ? logger.error(err) : logger.info('Connected to database.'));
+markAllPlayersInactive(() => logger.info('All players reset to inactive.'));

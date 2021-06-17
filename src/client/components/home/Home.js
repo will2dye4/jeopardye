@@ -21,6 +21,12 @@ class Home extends React.Component {
     this.closeRoomCodeDialog = this.closeRoomCodeDialog.bind(this);
   }
 
+  componentDidMount() {
+    if (this.props.roomCode) {
+      this.props.playerEditor.open(() => this.setState({showRoomCodeDialog: true}));
+    }
+  }
+
   openCreateRoomDialog() {
     this.setState({showCreateRoomDialog: true});
   }

@@ -1,12 +1,12 @@
 import express from 'express';
 import log from 'log';
-import { MAX_PASSWORD_LENGTH, StatusCodes } from '../../constants.mjs';
+import {MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes} from '../../constants.mjs';
 import { Room } from '../../models/room.mjs';
 import {
   createRoom,
   generateUniqueRoomCode,
   getPlayer,
-  getRoom,
+  getRoom, getRoomByCode,
   updatePlayer,
 } from '../db.mjs';
 import { removePlayerFromCurrentRoom } from '../utils.mjs';
@@ -58,7 +58,7 @@ async function handleCreateRoom(req, res, next) {
 
 async function handleGetRoom(req, res, next) {
   const roomID = req.params.roomID;
-  const room = await getRoom(roomID); /* TODO - allow passing room code? */
+  const room = await (roomID.length === ROOM_CODE_LENGTH ? getRoomByCode(roomID) : getRoom(roomID));
   if (room) {
     res.json(room);
   } else {

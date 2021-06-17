@@ -233,7 +233,7 @@ async function handleClientConnect(ws, event) {
   }, PING_INTERVAL_MILLIS);
 
   if (room) {
-    const players = await getPlayers(Object.keys(getClients(room.roomID)));
+    const players = await getPlayers(room.playerIDs);
     let newPlayers = {};
     players.forEach(player => newPlayers[player.playerID] = player);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {roomID: room.roomID, playerID: playerID, players: newPlayers}));
@@ -253,7 +253,7 @@ async function joinRoom(player, room, ws) {
   if (player.currentRoomID && player.currentRoomID !== room.roomID) {
     removeClient(player.currentRoomID, player.playerID);
   }
-  const players = await getPlayers(Object.keys(getClients(room.roomID)));
+  const players = await getPlayers(room.playerIDs);
   let newPlayers = {};
   players.forEach(player => newPlayers[player.playerID] = player);
   broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED_ROOM, {roomID: room.roomID, playerID: player.playerID, players: newPlayers}));
@@ -279,6 +279,11 @@ async function handleJoinRoom(ws, event) {
     handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
     return;
   }
+  if (room.passwordHash && player.currentRoomID !== room.roomID) {
+    /* require player to already be in the room's player list if the room is password-protected */
+    handleError(ws, event, 'player not in room', StatusCodes.BAD_REQUEST);
+    return;
+  }
   await joinRoom(player, room, ws);
 }
 
@@ -302,7 +307,7 @@ async function handleJoinRoomWithCode(ws, event) {
     handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
     return;
   }
-  if (room.passwordHash && !bcrypt.compareSync(password, room.passwordHash)) {
+  if (room.passwordHash && !bcrypt.compareSync(password || '', room.passwordHash)) {
     handleError(ws, event, 'invalid password', StatusCodes.UNAUTHORIZED);
     return;
   }
@@ -875,6 +880,10 @@ export function handleWebsocket(ws, req) {
         await handler(ws, event);
       } catch (e) {
         logger.error(`Caught unexpected error while handling ${eventType} event: ${e}`);
+        if (ws.readyState === WebSocket.OPEN) {
+          const payload = {eventType: eventType, error: e.toString(), status: StatusCodes.INTERNAL_SERVER_ERROR};
+          ws.send(JSON.stringify(new WebsocketEvent(EventTypes.ERROR, payload)));
+        }
       }
     } else {
       logger.info(`Ignoring event with unknown type: ${eventType} (${msg})`);

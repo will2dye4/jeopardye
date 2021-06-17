@@ -18,6 +18,10 @@ const gamesCollection = db.collection('games');
 const playersCollection = db.collection('players');
 const roomsCollection = db.collection('rooms');
 
+export function markAllPlayersInactive(callback) {
+  playersCollection.updateMany({}, {$set: {active: false}}).then(() => callback());
+}
+
 export async function generateUniqueRoomCode() {
   let code, room;
   while (!code || room) {

@@ -78,7 +78,7 @@ class GameSettings extends React.Component {
         </Card>
       );
     }
-    const disabled = (this.props.playerID !== this.props.room.hostPlayerID);
+    const disabled = (this.props.playerID !== this.props.room?.hostPlayerID);
     const startGameDisabled = (disabled || Object.keys(this.props.players).length === 0);
     return (
       <Card className="game-settings" px={8} py={6}>

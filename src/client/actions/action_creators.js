@@ -3,8 +3,9 @@ import { EventTypes, PLAYER_ID_KEY, StatusCodes } from '../../constants.mjs';
 import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
-  FETCH_CURRENT_ROOM: 'JEOPARDYE::FETCH_CURRENT_ROOM',
+  FETCH_ROOM: 'JEOPARDYE::FETCH_ROOM',
   CREATE_NEW_ROOM: 'JEOPARDYE::CREATE_NEW_ROOM',
+  SET_ROOM_CODE: 'JEOPARDYE::SET_ROOM_CODE',
   FETCH_CURRENT_GAME: 'JEOPARDYE::FETCH_CURRENT_GAME',
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   FETCH_NEW_GAME: 'JEOPARDYE::FETCH_NEW_GAME',
@@ -132,7 +133,7 @@ function updatePlayerName(playerID, name, preferredFontStyle) {
 
 export function fetchRoom(roomID) {
   return {
-    type: ActionTypes.FETCH_CURRENT_ROOM,
+    type: ActionTypes.FETCH_ROOM,
     payload: getRoomByID(roomID),
   };
 }
@@ -290,6 +291,13 @@ export function clearError(error) {
   return {
     type: ActionTypes.CLEAR_ERROR,
     payload: {error},
+  }
+}
+
+export function setRoomCode(roomCode) {
+  return {
+    type: ActionTypes.SET_ROOM_CODE,
+    payload: {roomCode},
   }
 }
 
