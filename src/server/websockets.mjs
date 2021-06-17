@@ -36,37 +36,77 @@ import {
 } from '../utils.mjs';
 import {
   addPlayerToGame,
+  addPlayerToRoom,
   advanceToNextRound,
   getGame,
   getPlayer,
   getPlayers,
+  getRoom,
   incrementPlayerStat,
   markActiveClueAsInvalid,
   markPlayerAsReadyForNextRound,
   setActiveClue,
+  setCurrentGameForRoom,
   setHighestGameScore,
   setPlayerAnswering,
   updateGame,
   updatePlayer,
   voteToSkipActiveClue,
 } from './db.mjs';
+import { removePlayerFromCurrentRoom } from './utils.mjs';
+
+const NO_ROOM_KEY = 'NO_ROOM';
 
 const PING_INTERVAL_MILLIS = 30_000;
 
 const logger = log.get('ws');
 
-export let connectedClients = {};
 export let playerNames = {};
 
+let connectedClients = {};
 let pingHandlers = {};
 
 let buzzTimers = {};
 let responseTimers = {};
 
+function addClient(roomID, playerID, ws) {
+  if (!connectedClients.hasOwnProperty(roomID)) {
+    connectedClients[roomID] = {};
+  }
+  connectedClients[roomID][playerID] = ws;
+  removeClient(NO_ROOM_KEY, playerID);
+}
+
+function removeClient(roomID, playerID) {
+  if (connectedClients.hasOwnProperty(roomID)) {
+    delete connectedClients[roomID][playerID];
+    if (!Object.keys(connectedClients[roomID]).length) {
+      delete connectedClients[roomID];
+    }
+  }
+}
+
+function getClients(roomID) {
+  return connectedClients[roomID] || {};
+}
+
+function getClient(roomID, playerID) {
+  const clients = connectedClients[roomID] || {};
+  return clients[playerID] || null;
+}
+
 export function broadcast(event, originatingPlayerID) {
   logger.debug(`Broadcasting ${event.eventType} event...`);
+
+  const roomID = event.payload.context?.roomID || event.payload.roomID;
+  if (!roomID) {
+    logger.error(`Unknown room ID for ${event.eventType} event; skipping broadcast.`);
+    return;
+  }
+
   let jsonEvent;
-  Object.entries(connectedClients).forEach(([playerID, ws]) => {
+  const clients = getClients(roomID);
+  Object.entries(clients).forEach(([playerID, ws]) => {
     if (!originatingPlayerID || playerID !== originatingPlayerID) {
       if (!jsonEvent) {
         jsonEvent = JSON.stringify(event);
@@ -115,7 +155,11 @@ function checkForLastClue(game) {
       if (gameOver) {
         const winners = places[Object.keys(places)[0]].map(getPlayerName);
         logger.info(`Game ${gameID} ended. ${formatList(winners)} ${winners.length === 1 ? 'won' : 'tied'}.`);
-        updateGame(gameID, {finishedTime: new Date(), roundSummary: roundSummary}).then(() => {
+        updateGame(gameID, {finishedTime: new Date(), roundSummary: roundSummary}).then(() =>
+          getRoom(game.roomID)
+        ).then(room =>
+          setCurrentGameForRoom(room, null)
+        ).then(() => {
           let playerUpdates = [];
           players.forEach(player => {
             const { playerID } = player;
@@ -133,42 +177,66 @@ function checkForLastClue(game) {
           logger.info(`Reached the end of the ${currentRound} round for game ${gameID}.`);
         });
       }
-      broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {...roundSummary, gameID: gameID}));
+      broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {...roundSummary, gameID: gameID, roomID: game.roomID}));
     });
   }
 }
 
 async function handleClientConnect(ws, event) {
-  const { playerID } = event.payload;
+  let { playerID, roomID } = event.payload;
   if (!playerID) {
     handleError(ws, event, 'missing player ID', StatusCodes.BAD_REQUEST);
     return;
   }
+
   const player = await getPlayer(playerID);
   if (!player) {
     handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
     return;
   }
-  updatePlayer(playerID, {active: true, lastConnectionTime: new Date()}).then(() => {
-    logger.info(`${player.name} connected.`);
-    connectedClients[playerID] = ws;
-    pingHandlers[ws] = setInterval(function() {
-      logger.debug(`Pinging websocket for ${getPlayerName(playerID)}...`);
-      try {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.ping('jeopardye');
-        }
-      } catch (e) {
-        logger.error(`Unexpected error while pinging websocket: ${e}`);
+
+  let room;
+  if (roomID) {
+    room = await getRoom(roomID);
+    if (!room) {
+      handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
+      return;
+    }
+  } else {
+    roomID = NO_ROOM_KEY;
+  }
+
+  let playerUpdates = {active: true, lastConnectionTime: new Date()};
+  if (room && player.currentRoomID !== room.roomID) {
+    playerUpdates.currentRoomID = room.roomID;
+    await removePlayerFromCurrentRoom(player);
+  }
+  await updatePlayer(playerID, playerUpdates);
+  if (room && !room.playerIDs.includes(playerID)) {
+    await addPlayerToRoom(room.roomID, playerID);
+  }
+
+  logger.info(`${player.name} connected.`);
+  addClient(roomID, playerID, ws);
+  playerNames[playerID] = player.name;
+
+  pingHandlers[ws] = setInterval(function() {
+    logger.debug(`Pinging websocket for ${getPlayerName(playerID)}...`);
+    try {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.ping('jeopardye');
       }
-    }, PING_INTERVAL_MILLIS);
-    playerNames[playerID] = player.name;
-    return getPlayers(Object.keys(connectedClients));
-  }).then(players => {
+    } catch (e) {
+      logger.error(`Unexpected error while pinging websocket: ${e}`);
+    }
+  }, PING_INTERVAL_MILLIS);
+
+  if (room) {
+    const players = await getPlayers(Object.keys(getClients(room.roomID)));
     let newPlayers = {};
     players.forEach(player => newPlayers[player.playerID] = player);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {playerID: playerID, players: newPlayers}));
-  });
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {roomID: room.roomID, playerID: playerID, players: newPlayers}));
+  }
 }
 
 async function handleGameSettingsChanged(ws, event) {
@@ -177,13 +245,22 @@ async function handleGameSettingsChanged(ws, event) {
 }
 
 async function handleJoinGame(ws, event) {
-  const { gameID, playerID } = event.payload.context;
+  const { roomID, gameID, playerID } = event.payload.context;
+  if (!roomID) {
+    handleError(ws, event, 'missing room ID', StatusCodes.BAD_REQUEST);
+    return;
+  }
   if (!gameID) {
     handleError(ws, event, 'missing game ID', StatusCodes.BAD_REQUEST);
     return;
   }
   if (!playerID) {
     handleError(ws, event, 'missing player ID', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  const room = await getRoom(roomID);
+  if (!room) {
+    handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
     return;
   }
   const game = await getGame(gameID);
@@ -194,6 +271,10 @@ async function handleJoinGame(ws, event) {
   const player = await getPlayer(playerID);
   if (!player) {
     handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  if (!room.playerIDs.includes(playerID) || player.currentRoomID !== roomID) {
+    handleError(ws, event, 'player not in room', StatusCodes.BAD_REQUEST);
     return;
   }
   if (!player.spectating) {
@@ -213,8 +294,11 @@ async function handleJoinGame(ws, event) {
   const gamePlayer = GamePlayer.fromPlayer(player, game.scores[playerID]);
   addPlayerToGame(gameID, playerID).then(() => {
     logger.info(`${player.name} joined game ${gameID}.`);
-    connectedClients[playerID] = ws;
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player: gamePlayer}));
+    addClient(roomID, playerID, ws);
+    if (player.currentRoomID && player.currentRoomID !== roomID) {
+      removeClient(player.currentRoomID, playerID);
+    }
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {roomID: roomID, player: gamePlayer}));
     if (!game.playerIDs.includes(playerID)) {
       incrementPlayerStat(playerID, GAMES_PLAYED_STAT).then(() => logger.debug(`Incremented games played for ${playerID}.`));
     }
@@ -222,11 +306,20 @@ async function handleJoinGame(ws, event) {
 }
 
 async function validateEventContext(ws, event) {
-  const { gameID, playerID, categoryID, clueID } = event.payload.context;
+  const { roomID, gameID, playerID, categoryID, clueID } = event.payload.context;
+  const room = await getRoom(roomID);
+  if (!room) {
+    handleError(ws, event, `room ${roomID} not found`, StatusCodes.NOT_FOUND);
+    return null;
+  }
   const game = await getGame(gameID);
   if (!game) {
     handleError(ws, event, `game ${gameID} not found`, StatusCodes.NOT_FOUND);
     return null;
+  }
+  if (room.currentGameID !== gameID || game.roomID !== roomID) {
+    handleError(ws, event, `game ${gameID} is not active in room ${roomID}`, StatusCodes.BAD_REQUEST);
+    return;
   }
   if (!game.playerIDs.includes(playerID)) {
     handleError(ws, event, `player ${playerID} not in game ${gameID}`, StatusCodes.BAD_REQUEST);
@@ -253,7 +346,7 @@ function setExpirationTimerForClue(gameID, clue, delayMillis = 0) {
       if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID) {
         logger.info('Time expired.');
         updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
-          const payload = {gameID: gameID, categoryID: clue.categoryID, clueID: clue.clueID, skipped: false};
+          const payload = {context: EventContext.fromGameAndClue(game, clue), skipped: false};
           broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, payload));
           delete buzzTimers[gameID];
           checkForLastClue(game);
@@ -292,7 +385,7 @@ function setResponseTimerForClue(game, clue, playerID, wagering = false) {
         updateGame(game.gameID, newFields).then(() => {
           const answerDelayMillis = (dailyDouble ? 0 : buzzTimers[game.gameID]?.delayMillis);
           const payload = {
-            context: new EventContext(game.gameID, playerID, clue.categoryID, clue.clueID),
+            context: EventContext.fromGameAndClue(game, clue, playerID),
             score: newScore,
             answerDelayMillis: answerDelayMillis,
           };
@@ -326,8 +419,7 @@ function setTimerForActiveClue(game, clue, playerID) {
       getGame(game.gameID).then(game => {
         if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID) {
           logger.info('Now accepting answers.');
-          const payload = {gameID: game.gameID, categoryID: clue.categoryID, clueID: clue.clueID};
-          broadcast(new WebsocketEvent(EventTypes.WAITING_PERIOD_ENDED, payload));
+          broadcast(new WebsocketEvent(EventTypes.WAITING_PERIOD_ENDED, {context: EventContext.fromGameAndClue(game, clue)}));
           setExpirationTimerForClue(game.gameID, clue);
         }
       });
@@ -466,7 +558,7 @@ function submitWager(game, categoryID, clueID, playerID, wager) {
     incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_STAT)
   ).then(() => {
     logger.info(`${getPlayerName(playerID)} wagered $${wager.toLocaleString()}.`);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, {playerID, wager}));
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, {roomID: game.roomID, playerID: playerID, wager: wager}));
     const timer = responseTimers[game.gameID];
     if (timer && timer.categoryID === categoryID && timer.clueID === clueID && timer.playerID === playerID && timer.wagering) {
       clearTimeout(timer.timerID);
@@ -504,10 +596,14 @@ async function handleSubmitWager(ws, event) {
 }
 
 async function handleStartSpectating(ws, event) {
-  const { playerID } = event.payload;
+  const { roomID, playerID } = event.payload;
   const player = await getPlayer(playerID);
   if (!player) {
     handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  if (player.currentRoomID !== roomID) {
+    handleError(ws, event, 'player not in room', StatusCodes.BAD_REQUEST);
     return;
   }
   updatePlayer(playerID, {spectating: true}).then(() => {
@@ -517,10 +613,14 @@ async function handleStartSpectating(ws, event) {
 }
 
 async function handleStopSpectating(ws, event) {
-  const { gameID, playerID } = event.payload;
+  const { roomID, gameID, playerID } = event.payload;
   const player = await getPlayer(playerID);
   if (!player) {
     handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  if (player.currentRoomID !== roomID) {
+    handleError(ws, event, 'player not in room', StatusCodes.BAD_REQUEST);
     return;
   }
   if (gameID) {
@@ -548,7 +648,7 @@ async function handleStopSpectating(ws, event) {
   }
   updatePlayer(playerID, {spectating: false}).then(() => {
     logger.info(`${getPlayerName(playerID)} stopped spectating.`);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, {playerID}));
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, {roomID, playerID}));
   });
 }
 
@@ -612,7 +712,7 @@ async function handleVoteToSkipClue(ws, event) {
     if (game.activeClue.playersVotingToSkip.length === numPlayers - 1) {
       logger.info(`Skipping clue ${clueID} (category ${categoryID}).`);
       updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
-        broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, {gameID, categoryID, clueID, skipped: true}));
+        broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, {context: event.payload.context, skipped: true}));
         clearTimeout(buzzTimers[gameID].timerID);
         delete buzzTimers[gameID];
         checkForLastClue(game);
@@ -622,10 +722,19 @@ async function handleVoteToSkipClue(ws, event) {
 }
 
 async function handleMarkPlayerAsReadyForNextRound(ws, event) {
-  const { gameID, playerID } = event.payload.context;
+  const { roomID, gameID, playerID } = event.payload.context;
+  const room = await getRoom(roomID);
+  if (!room) {
+    handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
+    return;
+  }
   const game = await getGame(gameID);
   if (!game) {
     handleError(ws, event, 'game not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  if (room.currentGameID !== gameID || game.roomID !== roomID) {
+    handleError(ws, event, 'game not active in room', StatusCodes.BAD_REQUEST);
     return;
   }
   if (!game.playerIDs.includes(playerID)) {
@@ -663,7 +772,7 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
       const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers)).playerID;
       advanceToNextRound(gameID, round, playerInControl).then(() => {
         logger.info(`Advanced to the ${round} round in game ${gameID}.`);
-        broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, {gameID, round, playerInControl: playerInControl}));
+        broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, {roomID, gameID, round, playerInControl: playerInControl}));
       });
     }
   });
@@ -725,14 +834,17 @@ export function handleWebsocket(ws, req) {
     } else {
       logger.debug('Ping handler not found; skipping.');
     }
-    Object.entries(connectedClients).forEach(([playerID, socket]) => {
-      if (socket === ws) {
-        updatePlayer(playerID, {active: false}).then(() => {
-          logger.info(`${getPlayerName(playerID)} went inactive.`);
-          broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_INACTIVE, {player: new GamePlayer(playerID, null)}));
-          delete connectedClients[playerID];
-        });
-      }
+    Object.entries(connectedClients).forEach(([roomID, clients]) => {
+      Object.entries(clients).forEach(([playerID, socket]) => {
+        if (socket === ws) {
+          updatePlayer(playerID, {active: false}).then(() => {
+            logger.info(`${getPlayerName(playerID)} went inactive.`);
+            const payload = {roomID: roomID, player: new GamePlayer(playerID, null)};
+            broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_INACTIVE, payload));
+            removeClient(roomID, playerID);
+          });
+        }
+      });
     });
   });
 }

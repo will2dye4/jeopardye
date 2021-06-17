@@ -31,7 +31,7 @@ function RoundScores(props) {
                   <Heading size={fontSize}>{player.name} ({formatScore(player.score)})</Heading>
                   {gameOver && place === '1st' && (
                     <Heading color="jeopardyYellow.500" size={getFontSize(i + 2)} ml={3}>
-                      <Icon id="winner-icon" icon={faCrown} title="Winner" clickable={false} />
+                      <Icon id="winner-icon" icon={faCrown} title="Champion" clickable={false} />
                     </Heading>
                   )}
                 </GridItem>

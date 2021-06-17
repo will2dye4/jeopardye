@@ -29,6 +29,7 @@ export class PlayerStatistics {
 export class Player {
   constructor(name, preferredFontStyle, spectating) {
     this.playerID = uuid.v4();
+    this.currentRoomID = null;
     this.name = name;
     this.preferredFontStyle = preferredFontStyle || DEFAULT_FONT_STYLE;
     this.spectating = spectating || false;

@@ -23,6 +23,7 @@ function Podiums(props) {
     const isCurrentPlayer = (player.playerID === props.playerID);
     const active = (player.playerID === props.playerAnswering);
     return <Podium key={player.playerID}
+                   roomID={props.gameState.roomID}
                    player={player}
                    gameHistory={props.gameHistory}
                    playerEditor={props.playerEditor}

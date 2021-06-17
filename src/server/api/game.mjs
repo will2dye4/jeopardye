@@ -16,7 +16,7 @@ import {
 import { Category, Game, Round } from '../../models/game.mjs';
 import { GAMES_PLAYED_STAT } from '../../models/player.mjs';
 import { range, WebsocketEvent } from '../../utils.mjs';
-import { createGame, getGame, getPlayers, incrementPlayerStat } from '../db.mjs';
+import { createGame, getGame, getPlayers, getRoom, incrementPlayerStat, setCurrentGameForRoom } from '../db.mjs';
 import { fetchRandomCategories } from '../jservice.mjs';
 import { broadcast } from '../websockets.mjs';
 
@@ -61,6 +61,13 @@ async function handleCreateGame(req, res, next) {
     next(error);
   }
 
+  const roomID = req.body.roomID?.toString().trim();
+  const room = await getRoom(roomID);
+  if (!room) {
+    handleError(`Room "${roomID}" not found`, StatusCodes.NOT_FOUND);
+    return;
+  }
+
   let numRounds = DEFAULT_NUM_ROUNDS;
   if (req.body.hasOwnProperty('numRounds')) {
     numRounds = parseInt(req.body.numRounds);
@@ -90,9 +97,9 @@ async function handleCreateGame(req, res, next) {
   }
 
   let playerIDs = [];
+  let players = [];
   if (req.body.hasOwnProperty('playerIDs')) {
     playerIDs = req.body.playerIDs;
-    let players;
     try {
       players = await getPlayers(playerIDs);
     } catch (e) {
@@ -105,13 +112,18 @@ async function handleCreateGame(req, res, next) {
       return;
     }
   }
+
   let playerInControl = null;
   if (req.body.hasOwnProperty('playerInControl') && req.body.playerInControl !== null) {
     playerInControl = req.body.playerInControl;
-    if (!playerIDs.includes(playerInControl)) {
+    if (!playerIDs.includes(playerInControl) || players.find(player => player.playerID === playerInControl).spectating) {
       handleError(`Invalid player in control "${playerInControl}"`, StatusCodes.BAD_REQUEST);
       return;
     }
+  }
+  if (!playerInControl && room.currentChampion && playerIDs.includes(room.currentChampion) &&
+      !players.find(player => player.playerID === room.currentChampion).spectating) {
+    playerInControl = room.currentChampion;
   }
 
   broadcast(new WebsocketEvent(EventTypes.GAME_STARTING, {}));
@@ -131,7 +143,7 @@ async function handleCreateGame(req, res, next) {
     rounds[Rounds.FINAL] = await createRound(Rounds.FINAL);
   }
 
-  const game = new Game(rounds, playerIDs, playerInControl);
+  const game = new Game(roomID, rounds, playerIDs, playerInControl);
   try {
     await createGame(game);
   } catch (e) {
@@ -139,11 +151,13 @@ async function handleCreateGame(req, res, next) {
     return;
   }
 
-  await Promise.all(game.playerIDs.map(playerID => incrementPlayerStat(playerID, GAMES_PLAYED_STAT)));
-
-  res.json(game);
-  broadcast(new WebsocketEvent(EventTypes.GAME_STARTED, {game}));
-  logger.info(`Created game ${game.gameID}.`);
+  setCurrentGameForRoom(room, game.gameID).then(() =>
+    Promise.all(game.playerIDs.map(playerID => incrementPlayerStat(playerID, GAMES_PLAYED_STAT)))
+  ).then(() => {
+    res.json(game);
+    broadcast(new WebsocketEvent(EventTypes.GAME_STARTED, {game}));
+    logger.info(`Created game ${game.gameID}.`);
+  });
 }
 
 async function handleGetGame(req, res, next) {

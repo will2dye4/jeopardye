@@ -1,10 +1,10 @@
 import { ActionTypes } from '../actions/action_creators';
 import {
-  DEFAULT_PLAYER_ID,
   EventTypes,
   GAME_HISTORY_EVENT_TYPES,
   GAME_ID_KEY,
   PLAYER_ID_KEY,
+  ROOM_ID_KEY,
   StatusCodes,
 } from '../../constants.mjs';
 import { GameSettings } from '../../models/game.mjs';
@@ -21,8 +21,9 @@ function newStoreData() {
     connected: false,
     error: null,
     eventHistory: [],
-    hostPlayerID: DEFAULT_PLAYER_ID,
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
+    roomID: localStorage.getItem(ROOM_ID_KEY) || null,
+    room: null,
     board: null,
     game: null,
     gameSettings: new GameSettings(),
@@ -302,7 +303,7 @@ function handlePlayerMarkedReadyForNextRound(storeData, event) {
 }
 
 function handleBuzzingPeriodEnded(storeData, event) {
-  const { categoryID, clueID } = event.payload;
+  const { categoryID, clueID } = event.payload.context;
   if (storeData.activeClue?.clueID === clueID) {
     console.log(`Time expired for clue ${clueID} (category ${categoryID}).`);
     return {...storeData, playerAnswering: null, allowAnswers: false, revealAnswer: true};
@@ -328,7 +329,7 @@ function handleResponsePeriodEnded(storeData, event) {
 }
 
 function handleWaitingPeriodEnded(storeData, event) {
-  const { categoryID, clueID } = event.payload;
+  const { categoryID, clueID } = event.payload.context;
   console.log(`Now accepting answers for clue ${clueID} (category ${categoryID}).`);
   return {...storeData, allowAnswers: true};
 }
@@ -383,6 +384,17 @@ function handleWebsocketEvent(storeData, event) {
 
 export function GameReducer(storeData, action) {
   switch (action.type) {
+    case ActionTypes.FETCH_CURRENT_ROOM:
+      const room = action.payload;
+      if (!room) {
+        console.log('Failed to fetch room.');
+        localStorage.removeItem(ROOM_ID_KEY);
+        return {...storeData, roomID: null, room: null};
+      }
+      if (room.error) {
+        return {...storeData, error: room.error};
+      }
+      return {...storeData, roomID: room.roomID, room: room};
     case ActionTypes.FETCH_CURRENT_GAME:
     case ActionTypes.FETCH_GAME:
     case ActionTypes.FETCH_NEW_GAME:

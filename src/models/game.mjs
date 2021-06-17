@@ -95,8 +95,9 @@ export class Round {
 }
 
 export class Game {
-  constructor(rounds, playerIDs, playerInControl, playerAnswering, currentRound, activeClue, currentWager) {
+  constructor(roomID, rounds, playerIDs, playerInControl, playerAnswering, currentRound, activeClue, currentWager) {
     this.gameID = uuid.v4();
+    this.roomID = roomID;
     this.rounds = rounds;
     this.numRounds = Object.keys(rounds).length - (rounds.hasOwnProperty(Rounds.FINAL) ? 1 : 0);
     this.playerIDs = playerIDs || [];
@@ -121,7 +122,8 @@ export class Game {
 }
 
 export class GameSettings {
-  constructor(numRounds, dailyDoubles, finalJeopardye, playerIDs, playerInControl) {
+  constructor(roomID, numRounds, dailyDoubles, finalJeopardye, playerIDs, playerInControl) {
+    this.roomID = roomID;
     this.numRounds = numRounds || DEFAULT_NUM_ROUNDS;
     this.dailyDoubles = dailyDoubles || DEFAULT_DAILY_DOUBLE_SETTING;
     this.finalJeopardye = finalJeopardye ?? DEFAULT_FINAL_JEOPARDYE;

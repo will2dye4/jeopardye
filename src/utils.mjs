@@ -53,15 +53,23 @@ export class WebsocketEvent {
 }
 
 export class EventContext {
-  static fromProps(props) {
-    const gameID = props.gameState?.gameID || props.game.gameID;
-    const playerID = props.gameState?.playerID || props.playerID;
-    return new EventContext(gameID, playerID, props.activeClue?.categoryID, props.activeClue?.clueID);
+  static fromGameAndClue(game, clue, playerID = null) {
+    return new EventContext(game.roomID, game.gameID, playerID, clue.categoryID, clue.clueID);
   }
 
-  constructor(gameID, playerID, categoryID, clueID) {
+  static fromProps(props) {
+    const roomID = props.gameState?.roomID || props.roomID;
+    const gameID = props.gameState?.gameID || props.game.gameID;
+    const playerID = props.gameState?.playerID || props.playerID;
+    return new EventContext(roomID, gameID, playerID, props.activeClue?.categoryID, props.activeClue?.clueID);
+  }
+
+  constructor(roomID, gameID, playerID, categoryID, clueID) {
+    this.roomID = roomID;
     this.gameID = gameID;
-    this.playerID = playerID;
+    if (playerID) {
+      this.playerID = playerID;
+    }
     if (categoryID) {
       this.categoryID = categoryID;
     }
@@ -73,10 +81,6 @@ export class EventContext {
 
 export function range(n) {
   return [...Array(n).keys()];
-}
-
-export function sum(values) {
-  return values.reduce((accumulator, value) => accumulator + value);
 }
 
 export function randomChoice(values) {

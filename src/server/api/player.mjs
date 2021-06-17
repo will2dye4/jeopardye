@@ -1,6 +1,6 @@
 import express from 'express';
 import log from 'log';
-import { createPlayer, getPlayer, updatePlayerName } from '../db.mjs';
+import { addPlayerToRoom, createPlayer, getPlayer, getRoom, updatePlayerName } from '../db.mjs';
 import { broadcast, playerNames } from '../websockets.mjs';
 import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, StatusCodes } from '../../constants.mjs';
 import { Player, validatePlayerName } from '../../models/player.mjs';
@@ -31,9 +31,21 @@ async function handleCreatePlayer(req, res, next) {
     }
   }
 
+  const roomID = req.body.roomID?.toString().trim();
+  if (roomID) {
+    const room = await getRoom(roomID);
+    if (!room) {
+      handleError(`Room "${roomID}" not found`, StatusCodes.NOT_FOUND);
+      return;
+    }
+  }
+
   const player = new Player(name, preferredFontStyle);
   try {
     await createPlayer(player);
+    if (roomID) {
+      await addPlayerToRoom(roomID, player.playerID);
+    }
   } catch (e) {
     handleError(`Failed to save player to database: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
     return;

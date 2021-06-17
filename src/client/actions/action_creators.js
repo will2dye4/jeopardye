@@ -1,8 +1,10 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { EventTypes, GAME_ID_KEY, PLAYER_ID_KEY, StatusCodes } from '../../constants.mjs';
+import { EventTypes, GAME_ID_KEY, PLAYER_ID_KEY, ROOM_ID_KEY, StatusCodes } from '../../constants.mjs';
 import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
+  FETCH_CURRENT_ROOM: 'JEOPARDYE::FETCH_CURRENT_ROOM',
+  CREATE_NEW_ROOM: 'JEOPARDYE::CREATE_NEW_ROOM',
   FETCH_CURRENT_GAME: 'JEOPARDYE::FETCH_CURRENT_GAME',
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   FETCH_NEW_GAME: 'JEOPARDYE::FETCH_NEW_GAME',
@@ -25,6 +27,7 @@ const API_BASE = 'http://localhost:3333/api';
 const WS_BASE = 'ws://localhost:3333/api/ws';
 const GAME_URL = `${API_BASE}/game`;
 const PLAYER_URL = `${API_BASE}/player`;
+const ROOM_URL = `${API_BASE}/room`;
 
 function getJSON(response, errorMessage) {
   if (response.ok) {
@@ -37,6 +40,32 @@ function getJSON(response, errorMessage) {
 function handleError(error, errorMessage) {
   console.log(`${errorMessage}: ${error}`);
   return {error: errorMessage};
+}
+
+function getRoomByID(roomID) {
+  return fetch(`${ROOM_URL}/${roomID}`).then(response =>
+    getJSON(response, `Error occurred while fetching room ${roomID}.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching room ${roomID}.`)
+  );
+}
+
+function createRoom(playerID, password = null) {
+  const opts = {
+    body: JSON.stringify({
+      ownerPlayerID: playerID,
+      password: password,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  };
+  return fetch(ROOM_URL, opts).then(response =>
+    getJSON(response, 'Error occurred while creating room.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while creating room.')
+  );
 }
 
 function getGameByID(gameID) {
@@ -54,12 +83,12 @@ function createNewGame(gameSettings = null) {
       'Content-Type': 'application/json',
     },
     method: 'POST',
-  }
- return fetch(GAME_URL, opts).then(response =>
-   getJSON(response, 'Error occurred while creating game.')
- ).catch(e =>
-   handleError(e, 'Unexpected error occurred while creating game.')
- );
+  };
+  return fetch(GAME_URL, opts).then(response =>
+    getJSON(response, 'Error occurred while creating game.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while creating game.')
+  );
 }
 
 function getPlayerByID(playerID) {
@@ -101,6 +130,21 @@ function updatePlayerName(playerID, name, preferredFontStyle) {
   }).catch(e => handleError(e, `Unexpected error occurred while updating name for player ${playerID}.`));
 }
 
+export function fetchCurrentRoom() {
+  const roomID = localStorage.getItem(ROOM_ID_KEY);
+  return {
+    type: ActionTypes.FETCH_CURRENT_ROOM,
+    payload: (roomID ? getRoomByID(roomID) : null),
+  };
+}
+
+export function createNewRoom(playerID, password = null) {
+  return {
+    type: ActionTypes.CREATE_NEW_ROOM,
+    payload: createRoom(playerID, password),
+  };
+}
+
 export function fetchCurrentGame() {
   const gameID = localStorage.getItem(GAME_ID_KEY);
   let payload = null;
@@ -128,8 +172,10 @@ export function fetchNewGame(gameSettings) {
   }
 }
 
-export function fetchGame() {
-  const gameID = localStorage.getItem(GAME_ID_KEY);
+export function fetchGame(gameID) {
+  if (!gameID) {
+    gameID = localStorage.getItem(GAME_ID_KEY);
+  }
   let promise;
   if (gameID) {
     promise = getGameByID(gameID).then(game => {
@@ -186,12 +232,12 @@ export function changePlayerName(playerID, name, preferredFontStyle) {
   }
 }
 
-export function startSpectating(playerID) {
-  return send(new WebsocketEvent(EventTypes.START_SPECTATING, {playerID}));
+export function startSpectating(roomID, playerID) {
+  return send(new WebsocketEvent(EventTypes.START_SPECTATING, {roomID, playerID}));
 }
 
-export function stopSpectating(playerID, gameID) {
-  const payload = {playerID};
+export function stopSpectating(roomID, playerID, gameID) {
+  const payload = {roomID, playerID};
   if (gameID) {
     payload.gameID = gameID;
   }
@@ -237,8 +283,8 @@ export function voteToSkipClue(context) {
   return send(new WebsocketEvent(EventTypes.VOTE_TO_SKIP_CLUE, {context}));
 }
 
-export function clientConnect(playerID) {
-  return send(new WebsocketEvent(EventTypes.CLIENT_CONNECT, {playerID}));
+export function clientConnect(playerID, roomID = null) {
+  return send(new WebsocketEvent(EventTypes.CLIENT_CONNECT, {playerID, roomID}));
 }
 
 export function updateGameSettings(settings) {

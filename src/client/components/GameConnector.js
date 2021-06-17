@@ -8,9 +8,10 @@ import {
   clearError,
   clientConnect,
   createNewPlayer,
+  createNewRoom,
   dismissActiveClue,
-  fetchCurrentGame,
   fetchCurrentPlayer,
+  fetchCurrentRoom,
   fetchGame,
   fetchNewGame,
   fetchPlayer,
@@ -57,9 +58,10 @@ const actionCreators = {
   clearError,
   clientConnect,
   createNewPlayer,
+  createNewRoom,
   dismissActiveClue,
-  fetchCurrentGame,
   fetchCurrentPlayer,
+  fetchCurrentRoom,
   fetchGame,
   fetchNewGame,
   fetchPlayer,
@@ -98,6 +100,10 @@ class Connector extends React.Component {
     if (this.props.playerID) {
       this.props.fetchCurrentPlayer();
     }
+
+    if (this.props.roomID) {
+      this.props.fetchCurrentRoom();
+    }
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -111,6 +117,10 @@ class Connector extends React.Component {
       /* TODO - show message to user? */
       console.log('Websocket connection lost. Attempting to reconnect...');
       this.connectAndFetchCurrentState();
+    }
+
+    if (!prevProps.room && this.props.room && this.props.room.currentGameID && this.props.room.currentGameID !== this.props.game?.gameID) {
+      this.props.fetchGame(this.props.room.currentGameID);
     }
 
     if (prevProps.playerID && !this.props.playerID) {
@@ -132,8 +142,8 @@ class Connector extends React.Component {
   }
 
   connectAndFetchCurrentState() {
-    this.props.clientConnect(this.props.playerID);
-    this.props.fetchCurrentGame();
+    this.props.clientConnect(this.props.playerID, this.props.roomID);
+    this.props.fetchCurrentRoom();
     this.props.fetchCurrentPlayer();
   }
 

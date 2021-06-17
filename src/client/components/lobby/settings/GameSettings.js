@@ -63,7 +63,7 @@ class GameSettings extends React.Component {
   createNewGame() {
     this.setState({creatingGame: true});
     const playerIDs = Object.keys(this.props.players);
-    const gameSettings = new Settings(this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye, playerIDs);
+    const gameSettings = new Settings(this.props.roomID, this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye, playerIDs);
     this.props.fetchNewGame(gameSettings);
   }
 
@@ -78,7 +78,7 @@ class GameSettings extends React.Component {
         </Card>
       );
     }
-    const disabled = (this.props.playerID !== this.props.hostPlayerID);
+    const disabled = (this.props.playerID !== this.props.room?.hostPlayerID);
     const startGameDisabled = (disabled || Object.keys(this.props.players).length === 0);
     return (
       <Card className="game-settings" px={8} py={6}>

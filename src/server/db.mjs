@@ -2,6 +2,8 @@ import mongodb from 'mongodb';
 const { MongoClient } = mongodb;
 
 import uuid from 'uuid';
+import { randomChoice, range } from '../utils.mjs';
+import { ROOM_CODE_CHARACTERS, ROOM_CODE_LENGTH } from '../constants.mjs';
 
 const MONGODB_HOST = 'localhost';
 const MONGODB_PORT = 27017;
@@ -14,6 +16,74 @@ await client.connect();
 const db = client.db(DB_NAME);
 const gamesCollection = db.collection('games');
 const playersCollection = db.collection('players');
+const roomsCollection = db.collection('rooms');
+
+export async function generateUniqueRoomCode() {
+  let code, room;
+  while (!code || room) {
+    code = range(ROOM_CODE_LENGTH).map(_ => randomChoice(ROOM_CODE_CHARACTERS)).join('');
+    room = await getRoomByCode(code);
+  }
+  return code;
+}
+
+export async function createRoom(room) {
+  if (!room.roomID) {
+    room.roomID = uuid.v4();
+  }
+  if (!room.roomCode) {
+    room.roomCode = await generateUniqueRoomCode();
+  }
+  room._id = room.roomID;
+  const result = await roomsCollection.insertOne(room);
+  if (result.insertedCount !== 1) {
+    throw new Error('Failed to create room!');
+  }
+}
+
+export async function getRoom(roomID) {
+  return await roomsCollection.findOne({_id: roomID});
+}
+
+export async function getRoomByCode(roomCode) {
+  return await roomsCollection.findOne({roomCode: roomCode});
+}
+
+async function updateRoomFields(roomID, updates, arrayFilters) {
+  let opts = {};
+  if (arrayFilters) {
+    opts.arrayFilters = arrayFilters;
+  }
+  await roomsCollection.updateOne({_id: roomID}, updates, opts);
+}
+
+export async function setCurrentGameForRoom(room, gameID) {
+  if (room.currentGameID !== gameID) {
+    let updates = {
+      $set: {
+        currentGameID: gameID,
+      },
+    };
+    if (room.currentGameID) {
+      updates.$addToSet = {
+        previousGameIDs: room.currentGameID,
+      };
+    }
+    await updateRoomFields(room.roomID, updates);
+  }
+}
+
+export async function addPlayerToRoom(roomID, playerID) {
+  await updateRoomFields(roomID, {$addToSet: {playerIDs: playerID}});
+}
+
+export async function removePlayerFromRoom(roomID, playerID, newHostPlayerID) {
+  let updates = {$pull: {playerIDs: playerID}};
+  if (newHostPlayerID) {
+    updates.$set = {hostPlayerID: newHostPlayerID};
+  }
+  await updateRoomFields(roomID, updates);
+}
 
 export async function createGame(game) {
   if (!game.gameID) {

@@ -35,7 +35,7 @@ function SpectatorsMenu(props) {
   const numSpectators = Object.keys(props.spectators).length;
   const spectating = props.gameState.playerIsSpectating;
   const title = (spectating ? 'You are spectating' : `${numSpectators} spectator${numSpectators > 1 ? 's' : ''}`);
-  const stopSpectating = (props.allowJoin ? (playerID) => props.stopSpectating(playerID, props.gameState.gameID) : null);
+  const stopSpectating = (props.allowJoin ? (playerID) => props.stopSpectating(props.gameState.roomID, playerID, props.gameState.gameID) : null);
   return (
     <Popover>
       <PopoverTrigger>

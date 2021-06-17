@@ -74,6 +74,7 @@ export const GAME_HISTORY_SIDE_KEY = 'gameHistorySide';
 export const GAME_HISTORY_SIZE_KEY = 'gameHistorySize';
 export const GAME_ID_KEY = 'gameID';
 export const PLAYER_ID_KEY = 'playerID';
+export const ROOM_ID_KEY = 'roomID';
 export const SOUND_EFFECTS_ENABLED_KEY = 'soundEffectsEnabled';
 export const SPEAK_CLUES_ENABLED_KEY = 'speakCluesEnabled';
 export const SPEAK_ANSWERS_ENABLED_KEY = 'speakAnswersEnabled';
@@ -112,6 +113,12 @@ export const READING_SPEED_SECONDS_PER_WORD = 60 / READING_SPEED_WORDS_PER_MINUT
 export const DEFAULT_COUNTDOWN_SECONDS = 10;
 export const DAILY_DOUBLE_COUNTDOWN_SECONDS = 25;
 export const WAGER_COUNTDOWN_SECONDS = 15;
+
+export const MAX_PASSWORD_LENGTH = 128;
+export const PASSWORD_SALT_ROUNDS = 10;
+
+export const ROOM_CODE_LENGTH = 4;
+export const ROOM_CODE_CHARACTERS = 'ABCDEFGHJKLMNPQRSTVWXYZ';
 
 export const EventTypes = {
   ERROR: 'error',

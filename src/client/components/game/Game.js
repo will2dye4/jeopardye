@@ -309,14 +309,18 @@ class Game extends React.Component {
     }
   }
 
+  getEventContext(clue) {
+    return new EventContext(this.props.roomID, this.props.game.gameID, this.props.playerID, clue?.categoryID, clue?.clueID);
+  }
+
   checkPlayerInGame() {
-    if (this.props.game && this.props.playerID && !this.props.game.playerIDs.includes(this.props.playerID)) {
+    if (this.props.connected && this.props.game && this.props.playerID && !this.props.game.playerIDs.includes(this.props.playerID)) {
       if (Object.keys(this.props.players).length >= MAX_PLAYERS_PER_GAME) {
         console.log('Game is full. Becoming a spectator.');
-        this.props.startSpectating(this.props.playerID);
+        this.props.startSpectating(this.props.roomID, this.props.playerID);
       }
       console.log('Joining game...');
-      this.props.joinGame(new EventContext(this.props.game.gameID, this.props.playerID));
+      this.props.joinGame(this.getEventContext());
     }
   }
 
@@ -530,7 +534,7 @@ class Game extends React.Component {
 
   handleClueClick(clue) {
     if (this.playerHasControl()) {
-      this.props.selectClue(new EventContext(this.props.game.gameID, this.props.playerID, clue.categoryID, clue.clueID));
+      this.props.selectClue(this.getEventContext(clue));
     }
   }
 
@@ -590,6 +594,7 @@ class Game extends React.Component {
       toggleSize: this.toggleGameHistorySize,
     };
     const gameState = {
+      roomID: this.props.roomID,
       gameID: this.props.game?.gameID,
       currentRound: this.props.game?.currentRound,
       categories: this.props.board?.categories,

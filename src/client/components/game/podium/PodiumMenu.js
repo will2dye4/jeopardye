@@ -9,7 +9,7 @@ const CANNOT_SPECTATE_MESSAGE = 'You are not allowed to spectate right now.';
 function PodiumMenu(props) {
   const handleSpectate = () => {
     if (props.allowSpectate) {
-      props.startSpectating(props.player.playerID);
+      props.startSpectating(props.roomID, props.player.playerID);
     }
   }
 
