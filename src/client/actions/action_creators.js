@@ -1,5 +1,5 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { EventTypes, GAME_ID_KEY, PLAYER_ID_KEY, ROOM_ID_KEY, StatusCodes } from '../../constants.mjs';
+import { EventTypes, PLAYER_ID_KEY, ROOM_ID_KEY, StatusCodes } from '../../constants.mjs';
 import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
@@ -145,26 +145,6 @@ export function createNewRoom(playerID, password = null) {
   };
 }
 
-export function fetchCurrentGame() {
-  const gameID = localStorage.getItem(GAME_ID_KEY);
-  let payload = null;
-  if (gameID) {
-    payload = getGameByID(gameID).then(game => {
-      if (game.error) {
-        return game;
-      }
-      if (game.finishedTime !== null || (!game.roundSummary && !getUnplayedClues(game.rounds[game.currentRound]).length)) {
-        return null;
-      }
-      return game;
-    });
-  }
-  return {
-    type: ActionTypes.FETCH_CURRENT_GAME,
-    payload: payload,
-  };
-}
-
 export function fetchNewGame(gameSettings) {
   return {
     type: ActionTypes.FETCH_NEW_GAME,
@@ -173,9 +153,6 @@ export function fetchNewGame(gameSettings) {
 }
 
 export function fetchGame(gameID) {
-  if (!gameID) {
-    gameID = localStorage.getItem(GAME_ID_KEY);
-  }
   let promise;
   if (gameID) {
     promise = getGameByID(gameID).then(game => {

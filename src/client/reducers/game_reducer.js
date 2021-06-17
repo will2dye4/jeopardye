@@ -2,7 +2,6 @@ import { ActionTypes } from '../actions/action_creators';
 import {
   EventTypes,
   GAME_HISTORY_EVENT_TYPES,
-  GAME_ID_KEY,
   PLAYER_ID_KEY,
   ROOM_ID_KEY,
   StatusCodes,
@@ -75,7 +74,6 @@ function handleNewGame(storeData, newGame) {
       console.log(`Not updating score for unknown player ${playerID}.`);
     }
   });
-  localStorage.setItem(GAME_ID_KEY, newGame.gameID);
   return {
     ...storeData,
     eventHistory: [],
@@ -424,7 +422,6 @@ export function GameReducer(storeData, action) {
     case ActionTypes.CLEAR_CURRENT_GAME:
       const { gameID } = action.payload;
       if (storeData.game?.gameID === gameID) {
-        localStorage.removeItem(GAME_ID_KEY);
         return {...storeData, game: null, board: null};
       }
       return storeData;
