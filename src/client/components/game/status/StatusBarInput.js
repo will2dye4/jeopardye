@@ -18,7 +18,7 @@ class StatusBarInput extends React.Component {
   }
 
   handleKeyUp(event) {
-    if (event.key === 'Enter') {
+    if (event.key.toLowerCase() === 'enter') {
       event.preventDefault();
       this.handleSubmit();
     }

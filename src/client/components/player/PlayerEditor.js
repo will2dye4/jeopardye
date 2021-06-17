@@ -10,23 +10,21 @@ import { PlayerEditorModes } from '../../../constants.mjs';
 import './PlayerEditor.css';
 import PlayerSettings from './settings/PlayerSettings';
 
-class PlayerEditor extends React.Component {
-  render() {
-    const mode = this.props.playerID ? PlayerEditorModes.EDIT : PlayerEditorModes.CREATE;
-    const allowClose = (mode === PlayerEditorModes.EDIT);
-    return (
-      <Modal isOpen={true} closeOnEsc={allowClose} closeOnOverlayClick={allowClose}
-             onClose={this.props.playerEditor.close} size="5xl">
-        <ModalOverlay />
-        <ModalContent>
-          {allowClose && <ModalCloseButton />}
-          <ModalBody p={0}>
-            <PlayerSettings mode={mode} onSubmit={this.props.playerEditor.close} {...this.props} />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    );
-  }
+function PlayerEditor(props) {
+  const mode = props.playerID ? PlayerEditorModes.EDIT : PlayerEditorModes.CREATE;
+  const allowClose = (mode === PlayerEditorModes.EDIT);
+  return (
+    <Modal isOpen={true} closeOnEsc={allowClose} closeOnOverlayClick={allowClose}
+           onClose={props.playerEditor.close} size="5xl">
+      <ModalOverlay />
+      <ModalContent>
+        {allowClose && <ModalCloseButton />}
+        <ModalBody p={0}>
+          <PlayerSettings mode={mode} onSubmit={props.playerEditor.close} {...props} />
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
 }
 
 export default PlayerEditor;

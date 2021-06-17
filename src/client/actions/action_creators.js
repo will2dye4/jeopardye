@@ -1,5 +1,5 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { EventTypes, PLAYER_ID_KEY, ROOM_ID_KEY, StatusCodes } from '../../constants.mjs';
+import { EventTypes, PLAYER_ID_KEY, StatusCodes } from '../../constants.mjs';
 import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
@@ -130,11 +130,10 @@ function updatePlayerName(playerID, name, preferredFontStyle) {
   }).catch(e => handleError(e, `Unexpected error occurred while updating name for player ${playerID}.`));
 }
 
-export function fetchCurrentRoom() {
-  const roomID = localStorage.getItem(ROOM_ID_KEY);
+export function fetchRoom(roomID) {
   return {
     type: ActionTypes.FETCH_CURRENT_ROOM,
-    payload: (roomID ? getRoomByID(roomID) : null),
+    payload: getRoomByID(roomID),
   };
 }
 
@@ -226,6 +225,18 @@ export function clearCurrentGame(gameID) {
     type: ActionTypes.CLEAR_CURRENT_GAME,
     payload: {gameID},
   }
+}
+
+export function joinRoom(playerID, roomID) {
+  return send(new WebsocketEvent(EventTypes.JOIN_ROOM, {playerID, roomID}));
+}
+
+export function joinRoomWithCode(playerID, roomCode, password) {
+  let payload = {playerID, roomCode};
+  if (password) {
+    payload.password = password;
+  }
+  return send(new WebsocketEvent(EventTypes.JOIN_ROOM_WITH_CODE, payload));
 }
 
 export function markPlayerAsReadyForNextRound(context) {

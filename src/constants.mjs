@@ -73,7 +73,6 @@ export const GAME_HISTORY_SCROLL_KEY = 'gameHistoryScroll';
 export const GAME_HISTORY_SIDE_KEY = 'gameHistorySide';
 export const GAME_HISTORY_SIZE_KEY = 'gameHistorySize';
 export const PLAYER_ID_KEY = 'playerID';
-export const ROOM_ID_KEY = 'roomID';
 export const SOUND_EFFECTS_ENABLED_KEY = 'soundEffectsEnabled';
 export const SPEAK_CLUES_ENABLED_KEY = 'speakCluesEnabled';
 export const SPEAK_ANSWERS_ENABLED_KEY = 'speakAnswersEnabled';
@@ -130,6 +129,9 @@ export const EventTypes = {
   ROUND_ENDED: 'round_ended',
   /* player events */
   PLAYER_CHANGED_NAME: 'player_changed_name',
+  JOIN_ROOM: 'join_room',
+  JOIN_ROOM_WITH_CODE: 'join_room_with_code',
+  PLAYER_JOINED_ROOM: 'player_joined_room',
   JOIN_GAME: 'join_game',
   PLAYER_JOINED: 'player_joined',
   PLAYER_WENT_ACTIVE: 'player_went_active',
@@ -227,6 +229,7 @@ export const StatusCodes = {
   NO_CONTENT: 204,
   /* client error codes */
   BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
   NOT_FOUND: 404,
   CONFLICT: 409,
   /* server error codes */

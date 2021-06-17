@@ -3,7 +3,6 @@ import {
   EventTypes,
   GAME_HISTORY_EVENT_TYPES,
   PLAYER_ID_KEY,
-  ROOM_ID_KEY,
   StatusCodes,
 } from '../../constants.mjs';
 import { GameSettings } from '../../models/game.mjs';
@@ -21,7 +20,7 @@ function newStoreData() {
     error: null,
     eventHistory: [],
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
-    roomID: localStorage.getItem(ROOM_ID_KEY) || null,
+    roomID: null,
     room: null,
     board: null,
     game: null,
@@ -126,6 +125,28 @@ function handleRoundEnded(storeData, event) {
   const { round } = event.payload;
   console.log(`Reached the end of the ${round} round.`);
   return {...storeData, roundSummary: event.payload};
+}
+
+function handlePlayerJoinedRoom(storeData, event) {
+  const { roomID, playerID, players } = event.payload;
+  const player = players[playerID];
+  console.log(`${player.name} has joined the room.`);
+  Object.entries(players).forEach(([playerID, player]) => {
+    if (storeData.players.hasOwnProperty(playerID)) {
+      player.score = storeData.players[playerID].score;
+    }
+    if (!playerNames.hasOwnProperty(playerID)) {
+      playerNames[playerID] = player.name;
+    }
+  });
+  let newStore = {...storeData, players: players};
+  if (storeData.room) {
+    newStore.room = {...storeData.room, playerIDs: Object.keys(players)};
+  }
+  if (player.playerID === storeData.playerID) {
+    newStore.roomID = roomID;
+  }
+  return newStore;
 }
 
 function handlePlayerChangedName(storeData, event) {
@@ -339,6 +360,7 @@ const eventHandlers = {
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.ROUND_STARTED]: handleRoundStarted,
   [EventTypes.ROUND_ENDED]: handleRoundEnded,
+  [EventTypes.PLAYER_JOINED_ROOM]: handlePlayerJoinedRoom,
   [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
@@ -386,7 +408,6 @@ export function GameReducer(storeData, action) {
       const room = action.payload;
       if (!room) {
         console.log('Failed to fetch room.');
-        localStorage.removeItem(ROOM_ID_KEY);
         return {...storeData, roomID: null, room: null};
       }
       if (room.error) {

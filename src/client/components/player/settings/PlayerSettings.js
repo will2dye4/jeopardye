@@ -83,8 +83,8 @@ class PlayerSettings extends React.Component {
   }
 
   handleNameChanged(event) {
-    const name = event.target.value;
-    this.setState({invalid: !name.trim(), name: name.substring(0, MAX_PLAYER_NAME_LENGTH)});
+    const name = event.target.value.trim();
+    this.setState({invalid: !name, name: name.substring(0, MAX_PLAYER_NAME_LENGTH)});
   }
 
   handleSoundEffectsChanged() {

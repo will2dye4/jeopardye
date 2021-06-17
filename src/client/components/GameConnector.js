@@ -11,11 +11,13 @@ import {
   createNewRoom,
   dismissActiveClue,
   fetchCurrentPlayer,
-  fetchCurrentRoom,
   fetchGame,
   fetchNewGame,
   fetchPlayer,
+  fetchRoom,
   joinGame,
+  joinRoom,
+  joinRoomWithCode,
   markClueAsInvalid,
   markPlayerAsReadyForNextRound,
   selectClue,
@@ -30,6 +32,7 @@ import {
 import { MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
 import JEOPARDYE_THEME from '../theme';
 import Game from './game/Game';
+import Home from './home/Home';
 import Lobby from './lobby/Lobby';
 import PlayerEditor from './player/PlayerEditor';
 import PlayerStatistics from './player/stats/PlayerStatistics';
@@ -61,11 +64,13 @@ const actionCreators = {
   createNewRoom,
   dismissActiveClue,
   fetchCurrentPlayer,
-  fetchCurrentRoom,
   fetchGame,
   fetchNewGame,
   fetchPlayer,
+  fetchRoom,
   joinGame,
+  joinRoom,
+  joinRoomWithCode,
   markClueAsInvalid,
   markPlayerAsReadyForNextRound,
   selectClue,
@@ -82,7 +87,8 @@ class Connector extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      showPlayerEditor: !props.playerID,
+      onPlayerEditorClose: null,
+      showPlayerEditor: (!!props.roomID && !props.playerID),
       showPlayerStats: false,
     };
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
@@ -102,8 +108,10 @@ class Connector extends React.Component {
     }
 
     if (this.props.roomID) {
-      this.props.fetchCurrentRoom();
+      this.props.fetchRoom(this.props.roomID);
     }
+
+    this.checkPlayerInRoom();
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -119,9 +127,15 @@ class Connector extends React.Component {
       this.connectAndFetchCurrentState();
     }
 
+    if (!prevProps.roomID && this.props.roomID) {
+      this.props.fetchRoom(this.props.roomID);
+    }
+
     if (!prevProps.room && this.props.room && this.props.room.currentGameID && this.props.room.currentGameID !== this.props.game?.gameID) {
       this.props.fetchGame(this.props.room.currentGameID);
     }
+
+    this.checkPlayerInRoom();
 
     if (prevProps.playerID && !this.props.playerID) {
       this.setState({showPlayerEditor: true});
@@ -143,12 +157,21 @@ class Connector extends React.Component {
 
   connectAndFetchCurrentState() {
     this.props.clientConnect(this.props.playerID, this.props.roomID);
-    this.props.fetchCurrentRoom();
+    if (this.props.roomID) {
+      this.props.fetchRoom(this.props.roomID);
+    }
     this.props.fetchCurrentPlayer();
   }
 
-  openPlayerEditor() {
-    this.setState({showPlayerEditor: true});
+  checkPlayerInRoom() {
+    if (this.props.connected && this.props.room && this.props.playerID && !this.props.room.playerIDs.includes(this.props.playerID)) {
+      console.log('Joining room...');
+      this.props.joinRoom(this.props.playerID, this.props.roomID);
+    }
+  }
+
+  openPlayerEditor(onClose = null) {
+    this.setState({onPlayerEditorClose: onClose, showPlayerEditor: true});
   }
 
   openPlayerStats() {
@@ -157,6 +180,10 @@ class Connector extends React.Component {
 
   closePlayerEditor() {
    this.setState({showPlayerEditor: false});
+   if (this.state.onPlayerEditorClose) {
+     this.state.onPlayerEditorClose();
+     this.setState({onPlayerEditorClose: null});
+   }
   }
 
   closePlayerStats() {
@@ -176,8 +203,10 @@ class Connector extends React.Component {
     let content;
     if (this.props.game) {
       content = <Game allowJoin={allowJoin} playerEditor={playerEditor} playerStats={playerStats} {...this.props} />;
-    } else {
+    } else if (this.props.room) {
       content = <Lobby allowJoin={allowJoin} playerEditor={playerEditor} playerStats={playerStats} {...this.props} />;
+    } else {
+      content = <Home playerEditor={playerEditor} {...this.props} />;
     }
     return (
       <React.Fragment>

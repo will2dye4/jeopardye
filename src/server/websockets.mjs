@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import log from 'log';
 import WebSocket from 'ws';
 import {
@@ -41,7 +42,7 @@ import {
   getGame,
   getPlayer,
   getPlayers,
-  getRoom,
+  getRoom, getRoomByCode,
   incrementPlayerStat,
   markActiveClueAsInvalid,
   markPlayerAsReadyForNextRound,
@@ -237,6 +238,75 @@ async function handleClientConnect(ws, event) {
     players.forEach(player => newPlayers[player.playerID] = player);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {roomID: room.roomID, playerID: playerID, players: newPlayers}));
   }
+}
+
+async function joinRoom(player, room, ws) {
+  if (player.currentRoomID !== room.roomID) {
+    await updatePlayer(player.playerID, {currentRoomID: room.roomID});
+    await removePlayerFromCurrentRoom(player);
+  }
+  if (!room.playerIDs.includes(player.playerID)) {
+    await addPlayerToRoom(room.roomID, player.playerID);
+  }
+  logger.info(`${player.name} joined room ${room.roomID}.`);
+  addClient(room.roomID, player.playerID, ws);
+  if (player.currentRoomID && player.currentRoomID !== room.roomID) {
+    removeClient(player.currentRoomID, player.playerID);
+  }
+  const players = await getPlayers(Object.keys(getClients(room.roomID)));
+  let newPlayers = {};
+  players.forEach(player => newPlayers[player.playerID] = player);
+  broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED_ROOM, {roomID: room.roomID, playerID: player.playerID, players: newPlayers}));
+}
+
+async function handleJoinRoom(ws, event) {
+  const { playerID, roomID } = event.payload;
+  if (!playerID) {
+    handleError(ws, event, 'missing player ID', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  if (!roomID) {
+    handleError(ws, event, 'missing room ID', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  const player = await getPlayer(playerID);
+  if (!player) {
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  const room = await getRoom(roomID);
+  if (!room) {
+    handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  await joinRoom(player, room, ws);
+}
+
+async function handleJoinRoomWithCode(ws, event) {
+  const { playerID, roomCode, password } = event.payload;
+  if (!playerID) {
+    handleError(ws, event, 'missing player ID', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  if (!roomCode) {
+    handleError(ws, event, 'missing room code', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  const player = await getPlayer(playerID);
+  if (!player) {
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  const room = await getRoomByCode(roomCode);
+  if (!room) {
+    handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  if (room.passwordHash && !bcrypt.compareSync(password, room.passwordHash)) {
+    handleError(ws, event, 'invalid password', StatusCodes.UNAUTHORIZED);
+    return;
+  }
+  await joinRoom(player, room, ws);
 }
 
 async function handleGameSettingsChanged(ws, event) {
@@ -780,6 +850,8 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
 
 const eventHandlers = {
   [EventTypes.CLIENT_CONNECT]: handleClientConnect,
+  [EventTypes.JOIN_ROOM]: handleJoinRoom,
+  [EventTypes.JOIN_ROOM_WITH_CODE]: handleJoinRoomWithCode,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.JOIN_GAME]: handleJoinGame,
   [EventTypes.SELECT_CLUE]: handleSelectClue,
