@@ -42,7 +42,8 @@ import {
   getGame,
   getPlayer,
   getPlayers,
-  getRoom, getRoomByCode,
+  getRoom,
+  getRoomByCode,
   incrementPlayerStat,
   markActiveClueAsInvalid,
   markPlayerAsReadyForNextRound,
@@ -52,13 +53,19 @@ import {
   setPlayerAnswering,
   updateGame,
   updatePlayer,
+  updateRoom,
   voteToSkipActiveClue,
 } from './db.mjs';
-import { removePlayerFromCurrentRoom } from './utils.mjs';
+import {
+  findNewHostPlayerID,
+  removePlayerFromRoom as removePlayerHelper,
+} from './utils.mjs';
 
 const NO_ROOM_KEY = 'NO_ROOM';
 
 const PING_INTERVAL_MILLIS = 30_000;
+
+const REASSIGNMENT_CHECK_DELAY_MILLIS = 5_000;
 
 const logger = log.get('ws');
 
@@ -130,6 +137,35 @@ function handleError(ws, event, message, status) {
   }
 }
 
+async function removePlayerFromRoom(player, roomID) {
+  const newHostPlayerID = await removePlayerHelper(player, roomID);
+  if (newHostPlayerID) {
+    logger.info(`Reassigning host for room ${roomID || player.currentRoomID} to ${getPlayerName(newHostPlayerID)}.`);
+  }
+  const payload = {roomID: player.currentRoomID, playerID: player.playerID, newHostPlayerID: newHostPlayerID};
+  broadcast(new WebsocketEvent(EventTypes.PLAYER_LEFT_ROOM, payload), player.playerID);
+}
+
+function reassignRoomHostIfNecessary(roomID, playerID) {
+  setTimeout(async function() {
+    const room = await getRoom(roomID);
+    if (room.hostPlayerID === playerID) {
+      const player = await getPlayer(playerID);
+      if (player.currentRoomID && player.currentRoomID !== roomID) {
+        await removePlayerFromRoom(player, roomID);
+      } else if (!player.active || !player.currentRoomID) {
+        const newHostPlayerID = await findNewHostPlayerID(room);
+        if (newHostPlayerID) {
+          logger.info(`Reassigning host for room ${roomID} to ${getPlayerName(newHostPlayerID)}.`);
+          await updateRoom(roomID, {hostPlayerID: newHostPlayerID});
+          const payload = {roomID: roomID, newHostPlayerID: newHostPlayerID};
+          broadcast(new WebsocketEvent(EventTypes.ROOM_HOST_REASSIGNED, payload), playerID);
+        }
+      }
+    }
+  }, REASSIGNMENT_CHECK_DELAY_MILLIS);
+}
+
 function getCurrentPlaces(game, players) {
   let scores = [];
   Object.entries(game.scores).forEach(([playerID, score]) => {
@@ -141,7 +177,7 @@ function getCurrentPlaces(game, players) {
   return getPlaces(scores);
 }
 
-function getPlayerName(playerID) {
+export function getPlayerName(playerID) {
   return playerNames[playerID] || playerID;
 }
 
@@ -210,7 +246,9 @@ async function handleClientConnect(ws, event) {
   let playerUpdates = {active: true, lastConnectionTime: new Date()};
   if (room && player.currentRoomID !== room.roomID) {
     playerUpdates.currentRoomID = room.roomID;
-    await removePlayerFromCurrentRoom(player);
+    if (player.currentRoomID) {
+      await removePlayerFromRoom(player);
+    }
   }
   await updatePlayer(playerID, playerUpdates);
   if (room && !room.playerIDs.includes(playerID)) {
@@ -243,9 +281,10 @@ async function handleClientConnect(ws, event) {
 async function joinRoom(player, room, ws) {
   if (player.currentRoomID !== room.roomID) {
     await updatePlayer(player.playerID, {currentRoomID: room.roomID});
-    await removePlayerFromCurrentRoom(player);
+    await removePlayerFromRoom(player);
   }
   if (!room.playerIDs.includes(player.playerID)) {
+    room.playerIDs.push(player.playerID);
     await addPlayerToRoom(room.roomID, player.playerID);
   }
   logger.info(`${player.name} joined room ${room.roomID}.`);
@@ -370,9 +409,6 @@ async function handleJoinGame(ws, event) {
   addPlayerToGame(gameID, playerID).then(() => {
     logger.info(`${player.name} joined game ${gameID}.`);
     addClient(roomID, playerID, ws);
-    if (player.currentRoomID && player.currentRoomID !== roomID) {
-      removeClient(player.currentRoomID, playerID);
-    }
     broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {roomID: roomID, player: gamePlayer}));
     if (!game.playerIDs.includes(playerID)) {
       incrementPlayerStat(playerID, GAMES_PLAYED_STAT).then(() => logger.debug(`Incremented games played for ${playerID}.`));
@@ -918,11 +954,12 @@ export function handleWebsocket(ws, req) {
     Object.entries(connectedClients).forEach(([roomID, clients]) => {
       Object.entries(clients).forEach(([playerID, socket]) => {
         if (socket === ws) {
-          updatePlayer(playerID, {active: false}).then(() => {
+          updatePlayer(playerID, {active: false, currentRoomID: null}).then(() => {
             logger.info(`${getPlayerName(playerID)} went inactive.`);
-            const payload = {roomID: roomID, player: new GamePlayer(playerID, null)};
+            const payload = {roomID: roomID, playerID: playerID};
             broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_INACTIVE, payload));
             removeClient(roomID, playerID);
+            reassignRoomHostIfNecessary(roomID, playerID);
           });
         }
       });

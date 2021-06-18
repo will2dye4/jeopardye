@@ -85,6 +85,17 @@ function getEventDescription(props) {
         isAccordion: !event.payload.gameOver,
       };
       break;
+    case EventTypes.ROOM_HOST_REASSIGNED:
+    case EventTypes.PLAYER_LEFT_ROOM:
+      if (event.payload.newHostPlayerID) {
+        const name = (event.payload.newHostPlayerID === props.gameState.playerID ? 'You' : getPlayerName(event.payload.newHostPlayerID));
+        const verb = (name === 'You' ? 'are' : 'is');
+        eventConfig = {
+          description: <Bold><PlayerName>{name}</PlayerName> {verb} now the host.</Bold>,
+          emoji: Emoji.MICROPHONE,
+        };
+      }
+      break;
     case EventTypes.PLAYER_CHANGED_NAME:
       if (event.payload.name !== event.payload.prevName) {
         eventConfig = {

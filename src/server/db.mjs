@@ -61,6 +61,10 @@ async function updateRoomFields(roomID, updates, arrayFilters) {
   await roomsCollection.updateOne({_id: roomID}, updates, opts);
 }
 
+export async function updateRoom(roomID, newFields) {
+  await updateRoomFields(roomID, {$set: newFields});
+}
+
 export async function setCurrentGameForRoom(room, gameID) {
   if (room.currentGameID !== gameID) {
     let updates = {

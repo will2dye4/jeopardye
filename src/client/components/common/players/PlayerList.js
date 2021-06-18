@@ -11,6 +11,8 @@ function PlayerList(props) {
   if (currentPlayers.length) {
     players = currentPlayers.map(player => <PlayerListItem key={player.playerID} player={player} edit={props.edit}
                                                            isCurrentPlayer={player.playerID === props.currentPlayerID}
+                                                           isHost={player.playerID === props.room?.hostPlayerID}
+                                                           isChampion={player.playerID === props.room?.currentChampion}
                                                            isSpectator={props.spectators}
                                                            changeSpectatingStatus={props.changeSpectatingStatus} />);
   } else {

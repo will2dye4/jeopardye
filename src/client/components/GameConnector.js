@@ -32,6 +32,7 @@ import {
   websocketConnect,
 } from '../actions/action_creators';
 import { MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
+import { getPlayerName } from '../reducers/game_reducer';
 import JEOPARDYE_THEME from '../theme';
 import Home from './home/Home';
 import PlayerEditor from './player/PlayerEditor';
@@ -118,7 +119,7 @@ class Connector extends React.Component {
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if ((!prevProps.connected && this.props.connected && this.props.playerID) ||
-        (!prevProps.playerID && this.props.playerID && this.props.connected)) {
+      (!prevProps.playerID && this.props.playerID && this.props.connected)) {
       console.log('Establishing connection to server...');
       this.connectAndFetchCurrentState();
     }
@@ -154,6 +155,17 @@ class Connector extends React.Component {
         });
       }
       this.props.clearError(this.props.error);
+    }
+
+    if (prevProps.room && this.props.room && prevProps.room !== this.props.room && prevProps.room.hostPlayerID !== this.props.room.hostPlayerID) {
+      const playerName = (this.props.room.hostPlayerID === this.props.playerID ? 'You' : getPlayerName(this.props.room.hostPlayerID));
+      const verb = (playerName === 'You' ? 'are' : 'is');
+      toast({
+        position: 'top',
+        title: `${playerName} ${verb} now the host.`,
+        status: 'info',
+        isClosable: true,
+      });
     }
   }
 

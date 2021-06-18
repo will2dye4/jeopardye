@@ -1,7 +1,8 @@
 import express from 'express';
 import log from 'log';
-import {MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes} from '../../constants.mjs';
+import { EventTypes, MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes } from '../../constants.mjs';
 import { Room, validateRoomCode } from '../../models/room.mjs';
+import { WebsocketEvent } from '../../utils.mjs';
 import {
   createRoom,
   generateUniqueRoomCode,
@@ -9,7 +10,8 @@ import {
   getRoom, getRoomByCode,
   updatePlayer,
 } from '../db.mjs';
-import { removePlayerFromCurrentRoom } from '../utils.mjs';
+import { removePlayerFromRoom } from '../utils.mjs';
+import { broadcast, playerNames } from '../websockets.mjs';
 
 const logger = log.get('api:room');
 
@@ -63,7 +65,12 @@ async function handleCreateRoom(req, res, next) {
 
   await updatePlayer(ownerPlayerID, {currentRoomID: room.roomID});
   if (player.currentRoomID) {
-    await removePlayerFromCurrentRoom(player);
+    const newHostPlayerID = await removePlayerFromRoom(player);
+    if (newHostPlayerID) {
+      logger.info(`Reassigning host for room ${player.currentRoomID} to ${playerNames[newHostPlayerID] || newHostPlayerID}.`);
+    }
+    const payload = {roomID: player.currentRoomID, playerID: player.playerID, newHostPlayerID: newHostPlayerID};
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_LEFT_ROOM, payload), player.playerID);
   }
 
   res.json(room);

@@ -24,8 +24,8 @@ class Home extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.roomCode && !this.props.roomID && !this.props.playerID) {
-      this.props.playerEditor.open(() => this.setState({showRoomCodeDialog: true}));
+    if (this.props.roomCode && !this.props.roomID) {
+      this.openRoomCodeDialog();
     }
   }
 

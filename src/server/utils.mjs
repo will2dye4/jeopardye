@@ -1,21 +1,34 @@
-import { getPlayers, getRoom, removePlayerFromRoom } from './db.mjs';
+import { getPlayers, getRoom, removePlayerFromRoom as removePlayer } from './db.mjs';
 
-export async function removePlayerFromCurrentRoom(player) {
-  const room = await getRoom(player.currentRoomID);
-  if (room) {
-    let newHostPlayerID;
-    if (room.hostPlayerID === player.playerID) {
-      const playerIDs = room.playerIDs.filter(playerID => playerID !== player.playerID);
-      const players = await getPlayers(playerIDs);
-      if (players) {
-        newHostPlayerID = players.find(player => player.active && !player.spectating)?.playerID;
-        if (!newHostPlayerID) {
-          newHostPlayerID = players.find(player => player.active)?.playerID || room.ownerPlayerID;
-        }
-      } else {
+export async function findNewHostPlayerID(room) {
+  const playerIDs = room.playerIDs.filter(playerID => playerID !== room.hostPlayerID);
+  const players = await getPlayers(playerIDs);
+  let newHostPlayerID;
+  if (players) {
+    newHostPlayerID = players.find(player => player.active && !player.spectating)?.playerID;
+    if (!newHostPlayerID) {
+      newHostPlayerID = players.find(player => player.active)?.playerID;
+      if (!newHostPlayerID && room.hostPlayerID !== room.ownerPlayerID) {
         newHostPlayerID = room.ownerPlayerID;
       }
     }
-    await removePlayerFromRoom(player.currentRoomID, player.playerID, newHostPlayerID);
+  } else {
+    newHostPlayerID = room.ownerPlayerID;
   }
+  return newHostPlayerID;
+}
+
+export async function removePlayerFromRoom(player, roomID) {
+  if (!roomID) {
+    roomID = player.currentRoomID;
+  }
+  const room = await getRoom(roomID);
+  let newHostPlayerID = null;
+  if (room) {
+    if (room.hostPlayerID === player.playerID) {
+      newHostPlayerID = await findNewHostPlayerID(room);
+    }
+    await removePlayer(player.currentRoomID, player.playerID, newHostPlayerID);
+  }
+  return newHostPlayerID;
 }

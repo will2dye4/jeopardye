@@ -82,7 +82,7 @@ class CreateRoomDialog extends React.Component {
 
   handleRoomCodeChanged(event) {
     const newCode = event.target.value.trim();
-    const invalid = (this.state.invalid && !validateRoomCode(newCode));
+    const invalid = (this.state.invalid && newCode && !validateRoomCode(newCode));
     this.setState({invalid: invalid, roomCode: newCode.toUpperCase().substring(0, ROOM_CODE_LENGTH)});
   }
 
@@ -91,7 +91,7 @@ class CreateRoomDialog extends React.Component {
   }
 
   handleSubmit() {
-    if (validateRoomCode(this.state.roomCode)) {
+    if (!this.state.roomCode || validateRoomCode(this.state.roomCode)) {
       this.props.createNewRoom(this.props.playerID, this.state.roomCode, this.state.password);
     } else {
       this.handleError(StatusCodes.BAD_REQUEST);
@@ -111,7 +111,7 @@ class CreateRoomDialog extends React.Component {
                 <GridRow cols={3} my={2}>
                   <GridItem my={1}>
                     <FormLabel fontSize="lg" fontWeight="bold" mb={0}>Room Code</FormLabel>
-                    <FormHelperText fontStyle="italic" mt={0}>{ROOM_CODE_LENGTH} letters</FormHelperText>
+                    <FormHelperText fontStyle="italic" mt={0}>{ROOM_CODE_LENGTH} letters (leave blank for random)</FormHelperText>
                   </GridItem>
                   <GridItem colSpan={2} d="flex" alignItems="center">
                     <Input bg="white" focusBorderColor="jeopardyBlue.500" size="lg" ml={2} w="75%" value={this.state.roomCode}

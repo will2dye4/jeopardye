@@ -136,6 +136,13 @@ function handleRoundEnded(storeData, event) {
   return {...storeData, roundSummary: event.payload};
 }
 
+function handleRoomHostReassigned(storeData, event) {
+  const { newHostPlayerID } = event.payload;
+  console.log(`${getPlayerName(newHostPlayerID)} is now the host.`);
+  const newRoom = {...storeData.room, hostPlayerID: newHostPlayerID};
+  return {...storeData, room: newRoom};
+}
+
 function handlePlayerJoinedRoom(storeData, event) {
   const { roomID, playerID, players } = event.payload;
   const player = players[playerID];
@@ -156,6 +163,28 @@ function handlePlayerJoinedRoom(storeData, event) {
     newStore.roomID = roomID;
   }
   return newStore;
+}
+
+function handlePlayerLeftRoom(storeData, event) {
+  const { roomID, playerID, newHostPlayerID } = event.payload;
+  if (roomID !== storeData.roomID) {
+    console.log(`Ignoring player left event for room ${roomID}.`);
+    return storeData;
+  }
+  let newStore = {...storeData};
+  if (storeData.players.hasOwnProperty(playerID)) {
+    const player = storeData.players[playerID];
+    console.log(`${player.name} has left the room.`);
+    let newPlayer = {...player, active: false};
+    newStore.players = {...storeData.players, [playerID]: newPlayer};
+  } else {
+    console.log(`Ignoring player left event for unknown player ${playerID}.`);
+  }
+  if (newHostPlayerID) {
+    console.log(`${getPlayerName(newHostPlayerID)} is now the host.`);
+    newStore.room = {...storeData.room, hostPlayerID: newHostPlayerID};
+  }
+  return storeData;
 }
 
 function handlePlayerChangedName(storeData, event) {
@@ -294,8 +323,7 @@ function handlePlayerWentActive(storeData, event) {
 }
 
 function handlePlayerWentInactive(storeData, event) {
-  const { player } = event.payload;
-  const playerID = player.playerID;
+  const { playerID } = event.payload;
   if (storeData.players.hasOwnProperty(playerID)) {
     console.log(`${getPlayerName(playerID)} went inactive.`);
     const newPlayer = {...storeData.players[playerID], active: false};
@@ -369,7 +397,9 @@ const eventHandlers = {
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.ROUND_STARTED]: handleRoundStarted,
   [EventTypes.ROUND_ENDED]: handleRoundEnded,
+  [EventTypes.ROOM_HOST_REASSIGNED]: handleRoomHostReassigned,
   [EventTypes.PLAYER_JOINED_ROOM]: handlePlayerJoinedRoom,
+  [EventTypes.PLAYER_LEFT_ROOM]: handlePlayerLeftRoom,
   [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
@@ -421,12 +451,15 @@ export function GameReducer(storeData, action) {
         return {...storeData, roomID: null, room: null};
       }
       if (room.error) {
-        if (room.status && room.status !== StatusCodes.INTERNAL_SERVER_ERROR) {
+        if (action.type === ActionTypes.CREATE_NEW_ROOM && room.status) {
           return {...storeData, errorContext: {...room, eventType: action.type}};
         }
         return {...storeData, error: room.error};
       }
-      return {...storeData, roomID: room.roomID, room: room};
+      if (room.playerIDs.includes(storeData.playerID)) {
+        return {...storeData, roomID: room.roomID, room: room};
+      }
+      return storeData;
     case ActionTypes.SET_ROOM_CODE:
       return {...storeData, roomCode: action.payload.roomCode};
     case ActionTypes.FETCH_CURRENT_GAME:

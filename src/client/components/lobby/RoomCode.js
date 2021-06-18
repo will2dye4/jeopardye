@@ -13,6 +13,7 @@ async function copyCodeToClipboard(onCopy) {
   if (!toast.isActive(COPY_TOAST_ID)) {
     toast({
       id: COPY_TOAST_ID,
+      position: 'top',
       title: 'Link copied to clipboard.',
       status: 'success',
       isClosable: true,

@@ -127,11 +127,14 @@ export const EventTypes = {
   GAME_ENDED: 'game_ended',
   ROUND_STARTED: 'round_started',
   ROUND_ENDED: 'round_ended',
+  /* room events */
+  ROOM_HOST_REASSIGNED: 'room_host_reassigned',
   /* player events */
   PLAYER_CHANGED_NAME: 'player_changed_name',
   JOIN_ROOM: 'join_room',
   JOIN_ROOM_WITH_CODE: 'join_room_with_code',
   PLAYER_JOINED_ROOM: 'player_joined_room',
+  PLAYER_LEFT_ROOM: 'player_left_room',
   JOIN_GAME: 'join_game',
   PLAYER_JOINED: 'player_joined',
   PLAYER_WENT_ACTIVE: 'player_went_active',
@@ -169,8 +172,11 @@ export const GAME_HISTORY_EVENT_TYPES = new Set([
   EventTypes.GAME_ENDED,
   EventTypes.ROUND_STARTED,
   EventTypes.ROUND_ENDED,
+  /* room events */
+  EventTypes.ROOM_HOST_REASSIGNED,
   /* player events */
   EventTypes.PLAYER_CHANGED_NAME,
+  EventTypes.PLAYER_LEFT_ROOM,
   EventTypes.PLAYER_JOINED,
   EventTypes.PLAYER_STARTED_SPECTATING,
   EventTypes.PLAYER_STOPPED_SPECTATING,
@@ -197,6 +203,7 @@ export const Emoji = {
   EYE: '\uD83D\uDC41\uFE0F',
   HOURGLASS: '\u23F3',
   INTERROBANG: '\u2049\uFE0F',
+  MICROPHONE: '\uD83C\uDFA4',
   MONEY_WITH_WINGS: '\uD83D\uDCB8',
   NAME_BADGE: '\uD83D\uDCDB',
   PLAY_BUTTON: '\u25B6\uFE0F',
@@ -217,6 +224,7 @@ export const EMOJI_NAME_TO_EMOJI = {
   'eye': Emoji.EYE,
   'hourglass': Emoji.HOURGLASS,
   'interrobang': Emoji.INTERROBANG,
+  'microphone': Emoji.MICROPHONE,
   'money_with_wings': Emoji.MONEY_WITH_WINGS,
   'name_badge': Emoji.NAME_BADGE,
   'play_button': Emoji.PLAY_BUTTON,
