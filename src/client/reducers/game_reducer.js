@@ -413,13 +413,17 @@ function handleWebsocketEvent(storeData, event) {
 
 export function GameReducer(storeData, action) {
   switch (action.type) {
+    case ActionTypes.CREATE_NEW_ROOM:
     case ActionTypes.FETCH_ROOM:
       const room = action.payload;
       if (!room) {
-        console.log('Failed to fetch room.');
+        console.log(`Failed to ${action.type === ActionTypes.CREATE_NEW_ROOM ? 'create' : 'fetch'} room.`);
         return {...storeData, roomID: null, room: null};
       }
       if (room.error) {
+        if (room.status && room.status !== StatusCodes.INTERNAL_SERVER_ERROR) {
+          return {...storeData, errorContext: {...room, eventType: action.type}};
+        }
         return {...storeData, error: room.error};
       }
       return {...storeData, roomID: room.roomID, room: room};

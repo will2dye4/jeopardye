@@ -44,7 +44,7 @@ function mapStateToProps(state) {
   let players = {};
   let spectators = {};
   Object.entries(state.players).forEach(([playerID, player]) => {
-    if (player.active) {
+    if (player.active || playerID === state.playerID) {
       if (player.spectating) {
         spectators[playerID] = player;
       } else {

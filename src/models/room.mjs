@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import uuid from 'uuid';
 import { ROOM_CODE_LENGTH, PASSWORD_SALT_ROUNDS, ROOM_CODE_CHARACTERS } from '../constants.mjs';
 import { isSuperset } from '../utils.mjs';

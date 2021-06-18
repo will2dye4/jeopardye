@@ -35,12 +35,12 @@ function getJSON(response, errorMessage) {
     return response.json();
   }
   console.log(`${errorMessage}: ${response.status} ${response.statusText}`);
-  return {error: errorMessage};
+  return {error: errorMessage, status: response.status};
 }
 
 function handleError(error, errorMessage) {
   console.log(`${errorMessage}: ${error}`);
-  return {error: errorMessage};
+  return {error: errorMessage, status: StatusCodes.INTERNAL_SERVER_ERROR};
 }
 
 function getRoomByID(roomID) {
@@ -51,11 +51,12 @@ function getRoomByID(roomID) {
   );
 }
 
-function createRoom(playerID, password = null) {
+function createRoom(playerID, roomCode, password) {
   const opts = {
     body: JSON.stringify({
       ownerPlayerID: playerID,
-      password: password,
+      roomCode: roomCode || null,
+      password: password || null,
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -138,10 +139,10 @@ export function fetchRoom(roomID) {
   };
 }
 
-export function createNewRoom(playerID, password = null) {
+export function createNewRoom(playerID, roomCode = null, password = null) {
   return {
     type: ActionTypes.CREATE_NEW_ROOM,
-    payload: createRoom(playerID, password),
+    payload: createRoom(playerID, roomCode, password),
   };
 }
 

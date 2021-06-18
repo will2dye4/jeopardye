@@ -30,7 +30,11 @@ class Home extends React.Component {
   }
 
   openCreateRoomDialog() {
-    this.setState({showCreateRoomDialog: true});
+    if (this.props.playerID) {
+      this.setState({showCreateRoomDialog: true});
+    } else {
+      this.props.playerEditor.open(() => this.setState({showCreateRoomDialog: true}));
+    }
   }
 
   closeCreateRoomDialog() {

@@ -15,8 +15,9 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@chakra-ui/react';
-import { MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH } from '../../../constants.mjs';
+import { MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes } from '../../../constants.mjs';
 import { validateRoomCode } from '../../../models/room.mjs';
+import { ActionTypes } from '../../actions/action_creators';
 import JEOPARDYE_THEME from '../../theme';
 import Card from '../common/card/Card';
 import GridRow from '../common/GridRow';
@@ -35,6 +36,41 @@ class CreateRoomDialog extends React.Component {
     this.handleRoomCodeChanged = this.handleRoomCodeChanged.bind(this);
     this.handlePasswordChanged = this.handlePasswordChanged.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (!prevProps.errorContext && this.props.errorContext && this.props.errorContext.eventType === ActionTypes.CREATE_NEW_ROOM) {
+      this.handleError(this.props.errorContext.status);
+      this.props.clearError(this.props.errorContext);
+    }
+  }
+
+  handleError(status) {
+    let invalid = false;
+    let title;
+    switch (status) {
+      case StatusCodes.BAD_REQUEST:
+        title = `Invalid room code. Code must be exactly ${ROOM_CODE_LENGTH} letters and may not include I, O, or U.`;
+        invalid = true;
+        break;
+      case StatusCodes.CONFLICT:
+        title = `Room code ${this.state.roomCode} is already in use.`;
+        invalid = true;
+        break;
+      default:
+        title = 'Failed to create room.';
+        break;
+    }
+    this.setState({invalid: invalid});
+    if (!toast.isActive(title)) {
+      toast({
+        id: title,
+        position: 'top',
+        title: title,
+        status: 'error',
+        isClosable: true,
+      });
+    }
   }
 
   handleKeyUp(event) {
@@ -56,9 +92,9 @@ class CreateRoomDialog extends React.Component {
 
   handleSubmit() {
     if (validateRoomCode(this.state.roomCode)) {
-      /* TODO - create room */
+      this.props.createNewRoom(this.props.playerID, this.state.roomCode, this.state.password);
     } else {
-      this.setState({invalid: true});
+      this.handleError(StatusCodes.BAD_REQUEST);
     }
   }
 
@@ -70,11 +106,11 @@ class CreateRoomDialog extends React.Component {
           <ModalCloseButton />
           <ModalBody p={0}>
             <Card className="game-settings" px={10} py={6}>
-              <Heading textAlign="center">Create a New Room</Heading>
+              <Heading mb={5} textAlign="center">Create a New Room</Heading>
               <FormControl id="room-code" isInvalid={this.state.invalid}>
                 <GridRow cols={3} my={2}>
-                  <GridItem my={1} d="flex" alignItems="center">
-                    <FormLabel fontSize="lg" fontWeight="bold">Room Code</FormLabel>
+                  <GridItem my={1}>
+                    <FormLabel fontSize="lg" fontWeight="bold" mb={0}>Room Code</FormLabel>
                     <FormHelperText fontStyle="italic" mt={0}>{ROOM_CODE_LENGTH} letters</FormHelperText>
                   </GridItem>
                   <GridItem colSpan={2} d="flex" alignItems="center">
@@ -95,7 +131,6 @@ class CreateRoomDialog extends React.Component {
                   </GridItem>
                 </GridRow>
               </FormControl>
-              {/* TODO - confirm password input? */}
               <Flex justify="center" mt={8} mb={3}>
                 <Button colorScheme="jeopardyBlue" size="lg" w="75%" onClick={this.handleSubmit}>
                   Create Room
