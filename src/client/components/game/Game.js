@@ -259,15 +259,28 @@ class Game extends React.Component {
     } else if (this.props.game && prevProps.players !== this.props.players &&
       Object.keys(this.props.players).length < Object.keys(prevProps.players).length) {
       let leavingPlayers = [];
+      let spectatingPlayers = [];
       Object.entries(prevProps.players).forEach(([playerID, player]) => {
         if (playerID !== this.props.playerID && !this.props.players.hasOwnProperty(playerID)) {
-          leavingPlayers.push(player.name);
+          if (this.props.spectators.hasOwnProperty(playerID)) {
+            spectatingPlayers.push(player.name);
+          } else {
+            leavingPlayers.push(player.name);
+          }
         }
       });
       if (leavingPlayers.length) {
         toast({
           position: 'top',
           title: `${formatList(leavingPlayers)} left the game.`,
+          status: 'info',
+          isClosable: true,
+        });
+      }
+      if (spectatingPlayers.length) {
+        toast({
+          position: 'top',
+          title: `${formatList(spectatingPlayers)} started spectating.`,
           status: 'info',
           isClosable: true,
         });

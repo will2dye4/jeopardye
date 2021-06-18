@@ -128,6 +128,7 @@ export const EventTypes = {
   ROUND_STARTED: 'round_started',
   ROUND_ENDED: 'round_ended',
   /* room events */
+  REASSIGN_ROOM_HOST: 'reassign_room_host',
   ROOM_HOST_REASSIGNED: 'room_host_reassigned',
   /* player events */
   PLAYER_CHANGED_NAME: 'player_changed_name',
@@ -164,7 +165,7 @@ export const EventTypes = {
   WAITING_PERIOD_ENDED: 'waiting_period_ended',
   /* connection events */
   CLIENT_CONNECT: 'client_connect',
-}
+};
 
 export const GAME_HISTORY_EVENT_TYPES = new Set([
   /* game events */

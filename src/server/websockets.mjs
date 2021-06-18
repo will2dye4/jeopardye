@@ -278,6 +278,37 @@ async function handleClientConnect(ws, event) {
   }
 }
 
+async function handleReassignRoomHost(ws, event) {
+  const { roomID, newHostPlayerID } = event.payload;
+  if (!roomID) {
+    handleError(ws, event, 'missing room ID', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  if (!newHostPlayerID) {
+    handleError(ws, event, 'missing new host player ID', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  const room = await getRoom(roomID);
+  if (!room) {
+    handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  const player = await getPlayer(newHostPlayerID);
+  if (!player) {
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  if (!room.playerIDs.includes(newHostPlayerID) || player.currentRoomID !== roomID) {
+    handleError(ws, event, 'player not in room', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  if (room.hostPlayerID !== newHostPlayerID) {
+    await updateRoom(roomID, {hostPlayerID: newHostPlayerID});
+    logger.info(`Reassigning host for room ${roomID} to ${getPlayerName(newHostPlayerID)}.`);
+    broadcast(new WebsocketEvent(EventTypes.ROOM_HOST_REASSIGNED, event.payload));
+  }
+}
+
 async function joinRoom(player, room, ws) {
   if (player.currentRoomID !== room.roomID) {
     await updatePlayer(player.playerID, {currentRoomID: room.roomID});
@@ -819,7 +850,7 @@ async function handleVoteToSkipClue(ws, event) {
   voteToSkipActiveClue(gameID, playerID).then(() => {
     logger.info(`${getPlayerName(playerID)} voted to skip clue ${clueID} (category ${categoryID}).`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_VOTED_TO_SKIP_CLUE, event.payload));
-    const numPlayers = players.filter(player => !player.spectating).length;
+    const numPlayers = players.filter(player => player.active && !player.spectating).length;
     if (game.activeClue.playersVotingToSkip.length === numPlayers - 1) {
       logger.info(`Skipping clue ${clueID} (category ${categoryID}).`);
       updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
@@ -891,6 +922,7 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
 
 const eventHandlers = {
   [EventTypes.CLIENT_CONNECT]: handleClientConnect,
+  [EventTypes.REASSIGN_ROOM_HOST]: handleReassignRoomHost,
   [EventTypes.JOIN_ROOM]: handleJoinRoom,
   [EventTypes.JOIN_ROOM_WITH_CODE]: handleJoinRoomWithCode,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,

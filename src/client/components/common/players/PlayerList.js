@@ -9,12 +9,20 @@ function PlayerList(props) {
   const listType = (props.spectators ? 'Spectators' : 'Players');
   let players;
   if (currentPlayers.length) {
-    players = currentPlayers.map(player => <PlayerListItem key={player.playerID} player={player} edit={props.edit}
-                                                           isCurrentPlayer={player.playerID === props.currentPlayerID}
-                                                           isHost={player.playerID === props.room?.hostPlayerID}
-                                                           isChampion={player.playerID === props.room?.currentChampion}
-                                                           isSpectator={props.spectators}
-                                                           changeSpectatingStatus={props.changeSpectatingStatus} />);
+    players = currentPlayers.map(player => {
+      const playerProps = {
+        changeSpectatingStatus: props.changeSpectatingStatus,
+        changeHost: (playerID) => props.reassignRoomHost(props.room?.roomID, playerID),
+        edit: props.edit,
+        isChampion: (player.playerID === props.room?.currentChampion),
+        isCurrentPlayer: (player.playerID === props.currentPlayerID),
+        isHost: (player.playerID === props.room?.hostPlayerID),
+        isOwner: (player.playerID === props.room?.ownerPlayerID),
+        isSpectator: props.spectators,
+        player: player,
+      };
+      return <PlayerListItem key={player.playerID} {...playerProps} />;
+    });
   } else {
     players = <ListItem key="empty" className="list-group-item empty-list">No {listType}</ListItem>;
   }

@@ -241,6 +241,10 @@ export function joinRoomWithCode(playerID, roomCode, password) {
   return send(new WebsocketEvent(EventTypes.JOIN_ROOM_WITH_CODE, payload));
 }
 
+export function reassignRoomHost(roomID, newHostPlayerID) {
+  return send(new WebsocketEvent(EventTypes.REASSIGN_ROOM_HOST, {roomID, newHostPlayerID}));
+}
+
 export function markPlayerAsReadyForNextRound(context) {
   return send(new WebsocketEvent(EventTypes.MARK_READY_FOR_NEXT_ROUND, {context}));
 }
