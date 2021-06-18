@@ -3,6 +3,8 @@ import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react';
 import { DEFAULT_PLAYER_ID } from '../../../constants.mjs';
 import Card from '../common/card/Card';
 import LogoPage from '../common/LogoPage';
+import CreateRoomDialog from './CreateRoomDialog';
+import RequestLinkDialog from './RequestLinkDialog';
 import RoomCodeDialog from './RoomCodeDialog';
 
 class Home extends React.Component {
@@ -22,7 +24,7 @@ class Home extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.roomCode) {
+    if (this.props.roomCode && !this.props.roomID && !this.props.playerID) {
       this.props.playerEditor.open(() => this.setState({showRoomCodeDialog: true}));
     }
   }
@@ -80,6 +82,8 @@ class Home extends React.Component {
             </Flex>
           </Card>
         </Flex>
+        {this.state.showCreateRoomDialog && <CreateRoomDialog onClose={this.closeCreateRoomDialog} {...this.props} />}
+        {this.state.showRequestLinkDialog && <RequestLinkDialog onClose={this.closeRequestLinkDialog} {...this.props} />}
         {this.state.showRoomCodeDialog && <RoomCodeDialog onClose={this.closeRoomCodeDialog} {...this.props} />}
       </LogoPage>
     );

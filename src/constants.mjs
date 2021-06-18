@@ -203,6 +203,7 @@ export const Emoji = {
   QUESTION_MARK: '\u2753',
   SKIP_FORWARD: '\u23ED',
   TIMER_CLOCK: '\u23F2',
+  WINK: '\uD83D\uDE09',
 };
 
 export const EMOJI_NAME_TO_EMOJI = {
@@ -222,6 +223,7 @@ export const EMOJI_NAME_TO_EMOJI = {
   'question': Emoji.QUESTION_MARK,
   'skip_forward': Emoji.SKIP_FORWARD,
   'timer_clock': Emoji.TIMER_CLOCK,
+  'wink': Emoji.WINK,
 };
 
 export const StatusCodes = {

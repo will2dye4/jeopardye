@@ -1,6 +1,11 @@
 import bcrypt from 'bcrypt';
 import uuid from 'uuid';
-import { PASSWORD_SALT_ROUNDS } from '../constants.mjs';
+import { ROOM_CODE_LENGTH, PASSWORD_SALT_ROUNDS, ROOM_CODE_CHARACTERS } from '../constants.mjs';
+import { isSuperset } from '../utils.mjs';
+
+export function validateRoomCode(roomCode) {
+  return (!!roomCode && roomCode?.length === ROOM_CODE_LENGTH && isSuperset(new Set(ROOM_CODE_CHARACTERS), new Set(roomCode)));
+}
 
 export class Room {
   constructor(roomCode, ownerPlayerID, password) {

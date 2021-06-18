@@ -1,7 +1,7 @@
 import express from 'express';
 import log from 'log';
 import {MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes} from '../../constants.mjs';
-import { Room } from '../../models/room.mjs';
+import { Room, validateRoomCode } from '../../models/room.mjs';
 import {
   createRoom,
   generateUniqueRoomCode,
@@ -38,7 +38,21 @@ async function handleCreateRoom(req, res, next) {
     }
   }
 
-  const roomCode = await generateUniqueRoomCode();
+  let roomCode = req.body.roomCode?.toString().toUpperCase().trim();
+  if (roomCode) {
+    if (!validateRoomCode(roomCode)) {
+      handleError(`Invalid room code "${roomCode}"`, StatusCodes.BAD_REQUEST);
+      return;
+    }
+    const room = await getRoomByCode(roomCode);
+    if (room) {
+      handleError(`Room with code "${roomCode}" already exists`, StatusCodes.CONFLICT);
+      return;
+    }
+  } else {
+    roomCode = await generateUniqueRoomCode();
+  }
+
   const room = new Room(roomCode, ownerPlayerID, password);
   try {
     await createRoom(room);

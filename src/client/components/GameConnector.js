@@ -90,7 +90,7 @@ class Connector extends React.Component {
     super(props);
     this.state = {
       onPlayerEditorClose: null,
-      showPlayerEditor: (!!props.roomID && !props.playerID),
+      showPlayerEditor: false,
       showPlayerStats: false,
     };
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
