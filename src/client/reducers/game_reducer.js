@@ -6,7 +6,7 @@ import {
   StatusCodes,
 } from '../../constants.mjs';
 import { GameSettings } from '../../models/game.mjs';
-import { isDailyDouble } from '../../utils.mjs';
+import { getCurrentChampion, isDailyDouble } from '../../utils.mjs';
 
 let playerNames = {};
 
@@ -69,7 +69,10 @@ function handleNewGame(storeData, newGame) {
   if (newGame?.error) {
     return {...storeData, error: newGame.error, gameStarting: false};
   }
-  if (!newGame || newGame.gameID === storeData.game?.gameID) {
+  if (!newGame) {
+    return {...storeData, board: null, game: null, gameStarting: false, roundSummary: null};
+  }
+  if (newGame.gameID === storeData.game?.gameID) {
     return storeData;
   }
   const newBoard = newGame.rounds[newGame.currentRound];
@@ -78,8 +81,8 @@ function handleNewGame(storeData, newGame) {
     if (newPlayers.hasOwnProperty(playerID)) {
       newPlayers[playerID].score = score;
     } else {
-      /* TODO - fetch player from API? */
-      console.log(`Not updating score for unknown player ${playerID}.`);
+      /* this can happen if the current game is fetched before the PLAYER_WENT_ACTIVE event fires */
+      newPlayers[playerID] = {playerID, score};
     }
   });
   return {
@@ -131,9 +134,21 @@ function handleRoundStarted(storeData, event) {
 }
 
 function handleRoundEnded(storeData, event) {
-  const { round } = event.payload;
+  const { gameOver, places, round } = event.payload;
   console.log(`Reached the end of the ${round} round.`);
-  return {...storeData, roundSummary: event.payload};
+  const newStore = {...storeData, roundSummary: event.payload};
+  if (gameOver) {
+    let newRoom = {...storeData.room};
+    const currentChampion = getCurrentChampion(places);
+    if (currentChampion && currentChampion === storeData.room.currentChampion) {
+      newRoom.currentWinningStreak = storeData.room.currentWinningStreak + 1;
+    } else {
+      newRoom.currentChampion = currentChampion;
+      newRoom.currentWinningStreak = (currentChampion ? 1 : 0);
+    }
+    newStore.room = newRoom;
+  }
+  return newStore;
 }
 
 function handleRoomHostReassigned(storeData, event) {

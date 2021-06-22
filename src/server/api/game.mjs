@@ -126,7 +126,7 @@ async function handleCreateGame(req, res, next) {
     playerInControl = room.currentChampion;
   }
 
-  broadcast(new WebsocketEvent(EventTypes.GAME_STARTING, {}));
+  broadcast(new WebsocketEvent(EventTypes.GAME_STARTING, {roomID}));
 
   let rounds = {};
   for (const i of range(numRounds)) {
@@ -155,7 +155,7 @@ async function handleCreateGame(req, res, next) {
     Promise.all(game.playerIDs.map(playerID => incrementPlayerStat(playerID, GAMES_PLAYED_STAT)))
   ).then(() => {
     res.json(game);
-    broadcast(new WebsocketEvent(EventTypes.GAME_STARTED, {game}));
+    broadcast(new WebsocketEvent(EventTypes.GAME_STARTED, {roomID, game}));
     logger.info(`Created game ${game.gameID}.`);
   });
 }

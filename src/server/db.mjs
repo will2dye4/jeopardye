@@ -65,7 +65,7 @@ export async function updateRoom(roomID, newFields) {
   await updateRoomFields(roomID, {$set: newFields});
 }
 
-export async function setCurrentGameForRoom(room, gameID) {
+export async function setCurrentGameForRoom(room, gameID, currentChampion) {
   if (room.currentGameID !== gameID) {
     let updates = {
       $set: {
@@ -76,6 +76,14 @@ export async function setCurrentGameForRoom(room, gameID) {
       updates.$addToSet = {
         previousGameIDs: room.currentGameID,
       };
+    }
+    if (currentChampion !== undefined) {
+      if (currentChampion && currentChampion === room.currentChampion) {
+        updates.$set.currentWinningStreak = room.currentWinningStreak + 1;
+      } else {
+        updates.$set.currentChampion = currentChampion;
+        updates.$set.currentWinningStreak = (currentChampion ? 1 : 0);
+      }
     }
     await updateRoomFields(room.roomID, updates);
   }

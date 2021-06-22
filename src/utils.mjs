@@ -156,6 +156,11 @@ export function getPlaces(scores) {
   return places;
 }
 
+export function getCurrentChampion(places) {
+  const winners = places[Object.keys(places)[0]];
+  return (winners.length === 1 ? winners[0].playerID : null);
+}
+
 export function getWagerRange(currentRound, playerScore) {
   const defaultMax = DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS[currentRound];
   const maxWager = Math.max(playerScore, defaultMax);

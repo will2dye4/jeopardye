@@ -26,6 +26,7 @@ import {
   formatList,
   getClueReadingDelayInMillis,
   getCountdownTimeInMillis,
+  getCurrentChampion,
   getNextRound,
   getPlaces,
   getUnplayedClues,
@@ -190,20 +191,22 @@ function checkForLastClue(game) {
       const places = getCurrentPlaces(game, players);
       const roundSummary = {round: currentRound, places: places, gameOver: gameOver};
       if (gameOver) {
-        const winners = places[Object.keys(places)[0]].map(getPlayerName);
-        logger.info(`Game ${gameID} ended. ${formatList(winners)} ${winners.length === 1 ? 'won' : 'tied'}.`);
+        const winners = places[Object.keys(places)[0]];
+        const winnerNames = winners.map(player => player.name);
+        logger.info(`Game ${gameID} ended. ${formatList(winnerNames)} ${winners.length === 1 ? 'won' : 'tied'}.`);
         updateGame(gameID, {finishedTime: new Date(), roundSummary: roundSummary}).then(() =>
           getRoom(game.roomID)
-        ).then(room =>
-          setCurrentGameForRoom(room, null)
-        ).then(() => {
+        ).then(room => {
+          const currentChampion = getCurrentChampion(places);
+          return setCurrentGameForRoom(room, null, currentChampion);
+        }).then(() => {
           let playerUpdates = [];
           players.forEach(player => {
             const { playerID } = player;
             if (game.scores[playerID] > player.stats.highestGameScore) {
               playerUpdates.push(setHighestGameScore(playerID, game.scores[playerID]));
             }
-            if (winners.includes(playerID)) {
+            if (winners.find(player => player.playerID === playerID)) {
               playerUpdates.push(incrementPlayerStat(playerID, GAMES_WON_STAT));
             }
           });
@@ -905,7 +908,7 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
   markPlayerAsReadyForNextRound(gameID, playerID).then(() => {
     logger.info(`${getPlayerName(playerID)} is ready for the next round in game ${gameID}.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_MARKED_READY_FOR_NEXT_ROUND, event.payload));
-    const numPlayers = players.filter(player => !player.spectating).length;
+    const numPlayers = players.filter(player => player.active && !player.spectating).length;
     if (game.playersReadyForNextRound.length === numPlayers - 1) {
       const round = getNextRound(game);
       const places = getCurrentPlaces(game, players);

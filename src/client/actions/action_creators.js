@@ -161,15 +161,13 @@ export function fetchGame(gameID) {
         return game;
       }
       if (game.finishedTime !== null || !getUnplayedClues(game.rounds[game.currentRound]).length) {
-        console.log(`Previous game ${gameID} finished. Creating a new game...`);
-        return createNewGame();
+        console.log(`Previous game ${gameID} finished. Not reusing game.`);
+        return null;
       }
-      console.log(`Using previous game ${gameID}...`);
       return game;
     });
   } else {
-    console.log('No previous game found. Creating a new game...');
-    promise = createNewGame();
+    promise = null;
   }
   return {
     type: ActionTypes.FETCH_GAME,
