@@ -159,6 +159,8 @@ export const EventTypes = {
   PLAYER_MARKED_CLUE_AS_INVALID: 'player_marked_clue_as_invalid',
   VOTE_TO_SKIP_CLUE: 'vote_to_skip_clue',
   PLAYER_VOTED_TO_SKIP_CLUE: 'player_voted_to_skip_clue',
+  OVERRIDE_SERVER_DECISION: 'override_server_decision',
+  HOST_OVERRODE_SERVER_DECISION: 'host_overrode_server_decision',
   /* server timing events */
   BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
   RESPONSE_PERIOD_ENDED: 'response_period_ended',
@@ -188,6 +190,7 @@ export const GAME_HISTORY_EVENT_TYPES = new Set([
   EventTypes.PLAYER_WAGERED,
   EventTypes.PLAYER_MARKED_CLUE_AS_INVALID,
   EventTypes.PLAYER_VOTED_TO_SKIP_CLUE,
+  EventTypes.HOST_OVERRODE_SERVER_DECISION,
   /* server timing events */
   EventTypes.BUZZING_PERIOD_ENDED,
   EventTypes.RESPONSE_PERIOD_ENDED,
@@ -204,6 +207,7 @@ export const Emoji = {
   EYE: '\uD83D\uDC41\uFE0F',
   HOURGLASS: '\u23F3',
   INTERROBANG: '\u2049\uFE0F',
+  JUDGE: '\uD83E\uDDD1\u200D\u2696\uFE0F',
   MICROPHONE: '\uD83C\uDFA4',
   MONEY_WITH_WINGS: '\uD83D\uDCB8',
   NAME_BADGE: '\uD83D\uDCDB',
@@ -225,6 +229,7 @@ export const EMOJI_NAME_TO_EMOJI = {
   'eye': Emoji.EYE,
   'hourglass': Emoji.HOURGLASS,
   'interrobang': Emoji.INTERROBANG,
+  'judge': Emoji.JUDGE,
   'microphone': Emoji.MICROPHONE,
   'money_with_wings': Emoji.MONEY_WITH_WINGS,
   'name_badge': Emoji.NAME_BADGE,
@@ -241,6 +246,7 @@ export const StatusCodes = {
   /* client error codes */
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
   /* server error codes */

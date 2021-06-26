@@ -18,7 +18,7 @@ function GameHistoryEventAccordion(props) {
           <AccordionButton fontSize="lg" p={0} textAlign="left" _hover={{background: 'inherit'}} _focus={{outline: 'none'}}>
             <Flex w="100%">
               <GameHistoryEventDescription className="hover-pointer" description={props.heading} isAccordion={false}
-                                           showTimestamp={true} timestamp={props.timestamp} />
+                                           showTimestamp={true} timestamp={props.timestamp} button={props.button} />
               <Spacer />
               <AccordionIcon />
             </Flex>

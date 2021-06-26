@@ -30,6 +30,7 @@ import GameHistory from './history/GameHistory';
 import Podiums from './podium/Podiums';
 import RoundSummary from './summary/RoundSummary';
 import StatusBar from './status/StatusBar';
+import {getPlayerName} from "../../reducers/game_reducer";
 
 const DISMISS_CLUE_DELAY_MILLIS = 5000;
 const SHOW_CLUE_DELAY_MILLIS = 1000;
@@ -75,7 +76,7 @@ class Game extends React.Component {
           event.preventDefault();
           this.props.buzzIn(EventContext.fromProps(this.props));
         }
-      } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager && !spectating) {
+      } /*else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager && !spectating) {
         if (key === 's' && !this.props.playersVotingToSkipClue.includes(this.props.playerID)) {
           console.log('Voting to skip the current clue...');
           event.preventDefault();
@@ -95,7 +96,7 @@ class Game extends React.Component {
           event.preventDefault();
           this.props.playerStats.open();
         }
-      }
+      }*/
     }.bind(this));
   }
 
@@ -324,6 +325,26 @@ class Game extends React.Component {
           isClosable: true,
         });
       }
+    }
+
+    if (this.props.hostOverride && this.props.hostOverride !== prevProps.hostOverride) {
+      if (this.props.room?.hostPlayerID !== this.props.playerID) {
+        const { value } = this.props.hostOverride;
+        const { playerID } = this.props.hostOverride.context;
+        const hostName = (this.props.room ? getPlayerName(this.props.room.hostPlayerID) : 'Host');
+        const playerName = (playerID === this.props.playerID ? 'your' : `${getPlayerName(playerID)}'s`);
+        const toastID = `${playerName}-${value}`;
+        if (!toast.isActive(toastID)) {
+          toast({
+            id: toastID,
+            position: 'top',
+            title: `${hostName} overrode the server's decision on ${playerName} previous answer (+$${value.toLocaleString()}).`,
+            status: 'info',
+            isClosable: true,
+          });
+        }
+      }
+      this.props.clearHostOverride(this.props.hostOverride);
     }
 
     if (!prevProps.roundSummary && this.props.roundSummary) {

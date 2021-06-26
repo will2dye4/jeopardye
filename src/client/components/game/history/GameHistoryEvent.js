@@ -1,10 +1,12 @@
 import React from 'react';
 import moment from 'moment';
 import { Box, GridItem, HStack, ListItem, Text } from '@chakra-ui/react';
+import { faGavel } from '@fortawesome/free-solid-svg-icons';
 import { Emoji, EventTypes } from '../../../../constants.mjs';
 import { formatScore, isDailyDouble } from '../../../../utils.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
 import { formatElementList } from '../../../utils';
+import ActionIcon from '../../common/ActionIcon';
 import Bold from '../../common/Bold';
 import GridRow from '../../common/GridRow';
 import GameHistoryEventAccordion from './GameHistoryEventAccordion';
@@ -45,7 +47,8 @@ function getEventDescription(props) {
   const timestamp = getRelativeEventTime(event.timestamp);
   const playerID = event.payload.context?.playerID || event.payload.playerID;
   const playerName = (playerID === props.gameState.playerID ? 'You' : getPlayerName(playerID));
-  let dailyDouble, description, eventConfig, heading, emoji;
+  const futureEvents = props.eventHistory.slice(props.index + 1);
+  let dailyDouble, description, emoji, eventConfig, heading, name;
   switch (event.eventType) {
     case EventTypes.GAME_STARTED:
       eventConfig = {
@@ -105,7 +108,7 @@ function getEventDescription(props) {
       }
       break;
     case EventTypes.PLAYER_JOINED:
-      const name = (event.payload.player.playerID === props.gameState.playerID ? 'You' : event.payload.player.name);
+      name = (event.payload.player.playerID === props.gameState.playerID ? 'You' : event.payload.player.name);
       eventConfig = {
         description: <React.Fragment><PlayerName>{name}</PlayerName> joined the game.</React.Fragment>,
         emoji: Emoji.BUST_IN_SILHOUETTE,
@@ -122,7 +125,7 @@ function getEventDescription(props) {
       break;
     case EventTypes.PLAYER_SELECTED_CLUE:
       dailyDouble = (!!props.game && isDailyDouble(props.game.rounds[event.round], event.clue.clueID));
-      const showQuestion = (!dailyDouble || !!props.eventHistory.slice(props.index + 1).find(event => event.eventType === EventTypes.PLAYER_WAGERED));
+      const showQuestion = (!dailyDouble || !!futureEvents.find(event => event.eventType === EventTypes.PLAYER_WAGERED));
       heading = (
         <React.Fragment>
           <PlayerName>{playerName}</PlayerName> played <Bold>{event.clue.category}</Bold> for <Bold>${event.clue.value.toLocaleString()}</Bold>.
@@ -155,6 +158,40 @@ function getEventDescription(props) {
       const color = (correct ? 'green' : 'red');
       dailyDouble = (!!props.game && isDailyDouble(props.game.rounds[event.round], clue.clueID));
       const showAnswer = (dailyDouble && !correct);
+      let showOverride = false;
+      if (!correct) {
+        const answerRevealedPredicate = (e) => {
+          if (e.eventType === EventTypes.PLAYER_ANSWERED) {
+            const { categoryID, clueID } = e.payload.clue;
+            return (categoryID === clue.categoryID && clueID === clue.clueID && e.payload.correct);
+          }
+          if (e.eventType === EventTypes.BUZZING_PERIOD_ENDED) {
+            const { categoryID, clueID } = e.clue;
+            return (categoryID === clue.categoryID && clueID === clue.clueID);
+          }
+          return false;
+        };
+        const decisionOverriddenPredicate = (e) => {
+          if (e.eventType === EventTypes.HOST_OVERRODE_SERVER_DECISION) {
+            const { categoryID, clueID } = e.payload.clue;
+            return (categoryID === clue.categoryID && clueID === clue.clueID && e.payload.context.playerID === playerID);
+          }
+          return false;
+        };
+        showOverride = ((dailyDouble || !!futureEvents.find(answerRevealedPredicate)) && !futureEvents.find(decisionOverriddenPredicate));
+      }
+      let overrideButton = null;
+      if (showOverride) {
+        const onClick = (clickEvent) => {
+          clickEvent.preventDefault();
+          props.overrideServerDecision(event.payload.context, value);
+        };
+        overrideButton = (
+          <Text as="span" mx={2}>
+            <ActionIcon id="override-icon" icon={faGavel} title="Override" ml={2} onClick={onClick} />
+          </Text>
+        );
+      }
       heading = (
         <React.Fragment>
           <PlayerName>{playerName}</PlayerName> answered "{answer.trim()}" (<Text as="span" fontWeight="bold" textColor={color} whiteSpace="nowrap">{amount}</Text>).
@@ -162,7 +199,7 @@ function getEventDescription(props) {
       );
       if (showAnswer) {
         description = (
-          <GameHistoryEventAccordion heading={heading} timestamp={timestamp}>
+          <GameHistoryEventAccordion heading={heading} timestamp={timestamp} button={overrideButton}>
             <Bold>Answer:</Bold> {clue.answer}
           </GameHistoryEventAccordion>
         );
@@ -173,6 +210,7 @@ function getEventDescription(props) {
         description: description,
         emoji: (correct ? Emoji.CHECK_MARK : Emoji.CROSS_MARK),
         isAccordion: showAnswer,
+        button: (showAnswer ? null : overrideButton),
       };
       break;
     case EventTypes.PLAYER_WAGERED:
@@ -195,6 +233,15 @@ function getEventDescription(props) {
       eventConfig = {
         description: <React.Fragment><PlayerName>{playerName}</PlayerName> voted to skip the clue.</React.Fragment>,
         emoji: Emoji.SKIP_FORWARD,
+      };
+      break;
+    case EventTypes.HOST_OVERRODE_SERVER_DECISION:
+      const hostName = (props.room ? (props.room.hostPlayerID === props.gameState.playerID ? 'You' : getPlayerName(props.room.hostPlayerID)) : 'Host');
+      const suffix = (playerName === 'You' ? '' : `'s`);
+      name = (playerName === 'You' ? 'your' : playerName);
+      eventConfig = {
+        description: <React.Fragment><PlayerName>{hostName}</PlayerName> overrode the server's decision on <PlayerName>{name}</PlayerName>{suffix} previous answer (<Text as="span" fontWeight="bold" textColor="green" whiteSpace="nowrap">+${event.payload.value.toLocaleString()}</Text>).</React.Fragment>,
+        emoji: Emoji.JUDGE,
       };
       break;
     case EventTypes.BUZZING_PERIOD_ENDED:

@@ -451,35 +451,36 @@ async function handleJoinGame(ws, event) {
 }
 
 async function validateEventContext(ws, event) {
+  const errorResult = {game: null, room: null};
   const { roomID, gameID, playerID, categoryID, clueID } = event.payload.context;
   const room = await getRoom(roomID);
   if (!room) {
     handleError(ws, event, `room ${roomID} not found`, StatusCodes.NOT_FOUND);
-    return null;
+    return errorResult;
   }
   const game = await getGame(gameID);
   if (!game) {
     handleError(ws, event, `game ${gameID} not found`, StatusCodes.NOT_FOUND);
-    return null;
+    return errorResult;
   }
   if (room.currentGameID !== gameID || game.roomID !== roomID) {
     handleError(ws, event, `game ${gameID} is not active in room ${roomID}`, StatusCodes.BAD_REQUEST);
-    return;
+    return errorResult;
   }
   if (!game.playerIDs.includes(playerID)) {
     handleError(ws, event, `player ${playerID} not in game ${gameID}`, StatusCodes.BAD_REQUEST);
-    return null;
+    return errorResult;
   }
   const categories = game.rounds[game.currentRound].categories;
   if (!categories.hasOwnProperty(categoryID)) {
     handleError(ws, event, `invalid category ${categoryID}`, StatusCodes.BAD_REQUEST);
-    return null;
+    return errorResult;
   }
   if (!categories[categoryID].clues.find(clue => clue.clueID === clueID)) {
     handleError(ws, event, `invalid clue ${clueID} (category ${categoryID})`, StatusCodes.BAD_REQUEST);
-    return null;
+    return errorResult;
   }
-  return game;
+  return {game, room};
 }
 
 function setExpirationTimerForClue(gameID, clue, delayMillis = 0) {
@@ -573,7 +574,7 @@ function setTimerForActiveClue(game, clue, playerID) {
 }
 
 async function handleSelectClue(ws, event) {
-  const game = await validateEventContext(ws, event);
+  const { game } = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -604,7 +605,7 @@ async function handleSelectClue(ws, event) {
 }
 
 async function handleBuzzIn(ws, event) {
-  const game = await validateEventContext(ws, event);
+  const { game } = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -642,7 +643,7 @@ async function handleBuzzIn(ws, event) {
 }
 
 async function handleSubmitAnswer(ws, event) {
-  const game = await validateEventContext(ws, event);
+  const { game } = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -713,7 +714,7 @@ function submitWager(game, categoryID, clueID, playerID, wager) {
 }
 
 async function handleSubmitWager(ws, event) {
-  const game = await validateEventContext(ws, event);
+  const { game } = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -798,7 +799,7 @@ async function handleStopSpectating(ws, event) {
 }
 
 async function handleMarkClueAsInvalid(ws, event) {
-  const game = await validateEventContext(ws, event);
+  const { game } = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -822,7 +823,7 @@ async function handleMarkClueAsInvalid(ws, event) {
 }
 
 async function handleVoteToSkipClue(ws, event) {
-  const game = await validateEventContext(ws, event);
+  const { game } = await validateEventContext(ws, event);
   if (!game) {
     return;
   }
@@ -862,6 +863,42 @@ async function handleVoteToSkipClue(ws, event) {
         delete buzzTimers[gameID];
         checkForLastClue(game);
       });
+    }
+  });
+}
+
+async function handleOverrideServerDecision(ws, event) {
+  const { roomID, gameID, playerID, categoryID, clueID } = event.payload.context;
+  const value = event.payload.value;
+  const { game, room } = await validateEventContext(ws, event);
+  if (!game) {
+    return;
+  }
+  const hostWS = getClient(roomID, room.hostPlayerID);
+  if (!hostWS || ws !== hostWS) {
+    handleError(ws, event, 'only the host may override server decisions', StatusCodes.FORBIDDEN);
+    return;
+  }
+  const round = game.rounds[game.currentRound];
+  const clue = round.categories[categoryID].clues.find(clue => clue.clueID === clueID);
+  if (!clue.played) {
+    handleError(ws, event, 'clue has not been played', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  const dailyDouble = isDailyDouble(round, clueID);
+  if (!dailyDouble && value !== clue.value) {
+    handleError(ws, event, 'invalid clue value', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  const increment = value * 2;  /* double the value that was subtracted from the player's score so they get money for being right */
+  const score = game.scores[playerID] + increment;
+  updateGame(gameID, {[`scores.${playerID}`]: score}).then(() => incrementPlayerStat(playerID, OVERALL_SCORE_STAT, increment)).then(() => {
+    const name = getPlayerName(playerID);
+    logger.info(`Host overrode server's decision on ${name}'s previous answer (+$${increment.toLocaleString()}).`);
+    broadcast(new WebsocketEvent(EventTypes.HOST_OVERRODE_SERVER_DECISION, {...event.payload, clue: clue, value: increment, score: score}));
+    incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).then(() => logger.debug(`Incremented correct answer count for ${name}.`));
+    if (dailyDouble) {
+      incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).then(() => logger.debug(`Incremented correct daily double count for ${name}.`));
     }
   });
 }
@@ -938,6 +975,7 @@ const eventHandlers = {
   [EventTypes.STOP_SPECTATING]: handleStopSpectating,
   [EventTypes.MARK_CLUE_AS_INVALID]: handleMarkClueAsInvalid,
   [EventTypes.VOTE_TO_SKIP_CLUE]: handleVoteToSkipClue,
+  [EventTypes.OVERRIDE_SERVER_DECISION]: handleOverrideServerDecision,
   [EventTypes.MARK_READY_FOR_NEXT_ROUND]: handleMarkPlayerAsReadyForNextRound,
 }
 

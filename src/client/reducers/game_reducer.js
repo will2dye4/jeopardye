@@ -20,6 +20,7 @@ function newStoreData() {
     error: null,
     errorContext: null,
     eventHistory: [],
+    hostOverride: null,
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
     roomCode: null,
     roomID: null,
@@ -323,6 +324,16 @@ function handlePlayerVotedToSkipClue(storeData, event) {
   return {...storeData, playersVotingToSkipClue: storeData.playersVotingToSkipClue.concat(playerID)};
 }
 
+function handleHostOverrodeServerDecision(storeData, event) {
+  const { value, score } = event.payload;
+  const playerID = event.payload.context.playerID;
+  const name = getPlayerName(playerID);
+  console.log(`Host overrode server's decision on ${name}'s previous answer (+$${value.toLocaleString()}).`);
+  const newPlayer = {...storeData.players[playerID], score: score};
+  const newPlayers = {...storeData.players, [playerID]: newPlayer};
+  return {...storeData, hostOverride: event.payload, players: newPlayers};
+}
+
 function handlePlayerWentActive(storeData, event) {
   const { playerID, players } = event.payload;
   Object.entries(players).forEach(([playerID, player]) => {
@@ -423,6 +434,7 @@ const eventHandlers = {
   [EventTypes.PLAYER_WAGERED]: handlePlayerWagered,
   [EventTypes.PLAYER_MARKED_CLUE_AS_INVALID]: handlePlayerMarkedClueAsInvalid,
   [EventTypes.PLAYER_VOTED_TO_SKIP_CLUE]: handlePlayerVotedToSkipClue,
+  [EventTypes.HOST_OVERRODE_SERVER_DECISION]: handleHostOverrodeServerDecision,
   [EventTypes.PLAYER_STARTED_SPECTATING]: handlePlayerSpectatingStatusChanged(true),
   [EventTypes.PLAYER_STOPPED_SPECTATING]: handlePlayerSpectatingStatusChanged(false),
   [EventTypes.PLAYER_MARKED_READY_FOR_NEXT_ROUND]: handlePlayerMarkedReadyForNextRound,
@@ -516,6 +528,12 @@ export function GameReducer(storeData, action) {
       }
       if (storeData.errorContext === error) {
         return {...storeData, errorContext: null};
+      }
+      return storeData;
+    case ActionTypes.CLEAR_HOST_OVERRIDE:
+      const { override } = action.payload;
+      if (storeData.hostOverride === override) {
+        return {...storeData, hostOverride: null};
       }
       return storeData;
     case ActionTypes.REDUX_WEBSOCKET_OPEN:

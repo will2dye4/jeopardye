@@ -16,6 +16,7 @@ export const ActionTypes = {
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   CLEAR_CURRENT_GAME: 'JEOPARDYE::CLEAR_CURRENT_GAME',
   CLEAR_ERROR: 'JEOPARDYE::CLEAR_ERROR',
+  CLEAR_HOST_OVERRIDE: 'JEOPARDYE::CLEAR_HOST_OVERRIDE',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -275,6 +276,10 @@ export function voteToSkipClue(context) {
   return send(new WebsocketEvent(EventTypes.VOTE_TO_SKIP_CLUE, {context}));
 }
 
+export function overrideServerDecision(context, value) {
+  return send(new WebsocketEvent(EventTypes.OVERRIDE_SERVER_DECISION, {context, value}));
+}
+
 export function clientConnect(playerID, roomID = null) {
   return send(new WebsocketEvent(EventTypes.CLIENT_CONNECT, {playerID, roomID}));
 }
@@ -287,21 +292,28 @@ export function dismissActiveClue() {
   return {
     type: ActionTypes.DISMISS_CLUE,
     payload: {},
-  }
+  };
 }
 
 export function clearError(error) {
   return {
     type: ActionTypes.CLEAR_ERROR,
     payload: {error},
-  }
+  };
+}
+
+export function clearHostOverride(override) {
+  return {
+    type: ActionTypes.CLEAR_HOST_OVERRIDE,
+    payload: {override},
+  };
 }
 
 export function setRoomCode(roomCode) {
   return {
     type: ActionTypes.SET_ROOM_CODE,
     payload: {roomCode},
-  }
+  };
 }
 
 export function websocketConnect(url = WS_BASE) {
