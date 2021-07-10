@@ -450,7 +450,7 @@ async function handleJoinGame(ws, event) {
   });
 }
 
-async function validateEventContext(ws, event) {
+async function validateEventContext(ws, event, validateClue = true) {
   const errorResult = {game: null, room: null};
   const { roomID, gameID, playerID, categoryID, clueID } = event.payload.context;
   const room = await getRoom(roomID);
@@ -471,14 +471,16 @@ async function validateEventContext(ws, event) {
     handleError(ws, event, `player ${playerID} not in game ${gameID}`, StatusCodes.BAD_REQUEST);
     return errorResult;
   }
-  const categories = game.rounds[game.currentRound].categories;
-  if (!categories.hasOwnProperty(categoryID)) {
-    handleError(ws, event, `invalid category ${categoryID}`, StatusCodes.BAD_REQUEST);
-    return errorResult;
-  }
-  if (!categories[categoryID].clues.find(clue => clue.clueID === clueID)) {
-    handleError(ws, event, `invalid clue ${clueID} (category ${categoryID})`, StatusCodes.BAD_REQUEST);
-    return errorResult;
+  if (validateClue) {
+    const categories = game.rounds[game.currentRound].categories;
+    if (!categories.hasOwnProperty(categoryID)) {
+      handleError(ws, event, `invalid category ${categoryID}`, StatusCodes.BAD_REQUEST);
+      return errorResult;
+    }
+    if (!categories[categoryID].clues.find(clue => clue.clueID === clueID)) {
+      handleError(ws, event, `invalid clue ${clueID} (category ${categoryID})`, StatusCodes.BAD_REQUEST);
+      return errorResult;
+    }
   }
   return {game, room};
 }
@@ -903,6 +905,23 @@ async function handleOverrideServerDecision(ws, event) {
   });
 }
 
+async function handleAbandonGame(ws, event) {
+  const { roomID, gameID } = event.payload.context;
+  const { room } = await validateEventContext(ws, event, false);
+  if (!room) {
+    return;
+  }
+  const hostWS = getClient(roomID, room.hostPlayerID);
+  if (!hostWS || ws !== hostWS) {
+    handleError(ws, event, 'only the host may abandon games', StatusCodes.FORBIDDEN);
+    return;
+  }
+  setCurrentGameForRoom(room, null).then(() => {
+    logger.info(`Host abandoned game ${gameID}.`);
+    broadcast(new WebsocketEvent(EventTypes.HOST_ABANDONED_GAME, event.payload));
+  });
+}
+
 async function handleMarkPlayerAsReadyForNextRound(ws, event) {
   const { roomID, gameID, playerID } = event.payload.context;
   const room = await getRoom(roomID);
@@ -975,6 +994,7 @@ const eventHandlers = {
   [EventTypes.STOP_SPECTATING]: handleStopSpectating,
   [EventTypes.MARK_CLUE_AS_INVALID]: handleMarkClueAsInvalid,
   [EventTypes.VOTE_TO_SKIP_CLUE]: handleVoteToSkipClue,
+  [EventTypes.ABANDON_GAME]: handleAbandonGame,
   [EventTypes.OVERRIDE_SERVER_DECISION]: handleOverrideServerDecision,
   [EventTypes.MARK_READY_FOR_NEXT_ROUND]: handleMarkPlayerAsReadyForNextRound,
 }

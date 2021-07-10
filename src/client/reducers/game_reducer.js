@@ -324,6 +324,12 @@ function handlePlayerVotedToSkipClue(storeData, event) {
   return {...storeData, playersVotingToSkipClue: storeData.playersVotingToSkipClue.concat(playerID)};
 }
 
+function handleHostAbandonedGame(storeData, event) {
+  const gameID = event.payload.context.gameID;
+  console.log(`Host abandoned game ${gameID}.`);
+  return handleNewGame(storeData, null);
+}
+
 function handleHostOverrodeServerDecision(storeData, event) {
   const { value, score } = event.payload;
   const playerID = event.payload.context.playerID;
@@ -434,6 +440,7 @@ const eventHandlers = {
   [EventTypes.PLAYER_WAGERED]: handlePlayerWagered,
   [EventTypes.PLAYER_MARKED_CLUE_AS_INVALID]: handlePlayerMarkedClueAsInvalid,
   [EventTypes.PLAYER_VOTED_TO_SKIP_CLUE]: handlePlayerVotedToSkipClue,
+  [EventTypes.HOST_ABANDONED_GAME]: handleHostAbandonedGame,
   [EventTypes.HOST_OVERRODE_SERVER_DECISION]: handleHostOverrodeServerDecision,
   [EventTypes.PLAYER_STARTED_SPECTATING]: handlePlayerSpectatingStatusChanged(true),
   [EventTypes.PLAYER_STOPPED_SPECTATING]: handlePlayerSpectatingStatusChanged(false),

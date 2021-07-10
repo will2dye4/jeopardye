@@ -1,42 +1,72 @@
 import React from 'react';
 import { Flex, Text } from '@chakra-ui/react';
-import { faChartLine, faEye, faHistory, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faDoorOpen, faEye, faHistory, faPen, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { EventContext } from '../../../../utils.mjs';
 import Icon from '../../common/Icon';
 import Card from '../../common/card/Card';
+import ConfirmAbandonGameDialog from './ConfirmAbandonGameDialog';
 
 const CANNOT_SPECTATE_MESSAGE = 'You are not allowed to spectate right now.';
 
 function PodiumMenu(props) {
+  const [ isConfirmDialogOpen, setIsConfirmDialogOpen ] = React.useState(false);
+
   const handleSpectate = () => {
     if (props.allowSpectate) {
-      props.startSpectating(props.roomID, props.player.playerID);
+      props.startSpectating(props.gameState.roomID, props.player.playerID);
     }
   }
 
-  const menuItems = [
-    {
-      icon: faPen,
-      label: 'Settings',
-      onClick: props.playerEditor.open,
-    },
-    {
-      icon: faChartLine,
-      label: 'Statistics',
-      onClick: props.playerStats.open,
-    },
-    {
-      icon: faHistory,
-      label: 'History',
-      onClick: props.gameHistory.open,
-    },
-    {
-      icon: faEye,
-      disabled: !props.allowSpectate,
-      label: 'Spectate',
-      onClick: handleSpectate,
-      title: (props.allowSpectate ? null : CANNOT_SPECTATE_MESSAGE),
-    },
-  ];
+  const reassignRoomHost = () => props.reassignRoomHost(props.gameState.roomID, props.player.playerID);
+
+  let menuItems;
+  if (props.isCurrentPlayer) {
+    menuItems = [
+      {
+        icon: faPen,
+        label: 'Settings',
+        onClick: props.playerEditor.open,
+      },
+      {
+        icon: faChartLine,
+        label: 'Statistics',
+        onClick: props.playerStats.open,
+      },
+      {
+        icon: faHistory,
+        label: 'History',
+        onClick: props.gameHistory.open,
+      },
+      {
+        icon: faEye,
+        disabled: !props.allowSpectate,
+        label: 'Spectate',
+        onClick: handleSpectate,
+        title: (props.allowSpectate ? null : CANNOT_SPECTATE_MESSAGE),
+      },
+    ];
+    if (props.gameState.playerIsHost) {
+      menuItems.push({
+        icon: faDoorOpen,
+        label: 'End Game',
+        onClick: () => setIsConfirmDialogOpen(true),
+      });
+    } else if (props.gameState.playerIsOwner) {
+      menuItems.push({
+        icon: faUserTie,
+        label: 'Become Host',
+        onClick: reassignRoomHost,
+      });
+    }
+  } else if (props.gameState.playerIsHost) {
+    menuItems = [
+      {
+        icon: faUserTie,
+        label: 'Make Host',
+        onClick: reassignRoomHost,
+      },
+    ];
+  }
 
   return (
     <Card mb={0} boxShadow="dark-lg" className="popover-card">
@@ -59,6 +89,9 @@ function PodiumMenu(props) {
           );
         })}
       </ul>
+      <ConfirmAbandonGameDialog isOpen={isConfirmDialogOpen}
+                                onClose={() => setIsConfirmDialogOpen(false)}
+                                onConfirm={() => props.abandonGame(EventContext.fromProps(props))} />
     </Card>
   );
 }

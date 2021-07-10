@@ -276,6 +276,10 @@ export function voteToSkipClue(context) {
   return send(new WebsocketEvent(EventTypes.VOTE_TO_SKIP_CLUE, {context}));
 }
 
+export function abandonGame(context) {
+  return send(new WebsocketEvent(EventTypes.ABANDON_GAME, {context}));
+}
+
 export function overrideServerDecision(context, value) {
   return send(new WebsocketEvent(EventTypes.OVERRIDE_SERVER_DECISION, {context, value}));
 }
@@ -285,7 +289,7 @@ export function clientConnect(playerID, roomID = null) {
 }
 
 export function updateGameSettings(settings) {
-  return send(new WebsocketEvent(EventTypes.GAME_SETTINGS_CHANGED, {settings}));
+  return send(new WebsocketEvent(EventTypes.GAME_SETTINGS_CHANGED, {roomID: settings.roomID, settings: settings}));
 }
 
 export function dismissActiveClue() {

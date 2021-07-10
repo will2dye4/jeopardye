@@ -2,14 +2,17 @@ import React from 'react';
 import {
   Box,
   Flex,
+  HStack,
   Popover,
   PopoverArrow,
   PopoverBody,
   PopoverContent,
   PopoverTrigger,
 } from '@chakra-ui/react';
+import { faCrown, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import { DEFAULT_FONT_STYLE, MAX_PLAYER_NAME_LENGTH } from '../../../../constants.mjs';
 import { formatScore } from '../../../../utils.mjs';
+import Icon from '../../common/Icon';
 import PodiumMenu from './PodiumMenu';
 
 const FONT_SIZE_CLASSES = ['xs', 'sm', 'md', 'lg', 'xl'];
@@ -73,7 +76,7 @@ function getNameClasses(name, font, size) {
 function getPodiumElement(props) {
   const size = props.size || 'lg';
   let wrapperClasses = `podium podium-${size}`;
-  if (props.isCurrentPlayer) {
+  if (props.isCurrentPlayer || props.gameState.playerIsHost) {
     wrapperClasses += ' hover-pointer';
   }
   const score = formatScore(props.player.score);
@@ -87,6 +90,18 @@ function getPodiumElement(props) {
   if (props.active) {
     nameClasses += ' podium-name-active';
   }
+  let icons = null;
+  if (props.isHost || props.isChampion) {
+    const fontSize = (size === 'xs' || size === 'sm' ? 'sm' : 'md');
+    icons = (
+      <Box position="absolute" fontSize={fontSize} bottom={5}>
+        <HStack>
+          {props.isHost && <Icon id="host-icon" icon={faUserTie} title="Host" clickable={false} />}
+          {props.isChampion && <Icon id="champion-icon" icon={faCrown} title="Champion" clickable={false} />}
+        </HStack>
+      </Box>
+    );
+  }
   return (
     <Flex className={wrapperClasses} mb={3} mx={mx} textAlign="center" userSelect="none">
       <Box className="podium-left-side podium-side">
@@ -95,7 +110,10 @@ function getPodiumElement(props) {
       </Box>
       <Box className={`podium-center podium-center-${size}`}>
         <Box className={scoreClasses} py={2}>{score}</Box>
-        <Box className={nameClasses} borderRadius="md" fontFamily={fontStyle} m={2} py={2}>{props.player.name}</Box>
+        <Box className={nameClasses} borderRadius="md" fontFamily={fontStyle} m={2} py={2}>
+          {props.player.name}
+          {icons}
+        </Box>
       </Box>
       <Box className="podium-right-side podium-side">
         <Box className="podium-stripe" />
@@ -107,7 +125,7 @@ function getPodiumElement(props) {
 
 function Podium(props) {
   let podium = getPodiumElement(props);
-  if (!props.isCurrentPlayer) {
+  if (!props.isCurrentPlayer && !props.gameState.playerIsHost) {
     return podium;
   }
   return (

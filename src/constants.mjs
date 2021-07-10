@@ -159,6 +159,9 @@ export const EventTypes = {
   PLAYER_MARKED_CLUE_AS_INVALID: 'player_marked_clue_as_invalid',
   VOTE_TO_SKIP_CLUE: 'vote_to_skip_clue',
   PLAYER_VOTED_TO_SKIP_CLUE: 'player_voted_to_skip_clue',
+  /* host-only gameplay events */
+  ABANDON_GAME: 'abandon_game',
+  HOST_ABANDONED_GAME: 'host_abandoned_game',
   OVERRIDE_SERVER_DECISION: 'override_server_decision',
   HOST_OVERRODE_SERVER_DECISION: 'host_overrode_server_decision',
   /* server timing events */

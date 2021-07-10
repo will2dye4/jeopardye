@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-dom';
 import { createStandaloneToast } from '@chakra-ui/react';
 import {
+  abandonGame,
   buzzIn,
   changePlayerName,
   clearCurrentGame,
@@ -60,6 +61,7 @@ function mapStateToProps(state) {
 }
 
 const actionCreators = {
+  abandonGame,
   buzzIn,
   changePlayerName,
   clearCurrentGame,

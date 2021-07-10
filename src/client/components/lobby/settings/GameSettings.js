@@ -37,7 +37,7 @@ class GameSettings extends React.Component {
   }
 
   updateGameSettings(numRounds, dailyDoubles, finalJeopardye) {
-    this.props.updateGameSettings(new Settings(numRounds, dailyDoubles, finalJeopardye));
+    this.props.updateGameSettings(new Settings(this.props.roomID, numRounds, dailyDoubles, finalJeopardye));
   }
 
   onDailyDoublesChanged(event) {

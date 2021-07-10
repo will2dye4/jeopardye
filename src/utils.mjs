@@ -59,8 +59,8 @@ export class EventContext {
 
   static fromProps(props) {
     const roomID = props.gameState?.roomID || props.roomID;
-    const gameID = props.gameState?.gameID || props.game.gameID;
-    const playerID = props.gameState?.playerID || props.playerID;
+    const gameID = props.gameState?.gameID || props.game?.gameID || props.gameID;
+    const playerID = props.gameState?.playerID || props.player?.playerID || props.playerID;
     return new EventContext(roomID, gameID, playerID, props.activeClue?.categoryID, props.activeClue?.clueID);
   }
 

@@ -328,7 +328,7 @@ class Game extends React.Component {
     }
 
     if (this.props.hostOverride && this.props.hostOverride !== prevProps.hostOverride) {
-      if (this.props.room?.hostPlayerID !== this.props.playerID) {
+      if (!this.playerIsHost()) {
         const { value } = this.props.hostOverride;
         const { playerID } = this.props.hostOverride.context;
         const hostName = (this.props.room ? getPlayerName(this.props.room.hostPlayerID) : 'Host');
@@ -388,6 +388,10 @@ class Game extends React.Component {
       }
     }
     return false;
+  }
+
+  playerIsHost() {
+    return (!!this.props.playerID && !!this.props.room && this.props.playerID === this.props.room.hostPlayerID);
   }
 
   playerIsSpectating() {
@@ -652,6 +656,8 @@ class Game extends React.Component {
       playerID: this.props.playerID,
       playerScore: this.props.players[this.props.playerID]?.score || 0,
       playerHasControl: this.playerHasControl(),
+      playerIsHost: this.playerIsHost(),
+      playerIsOwner: (!!this.props.playerID && !!this.props.room && this.props.playerID === this.props.room.ownerPlayerID),
       playerIsSpectating: this.playerIsSpectating(),
     };
     return (

@@ -21,16 +21,22 @@ function Podiums(props) {
   const allowSpectate = (!props.gameState.playerIsSpectating && !props.gameState.playerHasControl && Object.keys(props.players).length > 1);
   const podiums = Object.values(props.players).map(player => {
     const isCurrentPlayer = (player.playerID === props.playerID);
+    const isHost = (player.playerID === props.room?.hostPlayerID);
+    const isChampion = (player.playerID === props.room?.currentChampion);
     const active = (player.playerID === props.playerAnswering);
     return <Podium key={player.playerID}
-                   roomID={props.gameState.roomID}
                    player={player}
+                   gameState={props.gameState}
                    gameHistory={props.gameHistory}
                    playerEditor={props.playerEditor}
                    playerStats={props.playerStats}
                    isCurrentPlayer={isCurrentPlayer}
+                   isHost={isHost}
+                   isChampion={isChampion}
                    allowSpectate={allowSpectate}
                    startSpectating={props.startSpectating}
+                   abandonGame={props.abandonGame}
+                   reassignRoomHost={props.reassignRoomHost}
                    active={active}
                    size={size} />;
   });
