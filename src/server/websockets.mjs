@@ -328,7 +328,11 @@ async function joinRoom(player, room, ws) {
   }
   const players = await getPlayers(room.playerIDs);
   let newPlayers = {};
-  players.forEach(player => newPlayers[player.playerID] = player);
+  players.forEach(player => {
+    if (player.currentRoomID === room.roomID) {
+      newPlayers[player.playerID] = player;
+    }
+  });
   broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED_ROOM, {roomID: room.roomID, playerID: player.playerID, players: newPlayers}));
 }
 
@@ -922,6 +926,47 @@ async function handleAbandonGame(ws, event) {
   });
 }
 
+function advanceRound(roomID, game, players) {
+  const round = getNextRound(game);
+  const places = getCurrentPlaces(game, players);
+  const placeKeys = Object.keys(places);
+  const lastPlacePlayers = places[placeKeys[placeKeys.length - 1]];
+  const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers)).playerID;
+  advanceToNextRound(game.gameID, round, playerInControl).then(() => {
+    logger.info(`Advanced to the ${round} round in game ${game.gameID}.`);
+    const payload = {roomID: roomID, gameID: game.gameID, round: round, playerInControl: playerInControl};
+    broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, payload));
+  });
+}
+
+async function handleAdvanceToNextRound(ws, event) {
+  const { game, room } = await validateEventContext(ws, event, false);
+  if (!game) {
+    return;
+  }
+  const hostWS = getClient(room.roomID, room.hostPlayerID);
+  if (!hostWS || ws !== hostWS) {
+    handleError(ws, event, 'only the host may advance rounds', StatusCodes.FORBIDDEN);
+    return;
+  }
+  if (getUnplayedClues(game.rounds[game.currentRound], 1).length) {
+    handleError(ws, event, 'current round is not over', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  if (!hasMoreRounds(game)) {
+    handleError(ws, event, 'game does not have more rounds', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  let players;
+  try {
+    players = await getPlayers(game.playerIDs);
+  } catch (e) {
+    handleError('failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
+    return;
+  }
+  advanceRound(room.roomID, game, players);
+}
+
 async function handleMarkPlayerAsReadyForNextRound(ws, event) {
   const { roomID, gameID, playerID } = event.payload.context;
   const room = await getRoom(roomID);
@@ -966,15 +1011,7 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
     broadcast(new WebsocketEvent(EventTypes.PLAYER_MARKED_READY_FOR_NEXT_ROUND, event.payload));
     const numPlayers = players.filter(player => player.active && !player.spectating).length;
     if (game.playersReadyForNextRound.length === numPlayers - 1) {
-      const round = getNextRound(game);
-      const places = getCurrentPlaces(game, players);
-      const placeKeys = Object.keys(places);
-      const lastPlacePlayers = places[placeKeys[placeKeys.length - 1]];
-      const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers)).playerID;
-      advanceToNextRound(gameID, round, playerInControl).then(() => {
-        logger.info(`Advanced to the ${round} round in game ${gameID}.`);
-        broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, {roomID, gameID, round, playerInControl: playerInControl}));
-      });
+      advanceRound(roomID, game, players);
     }
   });
 }
@@ -996,6 +1033,7 @@ const eventHandlers = {
   [EventTypes.VOTE_TO_SKIP_CLUE]: handleVoteToSkipClue,
   [EventTypes.ABANDON_GAME]: handleAbandonGame,
   [EventTypes.OVERRIDE_SERVER_DECISION]: handleOverrideServerDecision,
+  [EventTypes.ADVANCE_TO_NEXT_ROUND]: handleAdvanceToNextRound,
   [EventTypes.MARK_READY_FOR_NEXT_ROUND]: handleMarkPlayerAsReadyForNextRound,
 }
 

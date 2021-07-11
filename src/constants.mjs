@@ -164,6 +164,7 @@ export const EventTypes = {
   HOST_ABANDONED_GAME: 'host_abandoned_game',
   OVERRIDE_SERVER_DECISION: 'override_server_decision',
   HOST_OVERRODE_SERVER_DECISION: 'host_overrode_server_decision',
+  ADVANCE_TO_NEXT_ROUND: 'advance_to_next_round',
   /* server timing events */
   BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
   RESPONSE_PERIOD_ENDED: 'response_period_ended',

@@ -92,9 +92,8 @@ function getPodiumElement(props) {
   }
   let icons = null;
   if (props.isHost || props.isChampion) {
-    const fontSize = (size === 'xs' || size === 'sm' ? 'sm' : 'md');
     icons = (
-      <Box position="absolute" fontSize={fontSize} bottom={5}>
+      <Box position="absolute" fontSize="sm" bottom={5} pb={1}>
         <HStack>
           {props.isHost && <Icon id="host-icon" icon={faUserTie} title="Host" clickable={false} />}
           {props.isChampion && <Icon id="champion-icon" icon={faCrown} title="Champion" clickable={false} />}

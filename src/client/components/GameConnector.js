@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-d
 import { createStandaloneToast } from '@chakra-ui/react';
 import {
   abandonGame,
+  advanceToNextRound,
   buzzIn,
   changePlayerName,
   clearCurrentGame,
@@ -62,6 +63,7 @@ function mapStateToProps(state) {
 
 const actionCreators = {
   abandonGame,
+  advanceToNextRound,
   buzzIn,
   changePlayerName,
   clearCurrentGame,

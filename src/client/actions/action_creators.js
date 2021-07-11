@@ -244,6 +244,10 @@ export function reassignRoomHost(roomID, newHostPlayerID) {
   return send(new WebsocketEvent(EventTypes.REASSIGN_ROOM_HOST, {roomID, newHostPlayerID}));
 }
 
+export function advanceToNextRound(context) {
+  return send(new WebsocketEvent(EventTypes.ADVANCE_TO_NEXT_ROUND, {context}));
+}
+
 export function markPlayerAsReadyForNextRound(context) {
   return send(new WebsocketEvent(EventTypes.MARK_READY_FOR_NEXT_ROUND, {context}));
 }
