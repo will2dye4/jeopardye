@@ -15,7 +15,7 @@ export class Room {
     this.ownerPlayerID = ownerPlayerID;
     this.hostPlayerID = ownerPlayerID;
     this.playerIDs = [ownerPlayerID];
-    this.kickedPlayerIDs = [];
+    this.kickedPlayerIDs = {};
     this.currentGameID = null;
     this.currentChampion = null;
     this.currentWinningStreak = 0;

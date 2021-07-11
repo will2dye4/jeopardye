@@ -6,6 +6,7 @@ import {
   DAILY_DOUBLE_MINIMUM_WAGER,
   DEFAULT_COUNTDOWN_SECONDS,
   EventTypes,
+  MAX_KICK_DURATION_SECONDS,
   MAX_PLAYERS_PER_GAME,
   StatusCodes,
   WAGER_COUNTDOWN_SECONDS,
@@ -48,6 +49,7 @@ import {
   incrementPlayerStat,
   markActiveClueAsInvalid,
   markPlayerAsReadyForNextRound,
+  removePlayerFromKickedPlayersInRoom,
   setActiveClue,
   setCurrentGameForRoom,
   setHighestGameScore,
@@ -242,6 +244,15 @@ async function handleClientConnect(ws, event) {
       handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
       return;
     }
+    if (room.kickedPlayerIDs.hasOwnProperty(playerID)) {
+      const expiration = room.kickedPlayerIDs[playerID];
+      if (Date.now() < expiration) {
+        handleError(ws, event, 'player was kicked from room', StatusCodes.CONFLICT);
+        return;
+      }
+      logger.info(`Removing ${getPlayerName(playerID)} from kicked players.`);
+      await removePlayerFromKickedPlayersInRoom(roomID, playerID);
+    }
   } else {
     roomID = NO_ROOM_KEY;
   }
@@ -276,7 +287,11 @@ async function handleClientConnect(ws, event) {
   if (room) {
     const players = await getPlayers(room.playerIDs);
     let newPlayers = {};
-    players.forEach(player => newPlayers[player.playerID] = player);
+    players.forEach(player => {
+      if (player.currentRoomID === room.roomID) {
+        newPlayers[player.playerID] = player;
+      }
+    });
     broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {roomID: room.roomID, playerID: playerID, players: newPlayers}));
   }
 }
@@ -312,10 +327,21 @@ async function handleReassignRoomHost(ws, event) {
   }
 }
 
-async function joinRoom(player, room, ws) {
+async function joinRoom(player, room, ws, event) {
+  if (room.kickedPlayerIDs.hasOwnProperty(player.playerID)) {
+    const expiration = room.kickedPlayerIDs[player.playerID];
+    if (Date.now() < expiration) {
+      handleError(ws, event, 'player was kicked from room', StatusCodes.CONFLICT);
+      return;
+    }
+    logger.info(`Removing ${getPlayerName(player.playerID)} from kicked players.`);
+    await removePlayerFromKickedPlayersInRoom(room.roomID, player.playerID);
+  }
   if (player.currentRoomID !== room.roomID) {
     await updatePlayer(player.playerID, {currentRoomID: room.roomID});
-    await removePlayerFromRoom(player);
+    if (player.currentRoomID) {
+      await removePlayerFromRoom(player);
+    }
   }
   if (!room.playerIDs.includes(player.playerID)) {
     room.playerIDs.push(player.playerID);
@@ -361,7 +387,7 @@ async function handleJoinRoom(ws, event) {
     handleError(ws, event, 'player not in room', StatusCodes.BAD_REQUEST);
     return;
   }
-  await joinRoom(player, room, ws);
+  await joinRoom(player, room, ws, event);
 }
 
 async function handleJoinRoomWithCode(ws, event) {
@@ -388,7 +414,7 @@ async function handleJoinRoomWithCode(ws, event) {
     handleError(ws, event, 'invalid password', StatusCodes.UNAUTHORIZED);
     return;
   }
-  await joinRoom(player, room, ws);
+  await joinRoom(player, room, ws, event);
 }
 
 async function handleGameSettingsChanged(ws, event) {
@@ -926,6 +952,49 @@ async function handleAbandonGame(ws, event) {
   });
 }
 
+async function handleKickPlayer(ws, event) {
+  const { roomID, playerID, duration } = event.payload;
+  const room = await getRoom(roomID);
+  if (!room) {
+    handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  const player = await getPlayer(playerID);
+  if (!player) {
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  const hostWS = getClient(roomID, room.hostPlayerID);
+  if (!hostWS || ws !== hostWS) {
+    handleError(ws, event, 'only the host may kick players', StatusCodes.FORBIDDEN);
+    return;
+  }
+  if (!room.playerIDs.includes(playerID) || player.currentRoomID !== roomID) {
+    handleError(ws, event, 'player not in room', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  if (room.kickedPlayerIDs.hasOwnProperty(playerID)) {
+    handleError(ws, event, 'player already kicked from room', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  let expiration = null;
+  if (duration !== null) {
+    let durationInSeconds = parseInt(duration);
+    if (isNaN(durationInSeconds) || durationInSeconds <= 0 || durationInSeconds > MAX_KICK_DURATION_SECONDS) {
+      handleError(ws, event, 'invalid duration', StatusCodes.BAD_REQUEST);
+      return;
+    }
+    expiration = Date.now() + (durationInSeconds * 1000);
+  }
+  updateRoom(roomID, {[`kickedPlayerIDs.${playerID}`]: expiration}).then(() => updatePlayer(playerID, {currentRoomID: null})).then(() => {
+    logger.info(`Host kicked ${getPlayerName(playerID)} ${expiration === null ? 'indefinitely' : 'until ' + new Date(expiration).toLocaleString()}.`);
+    /* NOTE: order matters here - need to broadcast before removing the player's websocket from the room */
+    broadcast(new WebsocketEvent(EventTypes.HOST_KICKED_PLAYER, event.payload));
+    removeClient(roomID, playerID);
+    addClient(NO_ROOM_KEY, playerID);
+  });
+}
+
 function advanceRound(roomID, game, players) {
   const round = getNextRound(game);
   const places = getCurrentPlaces(game, players);
@@ -1032,6 +1101,7 @@ const eventHandlers = {
   [EventTypes.MARK_CLUE_AS_INVALID]: handleMarkClueAsInvalid,
   [EventTypes.VOTE_TO_SKIP_CLUE]: handleVoteToSkipClue,
   [EventTypes.ABANDON_GAME]: handleAbandonGame,
+  [EventTypes.KICK_PLAYER]: handleKickPlayer,
   [EventTypes.OVERRIDE_SERVER_DECISION]: handleOverrideServerDecision,
   [EventTypes.ADVANCE_TO_NEXT_ROUND]: handleAdvanceToNextRound,
   [EventTypes.MARK_READY_FOR_NEXT_ROUND]: handleMarkPlayerAsReadyForNextRound,

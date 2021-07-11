@@ -15,7 +15,6 @@ function Room(props) {
     console.log(`Fetching room ${roomCode}`);
     props.fetchRoom(roomCode);
   }
-  props.setRoomCode(roomCode);
   return <Redirect to="/" />;
 }
 

@@ -14,7 +14,7 @@ function PlayerListItem(props) {
           {props.isChampion && <Text as="span" color="jeopardyYellow.500" ml={3}><Icon id="champion-icon" icon={faCrown} title="Champion" clickable={false} /></Text>}
         </Text>
         <Spacer minW={10} />
-        {props.isCurrentPlayer && <PlayerListItemIcons {...props} />}
+        {(props.isCurrentPlayer || props.currentPlayerIsHost) && <PlayerListItemIcons {...props} />}
       </Flex>
     </ListItem>
   );

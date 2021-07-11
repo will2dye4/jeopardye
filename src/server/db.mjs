@@ -101,6 +101,10 @@ export async function removePlayerFromRoom(roomID, playerID, newHostPlayerID) {
   await updateRoomFields(roomID, updates);
 }
 
+export async function removePlayerFromKickedPlayersInRoom(roomID, playerID) {
+  await updateRoomFields(roomID, {$unset: {[`kickedPlayerIDs.${playerID}`]: ''}});
+}
+
 export async function createGame(game) {
   if (!game.gameID) {
     game.gameID = uuid.v4();

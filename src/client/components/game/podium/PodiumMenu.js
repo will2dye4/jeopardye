@@ -1,6 +1,6 @@
 import React from 'react';
 import { Flex, Text } from '@chakra-ui/react';
-import { faChartLine, faDoorOpen, faEye, faHistory, faPen, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faDoorOpen, faEye, faHistory, faPen, faSignOutAlt, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import { EventContext } from '../../../../utils.mjs';
 import Icon from '../../common/Icon';
 import Card from '../../common/card/Card';
@@ -18,6 +18,7 @@ function PodiumMenu(props) {
   }
 
   const reassignRoomHost = () => props.reassignRoomHost(props.gameState.roomID, props.player.playerID);
+  const kickPlayer = () => props.kickPlayer(props.gameState.roomID, props.player.playerID, 60);  /* TODO - pass in duration */
 
   let menuItems;
   if (props.isCurrentPlayer) {
@@ -64,6 +65,11 @@ function PodiumMenu(props) {
         icon: faUserTie,
         label: 'Make Host',
         onClick: reassignRoomHost,
+      },
+      {
+        icon: faSignOutAlt,
+        label: 'Kick',
+        onClick: kickPlayer,
       },
     ];
   }

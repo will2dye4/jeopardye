@@ -5,7 +5,6 @@ import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 export const ActionTypes = {
   FETCH_ROOM: 'JEOPARDYE::FETCH_ROOM',
   CREATE_NEW_ROOM: 'JEOPARDYE::CREATE_NEW_ROOM',
-  SET_ROOM_CODE: 'JEOPARDYE::SET_ROOM_CODE',
   FETCH_CURRENT_GAME: 'JEOPARDYE::FETCH_CURRENT_GAME',
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   FETCH_NEW_GAME: 'JEOPARDYE::FETCH_NEW_GAME',
@@ -284,6 +283,10 @@ export function abandonGame(context) {
   return send(new WebsocketEvent(EventTypes.ABANDON_GAME, {context}));
 }
 
+export function kickPlayer(roomID, playerID, duration) {
+  return send(new WebsocketEvent(EventTypes.KICK_PLAYER, {roomID, playerID, duration}));
+}
+
 export function overrideServerDecision(context, value) {
   return send(new WebsocketEvent(EventTypes.OVERRIDE_SERVER_DECISION, {context, value}));
 }
@@ -314,13 +317,6 @@ export function clearHostOverride(override) {
   return {
     type: ActionTypes.CLEAR_HOST_OVERRIDE,
     payload: {override},
-  };
-}
-
-export function setRoomCode(roomCode) {
-  return {
-    type: ActionTypes.SET_ROOM_CODE,
-    payload: {roomCode},
   };
 }
 

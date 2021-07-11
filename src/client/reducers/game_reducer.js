@@ -330,6 +330,18 @@ function handleHostAbandonedGame(storeData, event) {
   return handleNewGame(storeData, null);
 }
 
+function handleHostKickedPlayer(storeData, event) {
+  const { playerID } = event.payload;
+  if (playerID === storeData.playerID) {
+    const newPlayer = {...storeData.players[playerID], currentRoomID: null};
+    return {...newStoreData(), connected: true, players: {playerID: newPlayer}};
+  }
+  console.log(`Host kicked ${getPlayerName(playerID)}.`);
+  const newPlayer = {...storeData.players[playerID], active: false};
+  const newPlayers = {...storeData.players, [playerID]: newPlayer};
+  return {...storeData, players: newPlayers};
+}
+
 function handleHostOverrodeServerDecision(storeData, event) {
   const { value, score } = event.payload;
   const playerID = event.payload.context.playerID;
@@ -441,6 +453,7 @@ const eventHandlers = {
   [EventTypes.PLAYER_MARKED_CLUE_AS_INVALID]: handlePlayerMarkedClueAsInvalid,
   [EventTypes.PLAYER_VOTED_TO_SKIP_CLUE]: handlePlayerVotedToSkipClue,
   [EventTypes.HOST_ABANDONED_GAME]: handleHostAbandonedGame,
+  [EventTypes.HOST_KICKED_PLAYER]: handleHostKickedPlayer,
   [EventTypes.HOST_OVERRODE_SERVER_DECISION]: handleHostOverrodeServerDecision,
   [EventTypes.PLAYER_STARTED_SPECTATING]: handlePlayerSpectatingStatusChanged(true),
   [EventTypes.PLAYER_STOPPED_SPECTATING]: handlePlayerSpectatingStatusChanged(false),
@@ -490,12 +503,13 @@ export function GameReducer(storeData, action) {
         }
         return {...storeData, error: room.error};
       }
+      if (room.kickedPlayerIDs.hasOwnProperty(storeData.playerID)) {
+        return {...storeData, error: 'Failed to join room.', roomID: null, room: null};
+      }
       if (room.playerIDs.includes(storeData.playerID)) {
         return {...storeData, roomID: room.roomID, room: room};
       }
-      return storeData;
-    case ActionTypes.SET_ROOM_CODE:
-      return {...storeData, roomCode: action.payload.roomCode};
+      return {...storeData, roomID: room.roomID};
     case ActionTypes.FETCH_CURRENT_GAME:
     case ActionTypes.FETCH_GAME:
     case ActionTypes.FETCH_NEW_GAME:

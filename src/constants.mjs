@@ -118,6 +118,8 @@ export const PASSWORD_SALT_ROUNDS = 10;
 export const ROOM_CODE_LENGTH = 4;
 export const ROOM_CODE_CHARACTERS = 'ABCDEFGHJKLMNPQRSTVWXYZ';
 
+export const MAX_KICK_DURATION_SECONDS = 30 * 24 * 60 * 60;  /* 30 days */
+
 export const EventTypes = {
   ERROR: 'error',
   /* game events */
@@ -162,6 +164,8 @@ export const EventTypes = {
   /* host-only gameplay events */
   ABANDON_GAME: 'abandon_game',
   HOST_ABANDONED_GAME: 'host_abandoned_game',
+  KICK_PLAYER: 'kick_player',
+  HOST_KICKED_PLAYER: 'host_kicked_player',
   OVERRIDE_SERVER_DECISION: 'override_server_decision',
   HOST_OVERRODE_SERVER_DECISION: 'host_overrode_server_decision',
   ADVANCE_TO_NEXT_ROUND: 'advance_to_next_round',

@@ -12,13 +12,15 @@ function PlayerList(props) {
     players = currentPlayers.map(player => {
       const playerProps = {
         changeSpectatingStatus: props.changeSpectatingStatus,
-        changeHost: (playerID) => props.reassignRoomHost(props.room?.roomID, playerID),
+        changeHost: () => props.reassignRoomHost(props.room?.roomID, player.playerID),
+        currentPlayerIsHost: (props.currentPlayerID === props.room?.hostPlayerID),
         edit: props.edit,
         isChampion: (player.playerID === props.room?.currentChampion),
         isCurrentPlayer: (player.playerID === props.currentPlayerID),
         isHost: (player.playerID === props.room?.hostPlayerID),
         isOwner: (player.playerID === props.room?.ownerPlayerID),
         isSpectator: props.spectators,
+        kickPlayer: () => props.kickPlayer(props.room?.roomID, player.playerID, 60),  /* TODO - pass in duration */
         player: player,
       };
       return <PlayerListItem key={player.playerID} {...playerProps} />;

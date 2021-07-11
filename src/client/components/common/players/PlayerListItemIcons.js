@@ -1,6 +1,6 @@
 import React from 'react';
 import { HStack } from '@chakra-ui/react';
-import { faEye, faPen, faUserPlus, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faPen, faUserPlus, faSignOutAlt, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import ActionIcon from '../ActionIcon';
 
 function getClaimHostIcon(props) {
@@ -8,10 +8,10 @@ function getClaimHostIcon(props) {
     return null;
   }
   const iconProps = {
-    id: 'change-host-icon',
+    id: 'become-host-icon',
     icon: faUserTie,
     title: 'Become host',
-    onClick: () => props.changeHost(props.player.playerID),
+    onClick: props.changeHost,
   };
   return <ActionIcon {...iconProps} />;
 }
@@ -38,13 +38,24 @@ function getSpectatingStateIcon(props) {
 }
 
 function PlayerListItemIcons(props) {
-  return (
-    <HStack spacing="15px">
-      {getClaimHostIcon(props)}
-      {getSpectatingStateIcon(props)}
-      <ActionIcon id="edit-player" icon={faPen} title="Edit" onClick={props.edit} />
-    </HStack>
-  );
+  if (props.isCurrentPlayer) {
+    return (
+      <HStack spacing="15px">
+        {getClaimHostIcon(props)}
+        {getSpectatingStateIcon(props)}
+        <ActionIcon id="edit-player" icon={faPen} title="Edit" onClick={props.edit} />
+      </HStack>
+    );
+  }
+  if (props.currentPlayerIsHost) {
+    return (
+      <HStack spacing="15px">
+        <ActionIcon id="make-host-icon" icon={faUserTie} title="Make host" onClick={props.changeHost} />
+        <ActionIcon id="kick-icon" icon={faSignOutAlt} title="Kick" onClick={props.kickPlayer} />
+      </HStack>
+    );
+  }
+  return null;
 }
 
 export default PlayerListItemIcons;
