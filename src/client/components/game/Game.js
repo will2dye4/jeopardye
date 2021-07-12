@@ -35,6 +35,8 @@ import {getPlayerName} from "../../reducers/game_reducer";
 const DISMISS_CLUE_DELAY_MILLIS = 5000;
 const SHOW_CLUE_DELAY_MILLIS = 1000;
 
+const LOADING_STATUS = 'Loading...';
+
 const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
 class Game extends React.Component {
@@ -257,7 +259,7 @@ class Game extends React.Component {
           isClosable: true,
         });
       }
-      if (Object.keys(this.props.players).length === this.props.game.playerIDs.length && this.state.status.text === 'Loading...') {
+      if (this.state.status.text === LOADING_STATUS && this.props.players.hasOwnProperty(this.props.playerInControl)) {
         this.setStatus(this.getInitialStatus());
       }
     } else if (this.props.game && prevProps.players !== this.props.players &&
@@ -423,10 +425,10 @@ class Game extends React.Component {
     }
     let appearance = 'default';
     let status;
-     if (props.roundSummary) {
+    if (props.roundSummary) {
       status = getEndOfRoundMessage(false, false, props.roundSummary.round, props.roundSummary.gameOver);
-    } else if (Object.keys(props.players).length < props.game.playerIDs.length) {
-      status = 'Loading...';
+    } else if (!props.players.hasOwnProperty(props.playerInControl)) {
+      status = LOADING_STATUS;
     } else {
       const isNewRound = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
       const playerHasControl = this.playerHasControl();

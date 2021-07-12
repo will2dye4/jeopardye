@@ -19,7 +19,6 @@ import {
   GAMES_PLAYED_STAT,
   GAMES_WON_STAT,
   OVERALL_SCORE_STAT,
-  GamePlayer,
 } from '../models/player.mjs';
 import {
   checkSubmittedAnswer,
@@ -469,11 +468,10 @@ async function handleJoinGame(ws, event) {
       return;
     }
   }
-  const gamePlayer = GamePlayer.fromPlayer(player, game.scores[playerID]);
   addPlayerToGame(gameID, playerID).then(() => {
     logger.info(`${player.name} joined game ${gameID}.`);
     addClient(roomID, playerID, ws);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {roomID: roomID, player: gamePlayer}));
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {roomID: roomID, player: {...player, score: game.scores[playerID]}}));
     if (!game.playerIDs.includes(playerID)) {
       incrementPlayerStat(playerID, GAMES_PLAYED_STAT).then(() => logger.debug(`Incremented games played for ${playerID}.`));
     }

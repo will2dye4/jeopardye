@@ -13,11 +13,11 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { faChartLine, faDoorOpen, faEye, faHistory } from '@fortawesome/free-solid-svg-icons';
+import { EventContext } from '../../../../utils.mjs';
 import ActionIcon from '../../common/ActionIcon';
 import Icon from '../../common/Icon';
 import PlayerList from '../../common/players/PlayerList';
-import {EventContext} from "../../../../utils.mjs";
-import ConfirmAbandonGameDialog from "./ConfirmAbandonGameDialog";
+import ConfirmAbandonGameDialog from './ConfirmAbandonGameDialog';
 
 function SpectatorsMenu(props) {
   const [ isConfirmDialogOpen, setIsConfirmDialogOpen ] = React.useState(false);

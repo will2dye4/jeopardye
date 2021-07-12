@@ -39,18 +39,3 @@ export class Player {
     this.stats = new PlayerStatistics();
   }
 }
-
-export class GamePlayer {
-  static fromPlayer(player, score) {
-    return new GamePlayer(player.playerID, player.name, player.preferredFontStyle, score || 0, player.spectating);
-  }
-
-  constructor(playerID, name, preferredFontStyle, score, spectating) {
-    this.playerID = playerID;
-    this.name = name;
-    this.preferredFontStyle = preferredFontStyle || DEFAULT_FONT_STYLE;
-    this.score = score || 0;
-    this.spectating = spectating || false;
-    this.active = true;
-  }
-}
