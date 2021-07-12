@@ -257,6 +257,9 @@ class Game extends React.Component {
           isClosable: true,
         });
       }
+      if (Object.keys(this.props.players).length === this.props.game.playerIDs.length && this.state.status.text === 'Loading...') {
+        this.setStatus(this.getInitialStatus());
+      }
     } else if (this.props.game && prevProps.players !== this.props.players &&
       Object.keys(this.props.players).length < Object.keys(prevProps.players).length) {
       let leavingPlayers = [];
@@ -418,17 +421,16 @@ class Game extends React.Component {
     if (!props) {
       props = this.props;
     }
-    if (!props.game) {
-      return 'Creating a new game, please wait ...';
-    }
     let appearance = 'default';
     let status;
-    if (props.roundSummary) {
+     if (props.roundSummary) {
       status = getEndOfRoundMessage(false, false, props.roundSummary.round, props.roundSummary.gameOver);
+    } else if (Object.keys(props.players).length < props.game.playerIDs.length) {
+      status = 'Loading...';
     } else {
       const isNewRound = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
       const playerHasControl = this.playerHasControl();
-      const playerName = this.getPlayerName(props.playerInControl);
+      const playerName = props.players[props.playerInControl]?.name;
       status = getStartOfRoundMessage(props.game.currentRound, isNewRound, playerHasControl, playerName);
       if (playerHasControl) {
         appearance = 'action';

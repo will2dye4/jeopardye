@@ -110,7 +110,7 @@ async function handleUpdatePlayer(req, res, next) {
 
   logger.info(`Player ${playerID} changed name from "${player.name}" to "${name}" (font: ${preferredFontStyle}).`);
   playerNames[playerID] = name;
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME, {playerID, name, preferredFontStyle, prevName: player.name}));
+  broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME, {playerID, name, preferredFontStyle, prevName: player.name, roomID: player.currentRoomID}));
   res.status(StatusCodes.NO_CONTENT).end();
 }
 

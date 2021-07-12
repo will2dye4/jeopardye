@@ -12,7 +12,7 @@ import {
   PopoverTrigger,
   Text,
 } from '@chakra-ui/react';
-import { faChartLine, faDoorOpen, faEye, faHistory, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faDoorOpen, faEye, faHistory } from '@fortawesome/free-solid-svg-icons';
 import ActionIcon from '../../common/ActionIcon';
 import Icon from '../../common/Icon';
 import PlayerList from '../../common/players/PlayerList';
