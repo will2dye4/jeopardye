@@ -246,7 +246,7 @@ async function handleClientConnect(ws, event) {
     }
     if (room.kickedPlayerIDs.hasOwnProperty(playerID)) {
       const expiration = room.kickedPlayerIDs[playerID];
-      if (Date.now() < expiration) {
+      if ((expiration === null || Date.now() < expiration) && playerID !== room.ownerPlayerID) {
         handleError(ws, event, 'player was kicked from room', StatusCodes.CONFLICT);
         return;
       }
@@ -330,7 +330,7 @@ async function handleReassignRoomHost(ws, event) {
 async function joinRoom(player, room, ws, event) {
   if (room.kickedPlayerIDs.hasOwnProperty(player.playerID)) {
     const expiration = room.kickedPlayerIDs[player.playerID];
-    if (Date.now() < expiration) {
+    if ((expiration === null || Date.now() < expiration) && player.playerID !== room.ownerPlayerID) {
       handleError(ws, event, 'player was kicked from room', StatusCodes.CONFLICT);
       return;
     }
@@ -978,12 +978,12 @@ async function handleKickPlayer(ws, event) {
     return;
   }
   let expiration = null;
-  if (duration !== null) {
-    let durationInSeconds = parseInt(duration);
-    if (isNaN(durationInSeconds) || durationInSeconds <= 0 || durationInSeconds > MAX_KICK_DURATION_SECONDS) {
-      handleError(ws, event, 'invalid duration', StatusCodes.BAD_REQUEST);
-      return;
-    }
+  let durationInSeconds = parseInt(duration);
+  if (isNaN(durationInSeconds) || durationInSeconds < 0 || durationInSeconds > MAX_KICK_DURATION_SECONDS) {
+    handleError(ws, event, 'invalid duration', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  if (durationInSeconds > 0) {
     expiration = Date.now() + (durationInSeconds * 1000);
   }
   updateRoom(roomID, {[`kickedPlayerIDs.${playerID}`]: expiration}).then(() => updatePlayer(playerID, {currentRoomID: null})).then(() => {

@@ -20,7 +20,7 @@ function PlayerList(props) {
         isHost: (player.playerID === props.room?.hostPlayerID),
         isOwner: (player.playerID === props.room?.ownerPlayerID),
         isSpectator: props.spectators,
-        kickPlayer: () => props.kickPlayer(props.room?.roomID, player.playerID, 60),  /* TODO - pass in duration */
+        kickPlayer: () => props.kickPlayerDialog.open(player.playerID),
         player: player,
       };
       return <PlayerListItem key={player.playerID} {...playerProps} />;

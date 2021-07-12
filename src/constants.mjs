@@ -118,7 +118,17 @@ export const PASSWORD_SALT_ROUNDS = 10;
 export const ROOM_CODE_LENGTH = 4;
 export const ROOM_CODE_CHARACTERS = 'ABCDEFGHJKLMNPQRSTVWXYZ';
 
-export const MAX_KICK_DURATION_SECONDS = 30 * 24 * 60 * 60;  /* 30 days */
+export const SECONDS_PER_MINUTE = 60;
+export const MINUTES_PER_HOUR = 60;
+export const HOURS_PER_DAY = 24;
+export const DAYS_PER_WEEK = 7;
+export const DAYS_PER_MONTH = 30;
+export const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+export const SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY;
+export const SECONDS_PER_WEEK = SECONDS_PER_DAY * DAYS_PER_WEEK;
+export const SECONDS_PER_MONTH = SECONDS_PER_DAY * DAYS_PER_MONTH;
+
+export const MAX_KICK_DURATION_SECONDS = SECONDS_PER_MONTH;
 
 export const EventTypes = {
   ERROR: 'error',

@@ -18,7 +18,7 @@ function PodiumMenu(props) {
   }
 
   const reassignRoomHost = () => props.reassignRoomHost(props.gameState.roomID, props.player.playerID);
-  const kickPlayer = () => props.kickPlayer(props.gameState.roomID, props.player.playerID, 60);  /* TODO - pass in duration */
+  const kickPlayer = () => props.kickPlayerDialog.open(props.player.playerID);
 
   let menuItems;
   if (props.isCurrentPlayer) {

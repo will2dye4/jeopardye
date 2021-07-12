@@ -28,6 +28,7 @@ function Podiums(props) {
                    player={player}
                    gameState={props.gameState}
                    gameHistory={props.gameHistory}
+                   kickPlayerDialog={props.kickPlayerDialog}
                    playerEditor={props.playerEditor}
                    playerStats={props.playerStats}
                    isCurrentPlayer={isCurrentPlayer}

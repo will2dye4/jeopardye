@@ -39,6 +39,7 @@ import {
 import { MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
 import { getPlayerName } from '../reducers/game_reducer';
 import JEOPARDYE_THEME from '../theme';
+import KickPlayerDialog from './common/players/KickPlayerDialog';
 import Home from './home/Home';
 import PlayerEditor from './player/PlayerEditor';
 import PlayerStatistics from './player/stats/PlayerStatistics';
@@ -100,12 +101,16 @@ class Connector extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      kickPlayerID: null,
       onPlayerEditorClose: null,
+      showKickPlayerDialog: false,
       showPlayerEditor: false,
       showPlayerStats: false,
     };
+    this.closeKickPlayerDialog = this.closeKickPlayerDialog.bind(this);
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
     this.closePlayerStats = this.closePlayerStats.bind(this);
+    this.openKickPlayerDialog = this.openKickPlayerDialog.bind(this);
     this.openPlayerEditor = this.openPlayerEditor.bind(this);
     this.openPlayerStats = this.openPlayerStats.bind(this);
   }
@@ -194,6 +199,20 @@ class Connector extends React.Component {
     }
   }
 
+  getPlayer(playerID) {
+    if (this.props.players.hasOwnProperty(playerID)) {
+      return this.props.players[playerID];
+    }
+    if (this.props.spectators.hasOwnProperty(playerID)) {
+      return this.props.spectators[playerID];
+    }
+    return null;
+  }
+
+  openKickPlayerDialog(playerID) {
+    this.setState({kickPlayerID: playerID, showKickPlayerDialog: true});
+  }
+
   openPlayerEditor(onClose = null) {
     this.setState({
       onPlayerEditorClose: (onClose === null || (typeof onClose === 'function') ? onClose : null),
@@ -205,12 +224,16 @@ class Connector extends React.Component {
     this.setState({showPlayerStats: true});
   }
 
+  closeKickPlayerDialog() {
+    this.setState({kickPlayerID: null, showKickPlayerDialog: false});
+  }
+
   closePlayerEditor() {
-   this.setState({showPlayerEditor: false});
-   if (this.state.onPlayerEditorClose) {
-     this.state.onPlayerEditorClose();
-     this.setState({onPlayerEditorClose: null});
-   }
+    this.setState({showPlayerEditor: false});
+    if (this.state.onPlayerEditorClose) {
+      this.state.onPlayerEditorClose();
+      this.setState({onPlayerEditorClose: null});
+    }
   }
 
   closePlayerStats() {
@@ -219,6 +242,10 @@ class Connector extends React.Component {
 
   render() {
     const allowJoin = (Object.keys(this.props.players).length < MAX_PLAYERS_PER_GAME);
+    const kickPlayerDialog = {
+      open: this.openKickPlayerDialog,
+      close: this.closeKickPlayerDialog,
+    };
     const playerEditor = {
       open: this.openPlayerEditor,
       close: this.closePlayerEditor,
@@ -233,14 +260,22 @@ class Connector extends React.Component {
           <Switch>
             <Route exact path="/">
               {this.props.room ?
-                <Redirect to={`/p/${this.props.room.roomCode}`} /> :
-                <Home playerEditor={playerEditor} {...this.props} />}
+                <Redirect to={`/p/${this.props.room.roomCode}`}/> :
+                <Home kickPlayerDialog={kickPlayerDialog} playerEditor={playerEditor} {...this.props} />}
             </Route>
             <Route path="/p/:roomCode">
-              <Room allowJoin={allowJoin} playerEditor={playerEditor} playerStats={playerStats} {...this.props} />
+              <Room allowJoin={allowJoin}
+                    kickPlayerDialog={kickPlayerDialog}
+                    playerEditor={playerEditor}
+                    playerStats={playerStats}
+                    {...this.props} />
             </Route>
           </Switch>
         </Router>
+        {this.state.showKickPlayerDialog && <KickPlayerDialog player={this.getPlayer(this.state.kickPlayerID)}
+                                                              roomID={this.props.roomID}
+                                                              kickPlayerDialog={kickPlayerDialog}
+                                                              kickPlayer={this.props.kickPlayer} />}
         {this.state.showPlayerEditor && <PlayerEditor playerEditor={playerEditor} {...this.props} />}
         {this.state.showPlayerStats && <PlayerStatistics playerStats={playerStats} {...this.props} />}
       </React.Fragment>

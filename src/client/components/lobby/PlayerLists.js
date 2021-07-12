@@ -7,7 +7,7 @@ function PlayerLists(props) {
   const listProps = {
     currentPlayerID: props.playerID,
     edit: props.playerEditor.open,
-    kickPlayer: props.kickPlayer,
+    kickPlayerDialog: props.kickPlayerDialog,
     reassignRoomHost: props.reassignRoomHost,
     room: props.room,
   };

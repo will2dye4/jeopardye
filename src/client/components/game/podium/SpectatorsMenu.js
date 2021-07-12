@@ -12,13 +12,17 @@ import {
   PopoverTrigger,
   Text,
 } from '@chakra-ui/react';
-import { faChartLine, faEye, faHistory } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faDoorOpen, faEye, faHistory, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import ActionIcon from '../../common/ActionIcon';
 import Icon from '../../common/Icon';
 import PlayerList from '../../common/players/PlayerList';
+import {EventContext} from "../../../../utils.mjs";
+import ConfirmAbandonGameDialog from "./ConfirmAbandonGameDialog";
 
 function SpectatorsMenu(props) {
-  const buttonIcons = [
+  const [ isConfirmDialogOpen, setIsConfirmDialogOpen ] = React.useState(false);
+
+  let buttonIcons = [
     {
       id: 'spectator-history-icon',
       title: 'Show game history',
@@ -32,6 +36,15 @@ function SpectatorsMenu(props) {
       onClick: props.playerStats.open,
     }
   ];
+  if (props.gameState.playerIsHost) {
+    buttonIcons.push({
+      id: 'end-game-icon',
+      title: 'End game',
+      icon: faDoorOpen,
+      onClick: () => setIsConfirmDialogOpen(true),
+    });
+  }
+
   const numSpectators = Object.keys(props.spectators).length;
   const spectating = props.gameState.playerIsSpectating;
   const title = (spectating ? 'You are spectating' : `${numSpectators} spectator${numSpectators > 1 ? 's' : ''}`);
@@ -52,7 +65,8 @@ function SpectatorsMenu(props) {
         <PopoverCloseButton />
         <PopoverBody p={0}>
           <PlayerList spectators={true} players={props.spectators} currentPlayerID={props.playerID}
-                      mb={0} boxShadow="dark-lg" edit={props.playerEditor.open} changeSpectatingStatus={stopSpectating}>
+                      mb={0} boxShadow="dark-lg" edit={props.playerEditor.open} changeSpectatingStatus={stopSpectating}
+                      kickPlayerDialog={props.kickPlayerDialog} reassignRoomHost={props.reassignRoomHost} room={props.room}>
             {spectating && (
               <ListItem key="buttons" className="list-group-item">
                 <Flex justify="center">
@@ -64,6 +78,9 @@ function SpectatorsMenu(props) {
             )}
           </PlayerList>
         </PopoverBody>
+        <ConfirmAbandonGameDialog isOpen={isConfirmDialogOpen}
+                                  onClose={() => setIsConfirmDialogOpen(false)}
+                                  onConfirm={() => props.abandonGame(EventContext.fromProps(props))} />
       </PopoverContent>
     </Popover>
   );
