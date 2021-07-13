@@ -171,6 +171,7 @@ export const EventTypes = {
   PLAYER_MARKED_CLUE_AS_INVALID: 'player_marked_clue_as_invalid',
   VOTE_TO_SKIP_CLUE: 'vote_to_skip_clue',
   PLAYER_VOTED_TO_SKIP_CLUE: 'player_voted_to_skip_clue',
+  PLAYER_IN_CONTROL_REASSIGNED: 'player_in_control_reassigned',
   /* host-only gameplay events */
   ABANDON_GAME: 'abandon_game',
   HOST_ABANDONED_GAME: 'host_abandoned_game',

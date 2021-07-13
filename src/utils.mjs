@@ -40,7 +40,8 @@ const NUMERALS_TO_WORDS = {
   20: 'twenty',
 };
 
-const PLACE_NAMES = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+const PLACE_NAMES = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', 'Honorable Mention'];
+const MAX_PLACE_INDEX = PLACE_NAMES.length - 1;
 
 const stemmer = new StemmerEn();
 stemmer.stopwords = new StopwordsEn();
@@ -141,11 +142,11 @@ export function getPlaces(scores) {
   let players = [];
   scores.sort((player1, player2) => player2.score - player1.score).forEach(player => {
     const playerScore = {playerID: player.playerID, name: player.name, score: player.score};
-    if (prevScore === null || player.score === prevScore) {
+    if (prevScore === null || player.score === prevScore || i === MAX_PLACE_INDEX) {
       players.push(playerScore);
     } else {
       places[PLACE_NAMES[i]] = players;
-      i += players.length;
+      i = Math.min(i + players.length, MAX_PLACE_INDEX);
       players = [playerScore];
     }
     prevScore = player.score;

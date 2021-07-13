@@ -362,6 +362,21 @@ class Game extends React.Component {
     if (prevProps.roundSummary && !this.props.roundSummary) {
       this.setState({showRoundSummary: false});
     }
+
+    if (!prevProps.playerInControlReassigned && this.props.playerInControlReassigned) {
+      const playerName = (this.props.playerInControl === this.props.playerID ? 'You' : getPlayerName(this.props.playerInControl));
+      const verb = (playerName === 'You' ? 'are' : 'is');
+      toast({
+        position: 'top',
+        title: `${playerName} ${verb} now in control of the board.`,
+        status: 'info',
+        isClosable: true,
+      });
+      if (!this.props.activeClue) {
+        this.setStatus(this.getInitialStatus());
+      }
+      this.props.clearPlayerInControlReassigned();
+    }
   }
 
   getEventContext(clue) {

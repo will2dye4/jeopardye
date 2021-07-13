@@ -16,6 +16,7 @@ export const ActionTypes = {
   CLEAR_CURRENT_GAME: 'JEOPARDYE::CLEAR_CURRENT_GAME',
   CLEAR_ERROR: 'JEOPARDYE::CLEAR_ERROR',
   CLEAR_HOST_OVERRIDE: 'JEOPARDYE::CLEAR_HOST_OVERRIDE',
+  CLEAR_PLAYER_IN_CONTROL_REASSIGNED: 'JEOPARDYE::CLEAR_PLAYER_IN_CONTROL_REASSIGNED',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -317,6 +318,13 @@ export function clearHostOverride(override) {
   return {
     type: ActionTypes.CLEAR_HOST_OVERRIDE,
     payload: {override},
+  };
+}
+
+export function clearPlayerInControlReassigned() {
+  return {
+    type: ActionTypes.CLEAR_PLAYER_IN_CONTROL_REASSIGNED,
+    payload: {},
   };
 }
 

@@ -60,6 +60,7 @@ import {
 } from './db.mjs';
 import {
   findNewHostPlayerID,
+  findNewPlayerInControl,
   removePlayerFromRoom as removePlayerHelper,
 } from './utils.mjs';
 
@@ -177,6 +178,27 @@ async function removePlayerFromRoom(player, roomID) {
   broadcast(new WebsocketEvent(EventTypes.PLAYER_LEFT_ROOM, payload), player.playerID);
 }
 
+function reassignPlayerInControlIfNecessary(gameID, playerID) {
+  setTimeout(async function() {
+    const game = await getGame(gameID);
+    if (!playerID) {
+      playerID = game.playerInControl;
+    }
+    if (game.playerInControl === playerID) {
+      const player = await getPlayer(playerID);
+      if (!player.active || player.currentRoomID !== game.roomID) {
+        const newPlayerInControl = await findNewPlayerInControl(game);
+        if (newPlayerInControl) {
+          roomLogger.info(game.roomID, `Reassigning player in control to ${getPlayerName(newPlayerInControl)}.`);
+          await updateGame(game.gameID, {playerInControl: newPlayerInControl});
+          const payload = {roomID: game.roomID, newPlayerInControl: newPlayerInControl};
+          broadcast(new WebsocketEvent(EventTypes.PLAYER_IN_CONTROL_REASSIGNED, payload), playerID);
+        }
+      }
+    }
+  }, REASSIGNMENT_CHECK_DELAY_MILLIS);
+}
+
 function reassignRoomHostIfNecessary(roomID, playerID) {
   setTimeout(async function() {
     const room = await getRoom(roomID);
@@ -201,7 +223,7 @@ function getCurrentPlaces(game, players) {
   let scores = [];
   Object.entries(game.scores).forEach(([playerID, score]) => {
     const player = players.find(player => player.playerID === playerID);
-    if (player && !player.spectating) {
+    if (player && (!player.spectating || score !== 0)) {
       scores.push({...player, score: score});
     }
   });
@@ -321,6 +343,9 @@ async function handleClientConnect(ws, event) {
       }
     });
     broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_ACTIVE, {roomID: room.roomID, playerID: playerID, players: newPlayers}));
+    if (room.currentGameID) {
+      reassignPlayerInControlIfNecessary(room.currentGameID);
+    }
   }
 }
 
@@ -1019,6 +1044,9 @@ async function handleKickPlayer(ws, event) {
     broadcast(new WebsocketEvent(EventTypes.HOST_KICKED_PLAYER, event.payload));
     removeClient(roomID, playerID);
     addClient(NO_ROOM_KEY, playerID);
+    if (room.currentGameID) {
+      reassignPlayerInControlIfNecessary(room.currentGameID, playerID);
+    }
   });
 }
 
@@ -1188,6 +1216,11 @@ export function handleWebsocket(ws, req) {
             broadcast(new WebsocketEvent(EventTypes.PLAYER_WENT_INACTIVE, payload));
             removeClient(roomID, playerID);
             reassignRoomHostIfNecessary(roomID, playerID);
+            getRoom(roomID).then(room => {
+              if (room.currentGameID) {
+                reassignPlayerInControlIfNecessary(room.currentGameID, playerID);
+              }
+            });
           });
         }
       });

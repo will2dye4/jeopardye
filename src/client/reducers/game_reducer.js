@@ -34,6 +34,7 @@ function newStoreData() {
     activeClue: null,
     playerAnswering: null,
     playerInControl: null,
+    playerInControlReassigned: false,
     playersMarkingClueInvalid: [],
     playersReadyForNextRound: [],
     playersVotingToSkipClue: [],
@@ -84,6 +85,11 @@ function handleNewGame(storeData, newGame) {
     } else {
       /* this can happen if the current game is fetched before the PLAYER_WENT_ACTIVE event fires */
       newPlayers[playerID] = {playerID, score};
+    }
+  });
+  Object.values(newPlayers).forEach(player => {
+    if (!newGame.scores.hasOwnProperty(player.playerID)) {
+      player.score = 0;
     }
   });
   return {
@@ -148,8 +154,17 @@ function handleRoundEnded(storeData, event) {
       newRoom.currentWinningStreak = (currentChampion ? 1 : 0);
     }
     newStore.room = newRoom;
+    let newPlayers = {...storeData.players};
+    Object.values(newPlayers).forEach(player => player.score = 0);
+    newStore.players = newPlayers;
   }
   return newStore;
+}
+
+function handlePlayerInControlReassigned(storeData, event) {
+  const { newPlayerInControl } = event.payload;
+  console.log(`${getPlayerName(newPlayerInControl)} is now in control.`);
+  return {...storeData, playerInControl: newPlayerInControl, playerInControlReassigned: true};
 }
 
 function handleRoomHostReassigned(storeData, event) {
@@ -441,6 +456,7 @@ const eventHandlers = {
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.ROUND_STARTED]: handleRoundStarted,
   [EventTypes.ROUND_ENDED]: handleRoundEnded,
+  [EventTypes.PLAYER_IN_CONTROL_REASSIGNED]: handlePlayerInControlReassigned,
   [EventTypes.ROOM_HOST_REASSIGNED]: handleRoomHostReassigned,
   [EventTypes.PLAYER_JOINED_ROOM]: handlePlayerJoinedRoom,
   [EventTypes.PLAYER_LEFT_ROOM]: handlePlayerLeftRoom,
@@ -557,6 +573,8 @@ export function GameReducer(storeData, action) {
         return {...storeData, hostOverride: null};
       }
       return storeData;
+    case ActionTypes.CLEAR_PLAYER_IN_CONTROL_REASSIGNED:
+      return {...storeData, playerInControlReassigned: false};
     case ActionTypes.REDUX_WEBSOCKET_OPEN:
       return {...storeData, connected: true};
     case ActionTypes.REDUX_WEBSOCKET_CLOSED:

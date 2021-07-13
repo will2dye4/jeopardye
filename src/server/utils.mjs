@@ -5,9 +5,9 @@ export async function findNewHostPlayerID(room) {
   const players = await getPlayers(playerIDs);
   let newHostPlayerID;
   if (players) {
-    newHostPlayerID = players.find(player => player.active && !player.spectating)?.playerID;
+    newHostPlayerID = players.find(player => player.active && player.currentRoomID === room.roomID && !player.spectating)?.playerID;
     if (!newHostPlayerID) {
-      newHostPlayerID = players.find(player => player.active)?.playerID;
+      newHostPlayerID = players.find(player => player.active && player.currentRoomID === room.roomID)?.playerID;
       if (!newHostPlayerID && room.hostPlayerID !== room.ownerPlayerID) {
         newHostPlayerID = room.ownerPlayerID;
       }
@@ -16,6 +16,16 @@ export async function findNewHostPlayerID(room) {
     newHostPlayerID = room.ownerPlayerID;
   }
   return newHostPlayerID;
+}
+
+export async function findNewPlayerInControl(game) {
+  const playerIDs = game.playerIDs.filter(playerID => playerID !== game.playerInControl);
+  const players = await getPlayers(playerIDs);
+  return players?.sort((player1, player2) =>
+    game.scores[player1.playerID] - game.scores[player2.playerID]
+  )?.find(player =>
+    player.active && player.currentRoomID === game.roomID && !player.spectating
+  )?.playerID;
 }
 
 export async function removePlayerFromRoom(player, roomID) {
