@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Flex, Image } from '@chakra-ui/react';
-import { EventContext } from '../../../../../utils.mjs';
 import ActiveClueButtons from './ActiveClueButtons';
 
 const LONG_CLUE_LENGTH_THRESHOLD = 150;
@@ -37,8 +36,8 @@ class ActiveClue extends React.Component {
       if (!this.props.playersVotingToSkipClue.includes(this.props.gameState.playerID)) {
         this.props.voteToSkipActiveClue(event);
       }
-    } else if (this.allowBuzz()) {
-      this.props.buzzIn(EventContext.fromProps(this.props));
+    } else if (!this.props.gameState.playerIsSpectating) {
+      this.props.handleBuzz();
     }
   }
 

@@ -32,8 +32,11 @@ import RoundSummary from './summary/RoundSummary';
 import StatusBar from './status/StatusBar';
 import {getPlayerName} from "../../reducers/game_reducer";
 
+const BUZZER_LOCKOUT_DELAY_MILLIS = 1000;
 const DISMISS_CLUE_DELAY_MILLIS = 5000;
 const SHOW_CLUE_DELAY_MILLIS = 1000;
+
+const BUZZER_LOCKED_OUT_TOAST_ID = 'buzzer-locked-out';
 
 const LOADING_STATUS = 'Loading...';
 
@@ -43,6 +46,7 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      buzzerLockedOut: false,
       gameHistoryScroll: (localStorage.getItem(GAME_HISTORY_SCROLL_KEY) ? isLocalStorageSettingEnabled(GAME_HISTORY_SCROLL_KEY) : true),
       gameHistorySide: localStorage.getItem(GAME_HISTORY_SIDE_KEY) || 'right',
       gameHistorySize: localStorage.getItem(GAME_HISTORY_SIZE_KEY) || 'xs',
@@ -57,6 +61,7 @@ class Game extends React.Component {
     };
     this.closeGameHistory = this.closeGameHistory.bind(this);
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
+    this.handleBuzz = this.handleBuzz.bind(this);
     this.handleClueClick = this.handleClueClick.bind(this);
     this.markActiveClueAsInvalid = this.markActiveClueAsInvalid.bind(this);
     this.openGameHistory = this.openGameHistory.bind(this);
@@ -74,11 +79,8 @@ class Game extends React.Component {
       const spectating = this.playerIsSpectating();
       const key = event.key.toLowerCase();
       if ((key === ' ' || key === 'enter') && this.state.showActiveClue && !spectating) {
-        if (this.props.allowAnswers && !this.props.playerAnswering) {
-          event.preventDefault();
-          this.props.buzzIn(EventContext.fromProps(this.props));
-        }
-      } /*else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager && !spectating) {
+        this.handleBuzz(event);
+      } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager && !spectating) {
         if (key === 's' && !this.props.playersVotingToSkipClue.includes(this.props.playerID)) {
           console.log('Voting to skip the current clue...');
           event.preventDefault();
@@ -98,7 +100,7 @@ class Game extends React.Component {
           event.preventDefault();
           this.props.playerStats.open();
         }
-      }*/
+      }
     }.bind(this));
   }
 
@@ -224,6 +226,21 @@ class Game extends React.Component {
         status = {
           emoji: 'hourglass',
           text: getWaitingForBuzzMessage(spectating),
+        };
+      }
+      if (this.state.buzzerLockedOut) {
+        const unlockedStatus = status;
+        setTimeout(function() {
+          let newState = {buzzerLockedOut: false};
+          if (this.props.activeClue && this.props.allowAnswers && !this.props.playerAnswering) {
+            newState.status = unlockedStatus;
+          }
+          this.setState(newState);
+        }.bind(this), BUZZER_LOCKOUT_DELAY_MILLIS);
+        status = {
+          appearance: 'incorrect',
+          emoji: 'locked',
+          text: 'Buzzer locked out.',
         };
       }
       this.setStatus(status);
@@ -605,6 +622,31 @@ class Game extends React.Component {
     this.checkForLastClue(isCurrentPlayer, this.props.prevAnswer?.correct);
   }
 
+  handleBuzz(event) {
+    if (!this.props.activeClue || this.props.playerAnswering || this.state.buzzerLockedOut ||
+        this.props.activeClue.playersAttempted.includes(this.props.playerID)) {
+      return;
+    }
+    if (this.props.allowAnswers) {
+      if (event) {
+        event.preventDefault();
+      }
+      this.props.buzzIn(EventContext.fromProps(this.props));
+    } else {
+      /* buzzed too early - lock the player out temporarily */
+      this.setState({buzzerLockedOut: true});
+      if (!toast.isActive(BUZZER_LOCKED_OUT_TOAST_ID)) {
+        toast({
+          id: BUZZER_LOCKED_OUT_TOAST_ID,
+          position: 'top',
+          title: `You buzzed too early!`,
+          status: 'error',
+          isClosable: true,
+        });
+      }
+    }
+  }
+
   handleClueClick(clue) {
     if (this.playerHasControl()) {
       this.props.selectClue(this.getEventContext(clue));
@@ -690,7 +732,7 @@ class Game extends React.Component {
                currentWager={this.props.currentWager}
                allowAnswers={this.props.allowAnswers}
                revealAnswer={this.props.revealAnswer}
-               buzzIn={this.props.buzzIn}
+               handleBuzz={this.handleBuzz}
                playersMarkingClueInvalid={this.props.playersMarkingClueInvalid}
                playersVotingToSkipClue={this.props.playersVotingToSkipClue}
                playerAnswering={this.props.playerAnswering}
