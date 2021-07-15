@@ -10,6 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { EventContext, formatList } from '../../../../utils.mjs';
+import { getPlayerName } from '../../../reducers/game_reducer';
 import Card from '../../common/card/Card';
 import RoundScores from './RoundScores';
 
@@ -42,7 +43,8 @@ function RoundSummary(props) {
     } else if (waitingPlayers.length) {
       waitingText = `Waiting for ${formatList(waitingPlayers.map(player => player.name))}...`;
     } else {
-      waitingText = 'Waiting for host to start next round...';
+      const hostName = (props.room ? getPlayerName(props.room.hostPlayerID) : 'host');
+      waitingText = `Waiting for ${hostName} to start the next round...`;
     }
   }
 

@@ -159,7 +159,7 @@ function getEventDescription(props) {
       dailyDouble = (!!props.game && isDailyDouble(props.game.rounds[event.round], clue.clueID));
       const showAnswer = (dailyDouble && !correct);
       let showOverride = false;
-      if (!correct) {
+      if (!correct && props.gameState.playerIsHost) {
         const answerRevealedPredicate = (e) => {
           if (e.eventType === EventTypes.PLAYER_ANSWERED) {
             const { categoryID, clueID } = e.payload.clue;
@@ -236,7 +236,7 @@ function getEventDescription(props) {
       };
       break;
     case EventTypes.HOST_OVERRODE_SERVER_DECISION:
-      const hostName = (props.room ? (props.room.hostPlayerID === props.gameState.playerID ? 'You' : getPlayerName(props.room.hostPlayerID)) : 'Host');
+      const hostName = (props.room ? (props.gameState.playerIsHost ? 'You' : getPlayerName(props.room.hostPlayerID)) : 'Host');
       const suffix = (playerName === 'You' ? '' : `'s`);
       name = (playerName === 'You' ? 'your' : playerName);
       eventConfig = {

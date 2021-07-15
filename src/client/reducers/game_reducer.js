@@ -155,9 +155,6 @@ function handleRoundEnded(storeData, event) {
       newRoom.currentWinningStreak = (currentChampion ? 1 : 0);
     }
     newStore.room = newRoom;
-    let newPlayers = {...storeData.players};
-    Object.values(newPlayers).forEach(player => player.score = 0);
-    newStore.players = newPlayers;
   }
   return newStore;
 }

@@ -3,6 +3,7 @@ import { Badge, Box, Button, Flex, Heading, Progress } from '@chakra-ui/react';
 import { DailyDoubleSettings, MAX_NUM_ROUNDS } from '../../../../constants.mjs';
 import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { range } from '../../../../utils.mjs';
+import { getPlayerName } from '../../../reducers/game_reducer';
 import Card from '../../common/card/Card';
 import GameSetting from './GameSetting';
 import RadioToggleGroup from '../../common/form/RadioToggleGroup';
@@ -80,6 +81,7 @@ class GameSettings extends React.Component {
     }
     const disabled = (this.props.playerID !== this.props.room?.hostPlayerID);
     const startGameDisabled = (disabled || Object.keys(this.props.players).length === 0);
+    const hostName = (this.props.room ? getPlayerName(this.props.room.hostPlayerID) : 'host');
     return (
       <Card className="game-settings" px={8} py={6}>
         <Heading mb={5} textAlign="center">Game Settings</Heading>
@@ -98,7 +100,7 @@ class GameSettings extends React.Component {
         </GameSetting>
         <Flex justify="center" mt={5} mb={3}>
           {disabled ?
-            <Heading size="lg">Waiting for host to start a new game...</Heading> :
+            <Heading size="lg">Waiting for {hostName} to start a new game...</Heading> :
             <Button colorScheme="jeopardyBlue" size="lg" disabled={startGameDisabled} onClick={this.createNewGame}>Start New Game</Button>
           }
         </Flex>

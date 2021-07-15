@@ -107,7 +107,7 @@ class Game extends React.Component {
           emoji: 'question',
           text: (
             <React.Fragment>
-              Playing <Bold>{this.props.activeClue.category}</Bold> for <Bold>${this.props.activeClue.value}</Bold> ...
+              Playing <Bold>{this.props.activeClue.category}</Bold> for <Bold>${this.props.activeClue.value.toLocaleString()}</Bold> ...
             </React.Fragment>
           ),
         };
