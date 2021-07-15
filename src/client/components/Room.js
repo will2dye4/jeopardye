@@ -11,7 +11,7 @@ function Room(props) {
   if (props.room) {
     return <Lobby {...props} />;
   }
-  if (props.playerID) {
+  if (roomCode && props.playerID && !props.redirectToHome) {
     console.log(`Fetching room ${roomCode}`);
     props.fetchRoom(roomCode);
   }

@@ -24,7 +24,7 @@ function Podiums(props) {
     const isHost = (player.playerID === props.room?.hostPlayerID);
     const isChampion = (player.playerID === props.room?.currentChampion);
     const active = (player.playerID === props.playerAnswering);
-    return <Podium key={player.playerID}
+    return <Podium key={`${player.playerID}-${Object.keys(props.players).length}`}
                    player={player}
                    gameState={props.gameState}
                    gameHistory={props.gameHistory}
@@ -37,6 +37,7 @@ function Podiums(props) {
                    allowSpectate={allowSpectate}
                    startSpectating={props.startSpectating}
                    abandonGame={props.abandonGame}
+                   leaveRoom={props.leaveRoom}
                    reassignRoomHost={props.reassignRoomHost}
                    active={active}
                    size={size} />;

@@ -86,12 +86,11 @@ function getPodiumElement(props) {
   }
   const mx = (size === 'xs' ? 6 : (size === 'sm' ? 8 : 12));
   const fontStyle = props.player.preferredFontStyle || DEFAULT_FONT_STYLE;
+  let icons = null;
   let nameClasses = getNameClasses(props.player.name, fontStyle, size);
   if (props.active) {
     nameClasses += ' podium-name-active';
-  }
-  let icons = null;
-  if (props.isHost || props.isChampion) {
+  } else if (props.isHost || props.isChampion) {
     icons = (
       <Box position="absolute" fontSize="sm" bottom={5} pb={1}>
         <HStack>

@@ -63,6 +63,7 @@ class Game extends React.Component {
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
     this.handleBuzz = this.handleBuzz.bind(this);
     this.handleClueClick = this.handleClueClick.bind(this);
+    this.handleKeyUp = this.handleKeyUp.bind(this);
     this.markActiveClueAsInvalid = this.markActiveClueAsInvalid.bind(this);
     this.openGameHistory = this.openGameHistory.bind(this);
     this.revealAnswer = this.revealAnswer.bind(this);
@@ -74,34 +75,7 @@ class Game extends React.Component {
 
   componentDidMount() {
     this.checkPlayerInGame();
-
-    document.addEventListener('keyup', function handleKeyUp(event) {
-      const spectating = this.playerIsSpectating();
-      const key = event.key.toLowerCase();
-      if ((key === ' ' || key === 'enter') && this.state.showActiveClue && !spectating) {
-        this.handleBuzz(event);
-      } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager && !spectating) {
-        if (key === 's' && !this.props.playersVotingToSkipClue.includes(this.props.playerID)) {
-          console.log('Voting to skip the current clue...');
-          event.preventDefault();
-          this.voteToSkipActiveClue();
-        } else if (key === 'i' && !this.props.playersMarkingClueInvalid.includes(this.props.playerID)) {
-          console.log('Marking the current clue as invalid...');
-          event.preventDefault();
-          this.markActiveClueAsInvalid();
-        }
-      } else if (this.props.playerAnswering !== this.props.playerID) {
-        if (key === 'h') {
-          console.log('Opening game history');
-          event.preventDefault();
-          this.openGameHistory();
-        } else if (key === 't') {
-          console.log('Opening player stats');
-          event.preventDefault();
-          this.props.playerStats.open();
-        }
-      }
-    }.bind(this));
+    document.addEventListener('keyup', this.handleKeyUp);
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -396,13 +370,17 @@ class Game extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    document.removeEventListener('keyup', this.handleKeyUp);
+  }
+
   getEventContext(clue) {
     return new EventContext(this.props.roomID, this.props.game.gameID, this.props.playerID, clue?.categoryID, clue?.clueID);
   }
 
   checkPlayerInGame() {
     if (this.props.connected && this.props.game && this.props.playerID && !this.props.game.playerIDs.includes(this.props.playerID)) {
-      if (Object.keys(this.props.players).length >= MAX_PLAYERS_PER_GAME) {
+      if (Object.values(this.props.players).filter(player => player.active).length >= MAX_PLAYERS_PER_GAME) {
         console.log('Game is full. Becoming a spectator.');
         this.props.startSpectating(this.props.roomID, this.props.playerID);
       }
@@ -465,7 +443,7 @@ class Game extends React.Component {
       const isNewRound = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
       const playerHasControl = this.playerHasControl();
       const playerName = props.players[props.playerInControl]?.name;
-      status = getStartOfRoundMessage(props.game.currentRound, isNewRound, playerHasControl, playerName);
+      status = getStartOfRoundMessage(props.game.currentRound, isNewRound, playerHasControl, props.playerInControlReassigned, playerName);
       if (playerHasControl) {
         appearance = 'action';
       }
@@ -624,7 +602,7 @@ class Game extends React.Component {
 
   handleBuzz(event) {
     if (!this.props.activeClue || this.props.playerAnswering || this.state.buzzerLockedOut ||
-        this.props.activeClue.playersAttempted.includes(this.props.playerID)) {
+        this.isActiveDailyDouble() || this.props.activeClue.playersAttempted.includes(this.props.playerID)) {
       return;
     }
     if (this.props.allowAnswers) {
@@ -650,6 +628,34 @@ class Game extends React.Component {
   handleClueClick(clue) {
     if (this.playerHasControl()) {
       this.props.selectClue(this.getEventContext(clue));
+    }
+  }
+
+  handleKeyUp(event) {
+    const spectating = this.playerIsSpectating();
+    const key = event.key.toLowerCase();
+    if ((key === ' ' || key === 'enter') && this.state.showActiveClue && !spectating) {
+      this.handleBuzz(event);
+    } else if (this.state.showActiveClue && !this.props.revealAnswer && !this.props.playerAnswering && !this.state.showDailyDoubleWager && !spectating) {
+      if (key === 's' && !this.props.playersVotingToSkipClue.includes(this.props.playerID)) {
+        console.log('Voting to skip the current clue...');
+        event.preventDefault();
+        this.voteToSkipActiveClue();
+      } else if (key === 'i' && !this.props.playersMarkingClueInvalid.includes(this.props.playerID)) {
+        console.log('Marking the current clue as invalid...');
+        event.preventDefault();
+        this.markActiveClueAsInvalid();
+      }
+    } else if (this.props.playerAnswering !== this.props.playerID) {
+      if (key === 'h') {
+        console.log('Opening game history');
+        event.preventDefault();
+        this.openGameHistory();
+      } else if (key === 't') {
+        console.log('Opening player stats');
+        event.preventDefault();
+        this.props.playerStats.open();
+      }
     }
   }
 

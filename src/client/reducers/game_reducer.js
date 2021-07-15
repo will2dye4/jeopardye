@@ -22,7 +22,7 @@ function newStoreData() {
     eventHistory: [],
     hostOverride: null,
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
-    roomCode: null,
+    redirectToHome: false,
     roomID: null,
     room: null,
     board: null,
@@ -106,6 +106,7 @@ function handleNewGame(storeData, newGame) {
     playerAnswering: newGame.playerAnswering,
     playerInControl: newGame.playerInControl,
     prevAnswer: null,
+    redirectToHome: false,
     roundSummary: newGame.roundSummary || null,
   };
 }
@@ -190,7 +191,8 @@ function handlePlayerJoinedRoom(storeData, event) {
   if (storeData.room) {
     newStore.room = {...storeData.room, playerIDs: Object.keys(players)};
   }
-  if (player.playerID === storeData.playerID) {
+  if (playerID === storeData.playerID) {
+    newStore.redirectToHome = false;
     newStore.roomID = roomID;
   }
   return newStore;
@@ -204,6 +206,10 @@ function handlePlayerLeftRoom(storeData, event) {
   }
   let newStore = {...storeData};
   if (storeData.players.hasOwnProperty(playerID)) {
+    if (playerID === storeData.playerID) {
+      const newPlayer = {...storeData.players[playerID], currentRoomID: null, score: 0};
+      return {...newStoreData(), connected: true, players: {[playerID]: newPlayer}, redirectToHome: true};
+    }
     const player = storeData.players[playerID];
     console.log(`${player.name} has left the room.`);
     let newPlayer = {...player, active: false};
@@ -215,7 +221,7 @@ function handlePlayerLeftRoom(storeData, event) {
     console.log(`${getPlayerName(newHostPlayerID)} is now the host.`);
     newStore.room = {...storeData.room, hostPlayerID: newHostPlayerID};
   }
-  return storeData;
+  return newStore;
 }
 
 function handlePlayerChangedName(storeData, event) {
@@ -348,8 +354,8 @@ function handleHostAbandonedGame(storeData, event) {
 function handleHostKickedPlayer(storeData, event) {
   const { playerID } = event.payload;
   if (playerID === storeData.playerID) {
-    const newPlayer = {...storeData.players[playerID], currentRoomID: null};
-    return {...newStoreData(), connected: true, players: {playerID: newPlayer}};
+    const newPlayer = {...storeData.players[playerID], currentRoomID: null, score: 0};
+    return {...newStoreData(), connected: true, players: {[playerID]: newPlayer}, redirectToHome: true};
   }
   console.log(`Host kicked ${getPlayerName(playerID)}.`);
   const newPlayer = {...storeData.players[playerID], active: false};
@@ -523,7 +529,7 @@ export function GameReducer(storeData, action) {
         return {...storeData, error: 'Failed to join room.', roomID: null, room: null};
       }
       if (room.playerIDs.includes(storeData.playerID)) {
-        return {...storeData, roomID: room.roomID, room: room};
+        return {...storeData, redirectToHome: false, roomID: room.roomID, room: room};
       }
       return {...storeData, roomID: room.roomID};
     case ActionTypes.FETCH_CURRENT_GAME:

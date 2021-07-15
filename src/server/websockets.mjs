@@ -175,7 +175,7 @@ async function removePlayerFromRoom(player, roomID) {
     roomLogger.info(roomID || player.currentRoomID, `Reassigning host to ${getPlayerName(newHostPlayerID)}.`);
   }
   const payload = {roomID: player.currentRoomID, playerID: player.playerID, newHostPlayerID: newHostPlayerID};
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_LEFT_ROOM, payload), player.playerID);
+  broadcast(new WebsocketEvent(EventTypes.PLAYER_LEFT_ROOM, payload));
 }
 
 function reassignPlayerInControlIfNecessary(gameID, playerID) {
@@ -470,6 +470,32 @@ async function handleJoinRoomWithCode(ws, event) {
   await joinRoom(player, room, ws, event);
 }
 
+async function handleLeaveRoom(ws, event) {
+  const { roomID, playerID } = event.payload;
+  const room = await getRoom(roomID);
+  if (!room) {
+    handleError(ws, event, 'room not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  const player = await getPlayer(playerID);
+  if (!player) {
+    handleError(ws, event, 'player not found', StatusCodes.NOT_FOUND);
+    return;
+  }
+  if (!room.playerIDs.includes(playerID) || player.currentRoomID !== roomID) {
+    handleError(ws, event, 'player not in room', StatusCodes.BAD_REQUEST);
+    return;
+  }
+  removePlayerFromRoom(player).then(() => updatePlayer(playerID, {currentRoomID: null})).then(() => {
+    roomLogger.info(roomID, `${getPlayerName(playerID)} left room.`);
+    removeClient(roomID, playerID);
+    addClient(NO_ROOM_KEY, playerID, ws);
+    if (room.currentGameID) {
+      reassignPlayerInControlIfNecessary(room.currentGameID, playerID);
+    }
+  });
+}
+
 async function handleGameSettingsChanged(ws, event) {
   roomLogger.info(event.payload.roomID, 'Game settings changed.');
   broadcast(event);
@@ -516,7 +542,7 @@ async function handleJoinGame(ws, event) {
       handleError('failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
       return;
     }
-    const numPlayers = players.filter(player => !player.spectating).length;
+    const numPlayers = players.filter(player => player.active && player.currentRoomID === roomID && !player.spectating).length;
     if (numPlayers >= MAX_PLAYERS_PER_GAME) {
       handleError(ws, event, 'max players exceeded', StatusCodes.BAD_REQUEST);
       return;
@@ -870,7 +896,7 @@ async function handleStopSpectating(ws, event) {
       handleError(ws, event, 'failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
       return;
     }
-    const numPlayers = players.filter(player => !player.spectating).length;
+    const numPlayers = players.filter(player => player.active && player.currentRoomID === roomID && !player.spectating).length;
     if (numPlayers >= MAX_PLAYERS_PER_GAME) {
       handleError(ws, event, 'max players exceeded', StatusCodes.BAD_REQUEST);
       return;
@@ -1043,7 +1069,7 @@ async function handleKickPlayer(ws, event) {
     /* NOTE: order matters here - need to broadcast before removing the player's websocket from the room */
     broadcast(new WebsocketEvent(EventTypes.HOST_KICKED_PLAYER, event.payload));
     removeClient(roomID, playerID);
-    addClient(NO_ROOM_KEY, playerID);
+    addClient(NO_ROOM_KEY, playerID, ws);
     if (room.currentGameID) {
       reassignPlayerInControlIfNecessary(room.currentGameID, playerID);
     }
@@ -1145,6 +1171,7 @@ const eventHandlers = {
   [EventTypes.REASSIGN_ROOM_HOST]: handleReassignRoomHost,
   [EventTypes.JOIN_ROOM]: handleJoinRoom,
   [EventTypes.JOIN_ROOM_WITH_CODE]: handleJoinRoomWithCode,
+  [EventTypes.LEAVE_ROOM]: handleLeaveRoom,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.JOIN_GAME]: handleJoinGame,
   [EventTypes.SELECT_CLUE]: handleSelectClue,

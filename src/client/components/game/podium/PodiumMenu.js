@@ -4,7 +4,7 @@ import { faChartLine, faDoorOpen, faEye, faHistory, faPen, faSignOutAlt, faUserT
 import { EventContext } from '../../../../utils.mjs';
 import Icon from '../../common/Icon';
 import Card from '../../common/card/Card';
-import ConfirmAbandonGameDialog from './ConfirmAbandonGameDialog';
+import ConfirmLeaveGameDialog from './ConfirmLeaveGameDialog';
 
 const CANNOT_SPECTATE_MESSAGE = 'You are not allowed to spectate right now.';
 
@@ -21,6 +21,7 @@ function PodiumMenu(props) {
   const kickPlayer = () => props.kickPlayerDialog.open(props.player.playerID);
 
   let menuItems;
+  let onConfirm;
   if (props.isCurrentPlayer) {
     menuItems = [
       {
@@ -52,12 +53,21 @@ function PodiumMenu(props) {
         label: 'End Game',
         onClick: () => setIsConfirmDialogOpen(true),
       });
-    } else if (props.gameState.playerIsOwner) {
+      onConfirm = () => props.abandonGame(EventContext.fromProps(props));
+    } else {
+      if (props.gameState.playerIsOwner) {
+        menuItems.push({
+          icon: faUserTie,
+          label: 'Become Host',
+          onClick: reassignRoomHost,
+        });
+      }
       menuItems.push({
-        icon: faUserTie,
-        label: 'Become Host',
-        onClick: reassignRoomHost,
+        icon: faDoorOpen,
+        label: 'Leave Game',
+        onClick: () => setIsConfirmDialogOpen(true),
       });
+      onConfirm = () => props.leaveRoom(props.player.playerID, props.gameState.roomID);
     }
   } else if (props.gameState.playerIsHost) {
     menuItems = [
@@ -95,9 +105,8 @@ function PodiumMenu(props) {
           );
         })}
       </ul>
-      <ConfirmAbandonGameDialog isOpen={isConfirmDialogOpen}
-                                onClose={() => setIsConfirmDialogOpen(false)}
-                                onConfirm={() => props.abandonGame(EventContext.fromProps(props))} />
+      <ConfirmLeaveGameDialog abandon={props.gameState.playerIsHost} isOpen={isConfirmDialogOpen} gameID={props.gameState.gameID}
+                              onClose={() => setIsConfirmDialogOpen(false)} onConfirm={onConfirm} />
     </Card>
   );
 }

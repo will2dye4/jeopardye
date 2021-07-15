@@ -76,6 +76,7 @@ class RoomCodeDialog extends React.Component {
   handleKeyUp(event) {
     if (event.key.toLowerCase() === 'enter') {
       event.preventDefault();
+      event.stopPropagation();
       this.handleSubmit();
     }
   }

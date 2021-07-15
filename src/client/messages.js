@@ -60,13 +60,19 @@ const TIME_ELAPSED_RESPONSES = {
   ],
 };
 
-export function getStartOfRoundMessage(currentRound, isNewRound, playerHasControl, playerName) {
+export function getStartOfRoundMessage(currentRound, isNewRound, playerHasControl, playerInControlReassigned, playerName) {
   let response;
   if (isNewRound) {
     if (currentRound === Rounds.SINGLE) {
       response = `Game started. ${playerName} will be the first to select a clue.`;
     } else {
       response = `Let's play the ${currentRound} Jeopardye round! ${playerName} will choose first.`;
+    }
+  } else if (playerInControlReassigned) {
+    if (playerHasControl) {
+      response = `It's now your turn, ${playerName}!`;
+    } else {
+      response = `It's now ${playerName}'s turn.`;
     }
   } else {
     response = `Joined existing game in the ${currentRound} Jeopardye round.`;

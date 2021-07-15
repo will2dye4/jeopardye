@@ -17,10 +17,13 @@ import { EventContext } from '../../../../utils.mjs';
 import ActionIcon from '../../common/ActionIcon';
 import Icon from '../../common/Icon';
 import PlayerList from '../../common/players/PlayerList';
-import ConfirmAbandonGameDialog from './ConfirmAbandonGameDialog';
+import ConfirmLeaveGameDialog from './ConfirmLeaveGameDialog';
 
 function SpectatorsMenu(props) {
   const [ isConfirmDialogOpen, setIsConfirmDialogOpen ] = React.useState(false);
+  const onConfirm = (props.gameState.playerIsHost ?
+    () => props.abandonGame(EventContext.fromProps(props)) :
+    () => props.leaveRoom(props.playerID, props.gameState.roomID));
 
   let buttonIcons = [
     {
@@ -34,16 +37,14 @@ function SpectatorsMenu(props) {
       title: 'Show player statistics',
       icon: faChartLine,
       onClick: props.playerStats.open,
-    }
-  ];
-  if (props.gameState.playerIsHost) {
-    buttonIcons.push({
-      id: 'end-game-icon',
-      title: 'End game',
+    },
+    {
+      id: (props.gameState.playerIsHost ? 'end-game-icon' : 'leave-game-icon'),
+      title: (props.gameState.playerIsHost ? 'End game' : 'Leave game'),
       icon: faDoorOpen,
       onClick: () => setIsConfirmDialogOpen(true),
-    });
-  }
+    },
+  ];
 
   const numSpectators = Object.keys(props.spectators).length;
   const spectating = props.gameState.playerIsSpectating;
@@ -78,9 +79,8 @@ function SpectatorsMenu(props) {
             )}
           </PlayerList>
         </PopoverBody>
-        <ConfirmAbandonGameDialog isOpen={isConfirmDialogOpen}
-                                  onClose={() => setIsConfirmDialogOpen(false)}
-                                  onConfirm={() => props.abandonGame(EventContext.fromProps(props))} />
+        <ConfirmLeaveGameDialog abandon={props.gameState.playerIsHost} isOpen={isConfirmDialogOpen} gameID={props.gameState.gameID}
+                                onClose={() => setIsConfirmDialogOpen(false)} onConfirm={onConfirm} />
       </PopoverContent>
     </Popover>
   );

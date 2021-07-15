@@ -24,6 +24,7 @@ import {
   joinRoom,
   joinRoomWithCode,
   kickPlayer,
+  leaveRoom,
   markClueAsInvalid,
   markPlayerAsReadyForNextRound,
   overrideServerDecision,
@@ -85,6 +86,7 @@ const actionCreators = {
   joinRoom,
   joinRoomWithCode,
   kickPlayer,
+  leaveRoom,
   markClueAsInvalid,
   markPlayerAsReadyForNextRound,
   overrideServerDecision,
@@ -147,7 +149,7 @@ class Connector extends React.Component {
       this.connectAndFetchCurrentState();
     }
 
-    if (!prevProps.roomID && this.props.roomID) {
+    if ((this.props.roomID && prevProps.roomID !== this.props.roomID) || (!prevProps.roomID && this.props.roomID && !this.props.room)) {
       this.connectAndFetchCurrentState();
     }
 
@@ -243,7 +245,7 @@ class Connector extends React.Component {
   }
 
   render() {
-    const allowJoin = (Object.keys(this.props.players).length < MAX_PLAYERS_PER_GAME);
+    const allowJoin = (Object.values(this.props.players).filter(player => player.active).length < MAX_PLAYERS_PER_GAME);
     const kickPlayerDialog = {
       open: this.openKickPlayerDialog,
       close: this.closeKickPlayerDialog,

@@ -147,6 +147,7 @@ export const EventTypes = {
   JOIN_ROOM: 'join_room',
   JOIN_ROOM_WITH_CODE: 'join_room_with_code',
   PLAYER_JOINED_ROOM: 'player_joined_room',
+  LEAVE_ROOM: 'leave_room',
   PLAYER_LEFT_ROOM: 'player_left_room',
   JOIN_GAME: 'join_game',
   PLAYER_JOINED: 'player_joined',
