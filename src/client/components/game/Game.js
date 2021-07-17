@@ -3,12 +3,21 @@ import { Box, Text, createStandaloneToast } from '@chakra-ui/react';
 import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
+  DEFAULT_COUNTDOWN_SECONDS,
   GAME_HISTORY_SCROLL_KEY,
   GAME_HISTORY_SIDE_KEY,
   GAME_HISTORY_SIZE_KEY,
   MAX_PLAYERS_PER_GAME,
+  WAGER_COUNTDOWN_SECONDS,
 } from '../../../constants.mjs';
-import { EventContext, formatList, getUnplayedClues, hasMoreRounds, isDailyDouble } from '../../../utils.mjs';
+import {
+  EventContext,
+  formatList,
+  getCountdownTimeInMillis,
+  getUnplayedClues,
+  hasMoreRounds,
+  isDailyDouble,
+} from '../../../utils.mjs';
 import {
   getBuzzInMessage,
   getCorrectAnswerMessage,
@@ -20,6 +29,7 @@ import {
   getTimeElapsedMessage,
   getWaitingForBuzzMessage,
 } from '../../messages';
+import { getPlayerName } from '../../reducers/game_reducer';
 import JEOPARDYE_THEME from '../../theme';
 import { isLocalStorageSettingEnabled, markClueAsInvalid, playSound, speakAnswer, speakClue } from '../../utils';
 import './Game.css';
@@ -30,7 +40,6 @@ import GameHistory from './history/GameHistory';
 import Podiums from './podium/Podiums';
 import RoundSummary from './summary/RoundSummary';
 import StatusBar from './status/StatusBar';
-import {getPlayerName} from "../../reducers/game_reducer";
 
 const BUZZER_LOCKOUT_DELAY_MILLIS = 1000;
 const DISMISS_CLUE_DELAY_MILLIS = 5000;
@@ -56,8 +65,21 @@ class Game extends React.Component {
       showGameHistory: false,
       showRoundSummary: !!props.roundSummary,
       status: this.getInitialStatus(props),
-      timerKey: Date.now(),
-      timerRef: React.createRef(),
+      /* timers */
+      defaultTimerPaused: false,
+      defaultTimerRunning: false,
+      defaultTimerWaiting: false,
+      defaultTimerSeconds: DEFAULT_COUNTDOWN_SECONDS,
+      defaultTimerUpdater: null,
+      defaultTimerValue: 100,
+      responseTimerPaused: false,
+      responseTimerRunning: false,
+      responseTimerWagering: false,
+      responseTimerWaiting: false,
+      responseTimerSeconds: DEFAULT_COUNTDOWN_SECONDS,
+      responseTimerUpdater: null,
+      responseTimerValue: 100,
+      showResponseTimer: false,
     };
     this.closeGameHistory = this.closeGameHistory.bind(this);
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
@@ -117,9 +139,9 @@ class Game extends React.Component {
       setTimeout(function() {
         this.setState({showActiveClue: true});
         if (showWager) {
-          this.getTimerRef()?.startResponseTimer(true);  /* start wager timer */
+          this.startResponseTimer(true);  /* start wager timer */
         } else if (!dailyDouble) {
-          this.getTimerRef()?.startWaitingPeriod();
+          this.startWaitingPeriod();
           speakClue(this.props.activeClue);
         }
       }.bind(this), SHOW_CLUE_DELAY_MILLIS);
@@ -130,7 +152,7 @@ class Game extends React.Component {
     }
 
     if (!prevProps.prevAnswer && this.props.prevAnswer) {
-      this.getTimerRef()?.resetResponseTimer();
+      this.resetResponseTimer();
       const playerID = this.props.prevAnswer.context.playerID;
       const isCurrentPlayer = (playerID === this.props.playerID);
       const playerName = this.getPlayerName(playerID);
@@ -164,8 +186,8 @@ class Game extends React.Component {
     if (!prevProps.currentWager && this.props.currentWager) {
       if (this.playerHasControl()) {
         this.setState({showDailyDoubleWager: false});
-        this.getTimerRef()?.resetResponseTimer();
-        this.getTimerRef()?.startCountdown();
+        this.resetResponseTimer();
+        this.startCountdown();
       } else {
         this.setStatus({
           emoji: 'hourglass',
@@ -176,9 +198,9 @@ class Game extends React.Component {
     }
 
     if (!prevProps.playerAnswering && this.props.playerAnswering && !this.isActiveDailyDouble()) {
-      this.getTimerRef()?.pause();
+      this.pauseTimer();
       if (this.playerHasControl()) {
-        this.getTimerRef()?.startResponseTimer();
+        this.startResponseTimer();
       } else {
         this.setStatus({
           emoji: 'hourglass',
@@ -218,7 +240,7 @@ class Game extends React.Component {
         };
       }
       this.setStatus(status);
-      this.getTimerRef()?.startCountdown();
+      this.startCountdown();
     }
 
     if (!prevProps.responseTimerElapsed && this.props.responseTimerElapsed) {
@@ -417,14 +439,6 @@ class Game extends React.Component {
     return this.props.players[playerID]?.name;
   }
 
-  getTimerRef() {
-    if (!this.state.timerRef.current) {
-      console.log('Replacing timer key');
-      this.setState({timerKey: Date.now()});
-    }
-    return this.state.timerRef.current;
-  }
-
   isActiveDailyDouble() {
     return (!!this.props.board && !!this.props.activeClue && isDailyDouble(this.props.board, this.props.activeClue.clueID));
   }
@@ -468,7 +482,7 @@ class Game extends React.Component {
     if (!isCurrentPlayer) {
       speakAnswer(this.props.prevAnswer.clue.answer);
     }
-    this.getTimerRef()?.reset();
+    this.resetTimer();
     this.checkForLastClue(isCurrentPlayer, true);
   }
 
@@ -506,10 +520,10 @@ class Game extends React.Component {
       });
     }
     if (dailyDouble) {
-      this.getTimerRef()?.reset();
+      this.resetTimer();
       this.revealAnswer(isCurrentPlayer, false, false);
     } else {
-      this.getTimerRef()?.resume(this.props.answerDelayMillis);
+      this.resumeTimer(this.props.answerDelayMillis);
     }
   }
 
@@ -565,7 +579,7 @@ class Game extends React.Component {
         text: status,
       };
     }
-    this.getTimerRef()?.reset();
+    this.resetTimer();
     this.setState(newState);
     speakAnswer(this.props.activeClue.answer, SHOW_CLUE_DELAY_MILLIS);
     setTimeout(this.dismissActiveClue, DISMISS_CLUE_DELAY_MILLIS);
@@ -595,7 +609,7 @@ class Game extends React.Component {
       showDailyDoubleWager: false,
       status: status,
     });
-    this.getTimerRef()?.reset();
+    this.resetTimer();
     this.props.dismissActiveClue();
     this.checkForLastClue(isCurrentPlayer, this.props.prevAnswer?.correct);
   }
@@ -703,6 +717,127 @@ class Game extends React.Component {
     this.setState({gameHistorySize: size});
   }
 
+  getCountdownTimeInSeconds() {
+    return getCountdownTimeInMillis(this.isActiveDailyDouble()) / 1000;
+  }
+
+  getDefaultTimerUpdater(startingValue) {
+    const interval = this.getCountdownTimeInSeconds() * 10;
+    if (!startingValue) {
+      startingValue = this.state.defaultTimerValue;
+    }
+    let value = startingValue;
+    return setInterval(function() {
+      value -= 1;
+      const finished = (value <= 0);
+      this.setState({
+        defaultTimerRunning: !finished,
+        defaultTimerValue: value,
+      });
+      if (finished) {
+        this.cancelDefaultTimerUpdater();
+      }
+    }.bind(this), interval);
+  }
+
+  getResponseTimerUpdater(seconds) {
+    const interval = seconds * 10;
+    return setInterval(function() {
+      const newValue = this.state.responseTimerValue - 1;
+      const finished = (newValue <= 0);
+      this.setState({
+        responseTimerRunning: !finished,
+        responseTimerValue: newValue,
+      });
+      if (finished) {
+        this.cancelResponseTimerUpdater();
+      }
+    }.bind(this), interval);
+  }
+
+  startCountdown() {
+    this.setState({
+      defaultTimerSeconds: this.getCountdownTimeInSeconds(),
+      defaultTimerRunning: true,
+      defaultTimerWaiting: false,
+      defaultTimerUpdater: this.getDefaultTimerUpdater(),
+      defaultTimerValue: 100,
+    });
+  }
+
+  startWaitingPeriod() {
+    this.setState({defaultTimerWaiting: true});
+  }
+
+  startResponseTimer(wagering = false) {
+    const seconds = (wagering ? WAGER_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS);
+    this.setState({
+      responseTimerSeconds: seconds,
+      responseTimerRunning: true,
+      responseTimerWagering: wagering,
+      responseTimerUpdater: this.getResponseTimerUpdater(seconds),
+      responseTimerValue: 100,
+      showResponseTimer: true,
+    });
+  }
+
+  pauseTimer() {
+    if (this.state.defaultTimerRunning && !this.state.defaultTimerPaused) {
+      this.setState({
+        defaultTimerRunning: false,
+        defaultTimerPaused: true,
+      });
+      this.cancelDefaultTimerUpdater();
+    }
+  }
+
+  resumeTimer(remainingDelayMillis) {
+    if (this.state.defaultTimerPaused && !this.state.defaultTimerWaiting) {
+      const newValue = (remainingDelayMillis / (this.getCountdownTimeInSeconds() * 1000)) * 100;
+      this.resetResponseTimer();
+      this.setState({
+        defaultTimerRunning: true,
+        defaultTimerPaused: false,
+        defaultTimerUpdater: this.getDefaultTimerUpdater(newValue),
+        defaultTimerValue: newValue,
+      });
+    }
+  }
+
+  resetTimer() {
+    this.resetResponseTimer();
+    this.cancelDefaultTimerUpdater();
+    this.setState({
+      defaultTimerRunning: false,
+      defaultTimerPaused: false,
+      defaultTimerValue: 100,
+    });
+  }
+
+  resetResponseTimer() {
+    this.cancelResponseTimerUpdater();
+    this.setState({
+      responseTimerRunning: false,
+      responseTimerWagering: false,
+      responseTimerValue: 100,
+      showResponseTimer: false,
+    });
+  }
+
+  cancelDefaultTimerUpdater() {
+    if (this.state.defaultTimerUpdater !== null) {
+      clearInterval(this.state.defaultTimerUpdater);
+      this.setState({defaultTimerUpdater: null});
+    }
+  }
+
+  cancelResponseTimerUpdater() {
+    if (this.state.responseTimerUpdater !== null) {
+      clearInterval(this.state.responseTimerUpdater);
+      this.setState({responseTimerUpdater: null});
+    }
+  }
+
   render() {
     const gameHistory = {
       open: this.openGameHistory,
@@ -727,12 +862,32 @@ class Game extends React.Component {
       playerIsOwner: (!!this.props.playerID && !!this.props.room && this.props.playerID === this.props.room.ownerPlayerID),
       playerIsSpectating: this.playerIsSpectating(),
     };
+    let timer;
+    if (this.state.showResponseTimer) {
+      timer = {
+        paused: this.state.responseTimerPaused,
+        running: this.state.responseTimerRunning,
+        wagering: this.state.responseTimerWagering,
+        waiting: this.state.responseTimerWaiting,
+        seconds: this.state.responseTimerSeconds,
+        updater: this.state.responseTimerUpdater,
+        value: this.state.responseTimerValue,
+      };
+    } else {
+      timer = {
+        paused: this.state.defaultTimerPaused,
+        running: this.state.defaultTimerRunning,
+        wagering: false,
+        waiting: this.state.defaultTimerWaiting,
+        seconds: this.state.defaultTimerSeconds,
+        updater: this.state.defaultTimerUpdater,
+        value: this.state.defaultTimerValue,
+      };
+    }
     return (
       <Box id="game" className="game" p={6}>
-        <CountdownTimer gameState={gameState}
-                        key={this.state.timerKey}
-                        ref={this.state.timerRef}
-                        activeClue={this.props.activeClue} />
+        <CountdownTimer gameState={gameState} activeClue={this.props.activeClue}
+                        showResponseTimer={this.state.showResponseTimer} timer={timer} />
         <Board gameState={gameState}
                activeClue={this.props.activeClue}
                currentWager={this.props.currentWager}

@@ -263,8 +263,9 @@ function getEventDescription(props) {
       };
       break;
     case EventTypes.RESPONSE_PERIOD_ENDED:
+      name = (playerName === 'You' ? 'you' : playerName);
       eventConfig = {
-        description: <React.Fragment>Time ran out for <PlayerName>{playerName}</PlayerName> to answer.</React.Fragment>,
+        description: <React.Fragment>Time ran out for <PlayerName>{name}</PlayerName> to answer.</React.Fragment>,
         emoji: Emoji.TIMER_CLOCK,
       };
       break;
