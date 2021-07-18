@@ -8,6 +8,7 @@ import db, { markAllPlayersInactive } from './db.mjs';
 import game from './api/game.mjs';
 import player from './api/player.mjs';
 import room from './api/room.mjs';
+import roomLinkRequest from './api/roomLinkRequest.mjs';
 import { handleWebsocket } from './websockets.mjs';
 
 const PORT = 3333;
@@ -23,6 +24,7 @@ app.use(cors());
 app.use('/api/game', game);
 app.use('/api/player', player);
 app.use('/api/room', room);
+app.use('/api/request', roomLinkRequest);
 app.ws('/api/ws', handleWebsocket);
 
 app.listen(PORT, () => logger.info(`API server running on port ${PORT}...`));

@@ -12,11 +12,13 @@ export const ActionTypes = {
   FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
   CREATE_NEW_PLAYER: 'JEOPARDYE::CREATE_NEW_PLAYER',
   CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
+  REQUEST_NEW_ROOM_LINK: 'JEOPARDYE::REQUEST_NEW_ROOM_LINK',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   CLEAR_CURRENT_GAME: 'JEOPARDYE::CLEAR_CURRENT_GAME',
   CLEAR_ERROR: 'JEOPARDYE::CLEAR_ERROR',
   CLEAR_HOST_OVERRIDE: 'JEOPARDYE::CLEAR_HOST_OVERRIDE',
   CLEAR_PLAYER_IN_CONTROL_REASSIGNED: 'JEOPARDYE::CLEAR_PLAYER_IN_CONTROL_REASSIGNED',
+  CLEAR_ROOM_LINK_REQUEST_SUCCEEDED: 'JEOPARDYE::CLEAR_ROOM_LINK_REQUEST_SUCCEEDED',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -30,6 +32,7 @@ const WS_BASE = 'ws://localhost:3333/api/ws';
 const GAME_URL = `${API_BASE}/game`;
 const PLAYER_URL = `${API_BASE}/player`;
 const ROOM_URL = `${API_BASE}/room`;
+const ROOM_REQUEST_URL = `${API_BASE}/request`;
 
 function getJSON(response, errorMessage) {
   if (response.ok) {
@@ -133,6 +136,24 @@ function updatePlayerName(playerID, name, preferredFontStyle) {
   }).catch(e => handleError(e, `Unexpected error occurred while updating name for player ${playerID}.`));
 }
 
+function submitNewRoomLinkRequest(name, email) {
+  const opts = {
+    body: JSON.stringify({
+      name: name,
+      email: email,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  }
+  return fetch(ROOM_REQUEST_URL, opts).then(response =>
+    getJSON(response, 'Error occurred while requesting new room link.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while requesting new room link.')
+  );
+}
+
 export function fetchRoom(roomID) {
   return {
     type: ActionTypes.FETCH_ROOM,
@@ -151,7 +172,7 @@ export function fetchNewGame(gameSettings) {
   return {
     type: ActionTypes.FETCH_NEW_GAME,
     payload: createNewGame(gameSettings),
-  }
+  };
 }
 
 export function fetchGame(gameID) {
@@ -192,21 +213,28 @@ export function fetchPlayer(playerID) {
   return {
     type: ActionTypes.FETCH_PLAYER,
     payload: getPlayerByID(playerID),
-  }
+  };
 }
 
 export function createNewPlayer(name, preferredFontStyle) {
   return {
     type: ActionTypes.CREATE_NEW_PLAYER,
     payload: createPlayer(name, preferredFontStyle),
-  }
+  };
 }
 
 export function changePlayerName(playerID, name, preferredFontStyle) {
   return {
     type: ActionTypes.CHANGE_PLAYER_NAME,
     payload: updatePlayerName(playerID, name, preferredFontStyle),
-  }
+  };
+}
+
+export function requestNewRoomLink(name, email) {
+  return {
+    type: ActionTypes.REQUEST_NEW_ROOM_LINK,
+    payload: submitNewRoomLinkRequest(name, email),
+  };
 }
 
 export function startSpectating(roomID, playerID) {
@@ -328,6 +356,13 @@ export function clearHostOverride(override) {
 export function clearPlayerInControlReassigned() {
   return {
     type: ActionTypes.CLEAR_PLAYER_IN_CONTROL_REASSIGNED,
+    payload: {},
+  };
+}
+
+export function clearRoomLinkRequestSucceeded() {
+  return {
+    type: ActionTypes.CLEAR_ROOM_LINK_REQUEST_SUCCEEDED,
     payload: {},
   };
 }

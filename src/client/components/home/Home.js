@@ -29,6 +29,12 @@ class Home extends React.Component {
     }
   }
 
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (!prevProps.roomCode && this.props.roomCode && !this.props.roomID) {
+      this.openRoomCodeDialog();
+    }
+  }
+
   openCreateRoomDialog() {
     if (this.props.playerID) {
       this.setState({showCreateRoomDialog: true});

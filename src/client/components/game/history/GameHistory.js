@@ -9,6 +9,7 @@ import {
   List,
   Text,
 } from '@chakra-ui/react';
+import { MAX_GAME_HISTORY_LENGTH } from '../../../../constants.mjs';
 import GameHistoryButtons from './GameHistoryButtons';
 import GameHistoryEvent from './GameHistoryEvent';
 
@@ -48,9 +49,13 @@ class GameHistory extends React.Component {
       {borderLeftColor: 'jeopardyBlue.500', borderLeftWidth: 4});
     let history;
     if (this.props.eventHistory.length) {
+      let eventHistory = this.props.eventHistory;
+      if (eventHistory.length > MAX_GAME_HISTORY_LENGTH) {
+        eventHistory = eventHistory.slice(eventHistory.length - MAX_GAME_HISTORY_LENGTH);
+      }
       history = (
         <List className="list-group">
-          {this.props.eventHistory.map((event, i) => <GameHistoryEvent key={i} index={i} event={event} {...this.props} />)}
+          {eventHistory.map((event, i) => <GameHistoryEvent key={i} index={i} event={event} {...this.props} />)}
         </List>
       );
     } else {

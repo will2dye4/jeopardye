@@ -2,8 +2,9 @@ import mongodb from 'mongodb';
 const { MongoClient } = mongodb;
 
 import uuid from 'uuid';
-import { randomChoice, range } from '../utils.mjs';
 import { ROOM_CODE_CHARACTERS, ROOM_CODE_LENGTH } from '../constants.mjs';
+import { RoomLinkRequestResolution } from '../models/roomLinkRequest.mjs';
+import { randomChoice, range } from '../utils.mjs';
 
 const MONGODB_HOST = 'localhost';
 const MONGODB_PORT = 27017;
@@ -17,6 +18,7 @@ const db = client.db(DB_NAME);
 const gamesCollection = db.collection('games');
 const playersCollection = db.collection('players');
 const roomsCollection = db.collection('rooms');
+const roomLinkRequestsCollection = db.collection('roomLinkRequests');
 
 export function markAllPlayersInactive(callback) {
   playersCollection.updateMany({}, {$set: {active: false}}).then(() => callback());
@@ -228,6 +230,29 @@ export async function incrementPlayerStat(playerID, statName, value = 1) {
 
 export async function setHighestGameScore(playerID, score) {
   await updatePlayer(playerID, {'stats.highestGameScore': score});
+}
+
+export async function createRoomLinkRequest(roomLinkRequest) {
+  if (!roomLinkRequest.requestID) {
+    roomLinkRequest.requestID = uuid.v4();
+  }
+  roomLinkRequest._id = roomLinkRequest.requestID;
+  const result = await roomLinkRequestsCollection.insertOne(roomLinkRequest);
+  if (result.insertedCount !== 1) {
+    throw new Error('Failed to create room link request!');
+  }
+}
+
+export async function getRoomLinkRequest(requestID) {
+  return await roomLinkRequestsCollection.findOne({_id: requestID});
+}
+
+export async function getRoomLinkRequestByEmail(email) {
+  return await roomLinkRequestsCollection.findOne({email: email, resolution: RoomLinkRequestResolution.UNRESOLVED});
+}
+
+export async function resolveRoomLinkRequest(requestID, resolution, resolvedTime) {
+  await roomLinkRequestsCollection.updateOne({_id: requestID}, {$set: {resolution: resolution, resolvedTime: resolvedTime}});
 }
 
 export default db;

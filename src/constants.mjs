@@ -102,6 +102,9 @@ export const DEFAULT_FINAL_JEOPARDYE = true;
 export const MIN_PLAYER_NAME_LENGTH = 1;
 export const MAX_PLAYER_NAME_LENGTH = 10;
 
+export const MAX_ROOM_REQUEST_EMAIL_LENGTH = 128;
+export const MAX_ROOM_REQUEST_NAME_LENGTH = 64;
+
 export const MIN_CLUE_READING_DELAY_SECONDS = 5;
 export const MAX_CLUE_READING_DELAY_SECONDS = 15;
 
@@ -129,6 +132,8 @@ export const SECONDS_PER_WEEK = SECONDS_PER_DAY * DAYS_PER_WEEK;
 export const SECONDS_PER_MONTH = SECONDS_PER_DAY * DAYS_PER_MONTH;
 
 export const MAX_KICK_DURATION_SECONDS = SECONDS_PER_MONTH;
+
+export const MAX_GAME_HISTORY_LENGTH = 100;
 
 export const EventTypes = {
   ERROR: 'error',

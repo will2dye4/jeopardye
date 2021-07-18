@@ -15,7 +15,8 @@ function Room(props) {
     console.log(`Fetching room ${roomCode}`);
     props.fetchRoom(roomCode);
   }
-  return <Redirect to="/" />;
+  const destination = (props.redirectToHome ? '/' : `/?code=${roomCode}`);
+  return <Redirect to={destination} />;
 }
 
 export default Room;

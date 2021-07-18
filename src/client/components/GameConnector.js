@@ -11,6 +11,7 @@ import {
   clearError,
   clearHostOverride,
   clearPlayerInControlReassigned,
+  clearRoomLinkRequestSucceeded,
   clientConnect,
   createNewPlayer,
   createNewRoom,
@@ -29,6 +30,7 @@ import {
   markPlayerAsReadyForNextRound,
   overrideServerDecision,
   reassignRoomHost,
+  requestNewRoomLink,
   selectClue,
   startSpectating,
   stopSpectating,
@@ -73,6 +75,7 @@ const actionCreators = {
   clearError,
   clearHostOverride,
   clearPlayerInControlReassigned,
+  clearRoomLinkRequestSucceeded,
   clientConnect,
   createNewPlayer,
   createNewRoom,
@@ -91,6 +94,7 @@ const actionCreators = {
   markPlayerAsReadyForNextRound,
   overrideServerDecision,
   reassignRoomHost,
+  requestNewRoomLink,
   selectClue,
   startSpectating,
   stopSpectating,
@@ -186,6 +190,16 @@ class Connector extends React.Component {
         isClosable: true,
       });
     }
+
+    if (!prevProps.roomLinkRequestSucceeded && this.props.roomLinkRequestSucceeded) {
+      toast({
+        position: 'top',
+        title: `Room link request submitted successfully.`,
+        status: 'success',
+        isClosable: true,
+      });
+      this.props.clearRoomLinkRequestSucceeded();
+    }
   }
 
   connectAndFetchCurrentState() {
@@ -200,6 +214,10 @@ class Connector extends React.Component {
     if (this.props.connected && this.props.room && this.props.playerID && !this.props.room.playerIDs.includes(this.props.playerID)) {
       console.log('Joining room...');
       this.props.joinRoom(this.props.playerID, this.props.roomID);
+      if (Object.values(this.props.players).filter(player => player.active).length >= MAX_PLAYERS_PER_GAME) {
+        console.log('Room is full. Becoming a spectator.');
+        this.props.startSpectating(this.props.roomID, this.props.playerID);
+      }
     }
   }
 
@@ -246,6 +264,11 @@ class Connector extends React.Component {
 
   render() {
     const allowJoin = (Object.values(this.props.players).filter(player => player.active).length < MAX_PLAYERS_PER_GAME);
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    let roomCode;
+    if (urlSearchParams.has('code')) {
+      roomCode = urlSearchParams.get('code');
+    }
     const kickPlayerDialog = {
       open: this.openKickPlayerDialog,
       close: this.closeKickPlayerDialog,
@@ -265,7 +288,7 @@ class Connector extends React.Component {
             <Route exact path="/">
               {this.props.room ?
                 <Redirect to={`/p/${this.props.room.roomCode}`}/> :
-                <Home kickPlayerDialog={kickPlayerDialog} playerEditor={playerEditor} {...this.props} />}
+                <Home kickPlayerDialog={kickPlayerDialog} playerEditor={playerEditor} roomCode={roomCode} {...this.props} />}
             </Route>
             <Route path="/p/:roomCode">
               <Room allowJoin={allowJoin}

@@ -44,6 +44,7 @@ function newStoreData() {
     revealAnswer: false,
     responseTimerElapsed: false,
     roundSummary: null,
+    roomLinkRequestSucceeded: false,
   };
 }
 
@@ -553,6 +554,14 @@ export function GameReducer(storeData, action) {
         newStore.playerID = player.playerID;
       }
       return newStore;
+    case ActionTypes.REQUEST_NEW_ROOM_LINK:
+      const roomLinkRequest = action.payload;
+      if (roomLinkRequest.error) {
+        const error = (roomLinkRequest.status === StatusCodes.CONFLICT ? 'Your previous request has not yet been approved.' : roomLinkRequest.error);
+        return {...storeData, error: error};
+      }
+      console.log(`Created room link request ${roomLinkRequest.requestID}.`);
+      return {...storeData, roomLinkRequestSucceeded: true};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
     case ActionTypes.CLEAR_CURRENT_GAME:
@@ -578,6 +587,8 @@ export function GameReducer(storeData, action) {
       return storeData;
     case ActionTypes.CLEAR_PLAYER_IN_CONTROL_REASSIGNED:
       return {...storeData, playerInControlReassigned: false};
+    case ActionTypes.CLEAR_ROOM_LINK_REQUEST_SUCCEEDED:
+      return {...storeData, roomLinkRequestSucceeded: false};
     case ActionTypes.REDUX_WEBSOCKET_OPEN:
       return {...storeData, connected: true};
     case ActionTypes.REDUX_WEBSOCKET_CLOSED:

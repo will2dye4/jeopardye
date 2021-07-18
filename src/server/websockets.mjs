@@ -980,7 +980,7 @@ async function handleVoteToSkipClue(ws, event) {
 async function handleOverrideServerDecision(ws, event) {
   const { roomID, gameID, playerID, categoryID, clueID } = event.payload.context;
   const value = event.payload.value;
-  const { game, room } = await validateEventContext(ws, event);
+  const { game, room } = await validateEventContext(ws, event, false);
   if (!game) {
     return;
   }
@@ -989,8 +989,21 @@ async function handleOverrideServerDecision(ws, event) {
     handleError(ws, event, 'only the host may override server decisions', StatusCodes.FORBIDDEN);
     return;
   }
-  const round = game.rounds[game.currentRound];
-  const clue = round.categories[categoryID].clues.find(clue => clue.clueID === clueID);
+  let clue, round;
+  for (const roundName of Object.keys(game.rounds)) {
+    round = game.rounds[roundName];
+    const categories = round.categories;
+    if (categories.hasOwnProperty(categoryID)) {
+      clue = categories[categoryID].clues.find(clue => clue.clueID === clueID);
+    }
+    if (clue || roundName === game.currentRound) {
+      break;
+    }
+  }
+  if (!clue) {
+    handleError(ws, event, `invalid clue ${clueID} (category ${categoryID})`, StatusCodes.BAD_REQUEST);
+    return;
+  }
   if (!clue.played) {
     handleError(ws, event, 'clue has not been played', StatusCodes.BAD_REQUEST);
     return;

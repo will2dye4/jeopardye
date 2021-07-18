@@ -14,6 +14,9 @@ import {
 const { StemmerEn, StopwordsEn } = langEn;
 const { leven } = similarity;
 
+/* anything@anything.anything */
+const EMAIL_REGEX = /\S+@\S+\.\S+/;
+
 const MIN_ANSWER_SIMILARITY_RATIO = 0.8;
 
 const NUMERALS_TO_WORDS = {
@@ -117,6 +120,10 @@ export function formatList(items) {
     }
   });
   return result;
+}
+
+export function validateEmail(email) {
+  return EMAIL_REGEX.test(email);
 }
 
 export function getUnplayedClues(board, limit = -1) {
