@@ -7,9 +7,75 @@ import {
 } from '../../constants.mjs';
 import { RoomLinkRequest, RoomLinkRequestResolution } from '../../models/roomLinkRequest.mjs';
 import { validateEmail } from '../../utils.mjs';
-import { createRoomLinkRequest, getRoomLinkRequest, getRoomLinkRequestByEmail, resolveRoomLinkRequest } from '../db.mjs';
+import {
+  createRoomLinkRequest,
+  getCountOfRoomLinkRequests,
+  getRoomLinkRequest,
+  getRoomLinkRequests,
+  getRoomLinkRequestByEmail,
+  resolveRoomLinkRequest,
+  PAGE_SIZE,
+} from '../db.mjs';
 
 const logger = log.get('api:room-link-request');
+
+async function handleGetRoomLinkRequests(req, res, next) {
+  const handleError = (message, status) => {
+    const error = new Error(message);
+    error.status = status;
+    next(error);
+  }
+
+  const pageParam = req.query.page || 1;
+  const page = parseInt(pageParam);
+  if (isNaN(page) || page < 1) {
+    handleError(`Invalid page "${pageParam}"`, StatusCodes.BAD_REQUEST);
+    return;
+  }
+
+  const resolutionParam = req.query.resolution;
+  let resolution;
+  if (resolutionParam) {
+    resolution = resolutionParam.toLowerCase();
+    if (!Object.values(RoomLinkRequestResolution).includes(resolution)) {
+      handleError(`Invalid resolution "${resolutionParam}"`, StatusCodes.BAD_REQUEST);
+      return;
+    }
+  }
+
+  let count = 0;
+  let hasMore = false;
+  let roomLinkRequests = [];
+
+  try {
+    count = await getCountOfRoomLinkRequests(resolution);
+  } catch (e) {
+    handleError('Failed to get count of room link requests', StatusCodes.INTERNAL_SERVER_ERROR);
+    return;
+  }
+
+  if (page > 1 && count <= (page - 1) * PAGE_SIZE) {
+    handleError(`Invalid page "${pageParam}"`, StatusCodes.BAD_REQUEST);
+    return;
+  }
+
+  if (count > 0) {
+    try {
+      roomLinkRequests = await getRoomLinkRequests(page, resolution);
+    } catch (e) {
+      handleError('Failed to get room link requests', StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
+    hasMore = (count > page * PAGE_SIZE);
+  }
+
+  res.json({
+    more: hasMore,
+    total: count,
+    page: page,
+    requests: roomLinkRequests,
+  });
+}
 
 async function handleCreateRoomLinkRequest(req, res, next) {
   logger.debug('Creating a request for a new room link.');
@@ -119,6 +185,7 @@ async function handleResolveRoomLinkRequest(req, res, next) {
 }
 
 const router = express.Router();
+router.get('/', handleGetRoomLinkRequests);
 router.post('/', handleCreateRoomLinkRequest);
 router.get('/:requestID', handleGetRoomLinkRequest);
 router.put('/:requestID', handleResolveRoomLinkRequest);

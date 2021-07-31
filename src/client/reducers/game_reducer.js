@@ -45,6 +45,9 @@ function newStoreData() {
     responseTimerElapsed: false,
     roundSummary: null,
     roomLinkRequestSucceeded: false,
+    roomLinkRequests: {},
+    rooms: {},
+    allPlayers: {},
   };
 }
 
@@ -509,6 +512,7 @@ function handleWebsocketEvent(storeData, event) {
 }
 
 export function GameReducer(storeData, action) {
+  let response;
   switch (action.type) {
     case ActionTypes.CREATE_NEW_ROOM:
     case ActionTypes.FETCH_ROOM:
@@ -530,6 +534,22 @@ export function GameReducer(storeData, action) {
         return {...storeData, redirectToHome: false, roomID: room.roomID, room: room};
       }
       return {...storeData, roomID: room.roomID};
+    case ActionTypes.FETCH_ROOMS:
+      response = action.payload;
+      if (response.error) {
+        return {...storeData, error: response.error};
+      }
+      let playerNames = storeData.rooms.playerNames;
+      let rooms = storeData.rooms.rooms;
+      if (response.page === 1) {
+        playerNames = response.playerNames;
+        rooms = response.rooms;
+      } else {
+        playerNames = {...playerNames, ...response.playerNames};
+        rooms = rooms.concat(response.rooms);
+      }
+      const newRooms = {...response, playerNames: playerNames, rooms: rooms};
+      return {...storeData, rooms: newRooms};
     case ActionTypes.FETCH_CURRENT_GAME:
     case ActionTypes.FETCH_GAME:
     case ActionTypes.FETCH_NEW_GAME:
@@ -554,6 +574,32 @@ export function GameReducer(storeData, action) {
         newStore.playerID = player.playerID;
       }
       return newStore;
+    case ActionTypes.FETCH_PLAYERS:
+      response = action.payload;
+      if (response.error) {
+        return {...storeData, error: response.error};
+      }
+      let players = storeData.allPlayers.players;
+      if (response.page === 1) {
+        players = response.players;
+      } else {
+        players = players.concat(response.players);
+      }
+      const allPlayers = {...response, players: players};
+      return {...storeData, allPlayers: allPlayers};
+    case ActionTypes.FETCH_ROOM_LINK_REQUESTS:
+      response = action.payload;
+      if (response.error) {
+        return {...storeData, error: response.error};
+      }
+      let newRequests = storeData.roomLinkRequests.requests;
+      if (response.page === 1) {
+        newRequests = response.requests;
+      } else {
+        newRequests = newRequests.concat(response.requests);
+      }
+      const newRoomLinkRequests = {...response, requests: newRequests};
+      return {...storeData, roomLinkRequests: newRoomLinkRequests};
     case ActionTypes.REQUEST_NEW_ROOM_LINK:
       const roomLinkRequest = action.payload;
       if (roomLinkRequest.error) {
@@ -562,6 +608,19 @@ export function GameReducer(storeData, action) {
       }
       console.log(`Created room link request ${roomLinkRequest.requestID}.`);
       return {...storeData, roomLinkRequestSucceeded: true};
+    case ActionTypes.RESOLVE_ROOM_LINK_REQUEST:
+      const request = action.payload;
+      if (request.error) {
+        return {...storeData, error: request.error};
+      }
+      let newReqs = {...storeData.roomLinkRequests};
+      newReqs.requests.forEach(req => {
+        if (req.requestID === request.requestID) {
+          req.resolution = request.resolution;
+          req.resolvedTime = request.resolvedTime;
+        }
+      });
+      return {...storeData, roomLinkRequests: newReqs};
     case ActionTypes.DISMISS_CLUE:
       return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
     case ActionTypes.CLEAR_CURRENT_GAME:

@@ -211,3 +211,13 @@ html, body {
     transform: translateX(-50%);
     -webkit-text-stroke: 2px white;
 }
+
+button[role=tab]:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+button[role=tab][aria-selected=true] {
+    color: #1D08A3;
+    font-weight: bold;
+}

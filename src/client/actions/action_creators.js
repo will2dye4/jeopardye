@@ -4,15 +4,19 @@ import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
   FETCH_ROOM: 'JEOPARDYE::FETCH_ROOM',
+  FETCH_ROOMS: 'JEOPARDYE::FETCH_ROOMS',
   CREATE_NEW_ROOM: 'JEOPARDYE::CREATE_NEW_ROOM',
   FETCH_CURRENT_GAME: 'JEOPARDYE::FETCH_CURRENT_GAME',
   FETCH_GAME: 'JEOPARDYE::FETCH_GAME',
   FETCH_NEW_GAME: 'JEOPARDYE::FETCH_NEW_GAME',
   FETCH_CURRENT_PLAYER: 'JEOPARDYE::FETCH_CURRENT_PLAYER',
   FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
+  FETCH_PLAYERS: 'JEOPARDYE::FETCH_PLAYERS',
   CREATE_NEW_PLAYER: 'JEOPARDYE::CREATE_NEW_PLAYER',
   CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
+  FETCH_ROOM_LINK_REQUESTS: 'JEOPARDYE::FETCH_ROOM_LINK_REQUESTS',
   REQUEST_NEW_ROOM_LINK: 'JEOPARDYE::REQUEST_NEW_ROOM_LINK',
+  RESOLVE_ROOM_LINK_REQUEST: 'JEOPARDYE::RESOLVE_ROOM_LINK_REQUEST',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   CLEAR_CURRENT_GAME: 'JEOPARDYE::CLEAR_CURRENT_GAME',
   CLEAR_ERROR: 'JEOPARDYE::CLEAR_ERROR',
@@ -45,6 +49,20 @@ function getJSON(response, errorMessage) {
 function handleError(error, errorMessage) {
   console.log(`${errorMessage}: ${error}`);
   return {error: errorMessage, status: StatusCodes.INTERNAL_SERVER_ERROR};
+}
+
+function getRooms(page = 1) {
+  const url = new URL(ROOM_URL);
+  const params = {};
+  if (page > 1) {
+    params.page = page;
+  }
+  url.search = new URLSearchParams(params).toString();
+  return fetch(url.toString()).then(response =>
+    getJSON(response, `Error occurred while fetching rooms.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching rooms.`)
+  );
 }
 
 function getRoomByID(roomID) {
@@ -97,6 +115,23 @@ function createNewGame(gameSettings = null) {
   );
 }
 
+function getPlayers(activeFilter, page = 1) {
+  const url = new URL(PLAYER_URL);
+  const params = {};
+  if (activeFilter !== undefined && activeFilter !== null) {
+    params.active = activeFilter;
+  }
+  if (page > 1) {
+    params.page = page;
+  }
+  url.search = new URLSearchParams(params).toString();
+  return fetch(url.toString()).then(response =>
+    getJSON(response, `Error occurred while fetching players.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching players.`)
+  );
+}
+
 function getPlayerByID(playerID) {
   return fetch(`${PLAYER_URL}/${playerID}`).then(response =>
     (response.status === StatusCodes.NOT_FOUND) ? null : getJSON(response, `Error occurred while fetching player ${playerID}.`)
@@ -136,6 +171,23 @@ function updatePlayerName(playerID, name, preferredFontStyle) {
   }).catch(e => handleError(e, `Unexpected error occurred while updating name for player ${playerID}.`));
 }
 
+function getRoomLinkRequests(resolution, page = 1) {
+  const url = new URL(ROOM_REQUEST_URL);
+  const params = {};
+  if (page > 1) {
+    params.page = page;
+  }
+  if (resolution) {
+    params.resolution = resolution;
+  }
+  url.search = new URLSearchParams(params).toString();
+  return fetch(url.toString()).then(response =>
+    getJSON(response, 'Error occurred while fetching room link requests.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while fetching room link requests.')
+  );
+}
+
 function submitNewRoomLinkRequest(name, email) {
   const opts = {
     body: JSON.stringify({
@@ -152,6 +204,30 @@ function submitNewRoomLinkRequest(name, email) {
   ).catch(e =>
     handleError(e, 'Unexpected error occurred while requesting new room link.')
   );
+}
+
+function submitRoomLinkRequestResolution(requestID, resolution) {
+  const opts = {
+    body: JSON.stringify({
+      resolution: resolution,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'PUT',
+  }
+  return fetch(`${ROOM_REQUEST_URL}/${requestID}`, opts).then(response =>
+    getJSON(response, 'Error occurred while resolving room link request.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while resolving room link request.')
+  );
+}
+
+export function fetchRooms(page = 1) {
+  return {
+    type: ActionTypes.FETCH_ROOMS,
+    payload: getRooms(page),
+  };
 }
 
 export function fetchRoom(roomID) {
@@ -197,6 +273,13 @@ export function fetchGame(gameID) {
   };
 }
 
+export function fetchPlayers(activeFilter, page = 1) {
+  return {
+    type: ActionTypes.FETCH_PLAYERS,
+    payload: getPlayers(activeFilter, page),
+  };
+}
+
 export function fetchCurrentPlayer() {
   const playerID = localStorage.getItem(PLAYER_ID_KEY);
   let payload = null;
@@ -230,10 +313,24 @@ export function changePlayerName(playerID, name, preferredFontStyle) {
   };
 }
 
+export function fetchRoomLinkRequests(resolution, page = 1) {
+  return {
+    type: ActionTypes.FETCH_ROOM_LINK_REQUESTS,
+    payload: getRoomLinkRequests(resolution, page),
+  };
+}
+
 export function requestNewRoomLink(name, email) {
   return {
     type: ActionTypes.REQUEST_NEW_ROOM_LINK,
     payload: submitNewRoomLinkRequest(name, email),
+  };
+}
+
+export function resolveRoomLinkRequest(requestID, resolution) {
+  return {
+    type: ActionTypes.RESOLVE_ROOM_LINK_REQUEST,
+    payload: submitRoomLinkRequestResolution(requestID, resolution),
   };
 }
 

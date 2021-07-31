@@ -1,12 +1,81 @@
 import express from 'express';
 import log from 'log';
-import { addPlayerToRoom, createPlayer, getPlayer, getRoom, updatePlayerName } from '../db.mjs';
+import {
+  addPlayerToRoom,
+  createPlayer,
+  getCountOfPlayers,
+  getPageOfPlayers,
+  getPlayer,
+  getRoom,
+  PAGE_SIZE,
+  updatePlayerName,
+} from '../db.mjs';
 import { broadcast, playerNames } from '../websockets.mjs';
 import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, StatusCodes } from '../../constants.mjs';
 import { Player, validatePlayerName } from '../../models/player.mjs';
 import { WebsocketEvent } from '../../utils.mjs';
+import {RoomLinkRequestResolution} from "../../models/roomLinkRequest.mjs";
 
 const logger = log.get('api:player');
+
+async function handleGetPlayers(req, res, next) {
+  const handleError = (message, status) => {
+    const error = new Error(message);
+    error.status = status;
+    next(error);
+  }
+
+  const pageParam = req.query.page || 1;
+  const page = parseInt(pageParam);
+  if (isNaN(page) || page < 1) {
+    handleError(`Invalid page "${pageParam}"`, StatusCodes.BAD_REQUEST);
+    return;
+  }
+
+  const activeParam = req.query.active;
+  let active = null;
+  if (activeParam) {
+    active = activeParam.toLowerCase();
+    if (active !== 'true' && active !== 'false') {
+      handleError(`Invalid active filter "${activeParam}"`, StatusCodes.BAD_REQUEST);
+      return;
+    }
+    active = (active === 'true');
+  }
+
+  let count = 0;
+  let hasMore = false;
+  let players = [];
+
+  try {
+    count = await getCountOfPlayers(active);
+  } catch (e) {
+    handleError('Failed to get count of players', StatusCodes.INTERNAL_SERVER_ERROR);
+    return;
+  }
+
+  if (page > 1 && count <= (page - 1) * PAGE_SIZE) {
+    handleError(`Invalid page "${pageParam}"`, StatusCodes.BAD_REQUEST);
+    return;
+  }
+
+  if (count > 0) {
+    try {
+      players = await getPageOfPlayers(page, active);
+    } catch (e) {
+      handleError('Failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
+    hasMore = (count > page * PAGE_SIZE);
+  }
+
+  res.json({
+    more: hasMore,
+    total: count,
+    page: page,
+    players: players,
+  });
+}
 
 async function handleCreatePlayer(req, res, next) {
   const handleError = (message, status) => {
@@ -115,6 +184,7 @@ async function handleUpdatePlayer(req, res, next) {
 }
 
 const router = express.Router();
+router.get('/', handleGetPlayers);
 router.post('/', handleCreatePlayer);
 router.get('/:playerID', handleGetPlayer);
 router.patch('/:playerID', handleUpdatePlayer);

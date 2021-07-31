@@ -20,7 +20,10 @@ import {
   fetchGame,
   fetchNewGame,
   fetchPlayer,
+  fetchPlayers,
   fetchRoom,
+  fetchRooms,
+  fetchRoomLinkRequests,
   joinGame,
   joinRoom,
   joinRoomWithCode,
@@ -31,6 +34,7 @@ import {
   overrideServerDecision,
   reassignRoomHost,
   requestNewRoomLink,
+  resolveRoomLinkRequest,
   selectClue,
   startSpectating,
   stopSpectating,
@@ -43,6 +47,7 @@ import {
 import { MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
 import { getPlayerName } from '../reducers/game_reducer';
 import JEOPARDYE_THEME from '../theme';
+import AdminDashboard from './admin/AdminDashboard';
 import KickPlayerDialog from './common/players/KickPlayerDialog';
 import Home from './home/Home';
 import PlayerEditor from './player/PlayerEditor';
@@ -84,7 +89,10 @@ const actionCreators = {
   fetchGame,
   fetchNewGame,
   fetchPlayer,
+  fetchPlayers,
   fetchRoom,
+  fetchRooms,
+  fetchRoomLinkRequests,
   joinGame,
   joinRoom,
   joinRoomWithCode,
@@ -95,6 +103,7 @@ const actionCreators = {
   overrideServerDecision,
   reassignRoomHost,
   requestNewRoomLink,
+  resolveRoomLinkRequest,
   selectClue,
   startSpectating,
   stopSpectating,
@@ -111,13 +120,16 @@ class Connector extends React.Component {
     this.state = {
       kickPlayerID: null,
       onPlayerEditorClose: null,
+      showAdminDashboard: false,
       showKickPlayerDialog: false,
       showPlayerEditor: false,
       showPlayerStats: false,
     };
+    this.closeAdminDashboard = this.closeAdminDashboard.bind(this);
     this.closeKickPlayerDialog = this.closeKickPlayerDialog.bind(this);
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
     this.closePlayerStats = this.closePlayerStats.bind(this);
+    this.openAdminDashboard = this.openAdminDashboard.bind(this);
     this.openKickPlayerDialog = this.openKickPlayerDialog.bind(this);
     this.openPlayerEditor = this.openPlayerEditor.bind(this);
     this.openPlayerStats = this.openPlayerStats.bind(this);
@@ -231,6 +243,10 @@ class Connector extends React.Component {
     return null;
   }
 
+  openAdminDashboard() {
+    this.setState({showAdminDashboard: true});
+  }
+
   openKickPlayerDialog(playerID) {
     this.setState({kickPlayerID: playerID, showKickPlayerDialog: true});
   }
@@ -244,6 +260,10 @@ class Connector extends React.Component {
 
   openPlayerStats() {
     this.setState({showPlayerStats: true});
+  }
+
+  closeAdminDashboard() {
+    this.setState({showAdminDashboard: false});
   }
 
   closeKickPlayerDialog() {
@@ -269,6 +289,10 @@ class Connector extends React.Component {
     if (urlSearchParams.has('code')) {
       roomCode = urlSearchParams.get('code');
     }
+    const adminDashboard = {
+      open: this.openAdminDashboard,
+      close: this.closeAdminDashboard,
+    };
     const kickPlayerDialog = {
       open: this.openKickPlayerDialog,
       close: this.closeKickPlayerDialog,
@@ -299,6 +323,7 @@ class Connector extends React.Component {
             </Route>
           </Switch>
         </Router>
+        {this.state.showAdminDashboard && <AdminDashboard adminDashboard={adminDashboard} {...this.props} />}
         {this.state.showKickPlayerDialog && <KickPlayerDialog player={this.getPlayer(this.state.kickPlayerID)}
                                                               roomID={this.props.roomID}
                                                               kickPlayerDialog={kickPlayerDialog}

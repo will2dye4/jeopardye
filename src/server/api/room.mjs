@@ -6,14 +6,83 @@ import { WebsocketEvent } from '../../utils.mjs';
 import {
   createRoom,
   generateUniqueRoomCode,
+  getCountOfRooms,
   getPlayer,
-  getRoom, getRoomByCode,
+  getPlayers,
+  getRoom,
+  getRoomByCode,
+  getRooms,
+  PAGE_SIZE,
   updatePlayer,
 } from '../db.mjs';
 import { removePlayerFromRoom } from '../utils.mjs';
 import { broadcast, playerNames } from '../websockets.mjs';
 
 const logger = log.get('api:room');
+
+async function handleGetRooms(req, res, next) {
+  const handleError = (message, status) => {
+    const error = new Error(message);
+    error.status = status;
+    next(error);
+  }
+
+  const pageParam = req.query.page || 1;
+  const page = parseInt(pageParam);
+  if (isNaN(page) || page < 1) {
+    handleError(`Invalid page "${pageParam}"`, StatusCodes.BAD_REQUEST);
+    return;
+  }
+
+  let count = 0;
+  let hasMore = false;
+  let rooms = [];
+
+  try {
+    count = await getCountOfRooms();
+  } catch (e) {
+    handleError('Failed to get count of rooms', StatusCodes.INTERNAL_SERVER_ERROR);
+    return;
+  }
+
+  if (page > 1 && count <= (page - 1) * PAGE_SIZE) {
+    handleError(`Invalid page "${pageParam}"`, StatusCodes.BAD_REQUEST);
+    return;
+  }
+
+  if (count > 0) {
+    try {
+      rooms = await getRooms(page);
+    } catch (e) {
+      handleError('Failed to get rooms', StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
+    hasMore = (count > page * PAGE_SIZE);
+  }
+
+  let uniquePlayerIDs = new Set();
+  rooms.forEach(room => {
+    uniquePlayerIDs.add(room.ownerPlayerID);
+    uniquePlayerIDs.add(room.hostPlayerID);
+  });
+
+  let playerNames = {};
+  try {
+    const players = await getPlayers(new Array(...uniquePlayerIDs));
+    players.forEach(player => playerNames[player.playerID] = player.name);
+  } catch (e) {
+    handleError('Failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
+    return;
+  }
+
+  res.json({
+    more: hasMore,
+    total: count,
+    page: page,
+    rooms: rooms,
+    playerNames: playerNames,
+  });
+}
 
 async function handleCreateRoom(req, res, next) {
   logger.info('Creating a new room.');
@@ -90,6 +159,7 @@ async function handleGetRoom(req, res, next) {
 }
 
 const router = express.Router();
+router.get('/', handleGetRooms);
 router.post('/', handleCreateRoom);
 router.get('/:roomID', handleGetRoom);
 

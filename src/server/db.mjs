@@ -6,6 +6,8 @@ import { ROOM_CODE_CHARACTERS, ROOM_CODE_LENGTH } from '../constants.mjs';
 import { RoomLinkRequestResolution } from '../models/roomLinkRequest.mjs';
 import { randomChoice, range } from '../utils.mjs';
 
+export const PAGE_SIZE = 10;
+
 const MONGODB_HOST = 'localhost';
 const MONGODB_PORT = 27017;
 const DB_NAME = 'jeopardye';
@@ -45,6 +47,18 @@ export async function createRoom(room) {
   if (result.insertedCount !== 1) {
     throw new Error('Failed to create room!');
   }
+}
+
+export async function getCountOfRooms() {
+  return await roomsCollection.find().count();
+}
+
+export async function getRooms(page) {
+  let cursor = roomsCollection.find().sort({createdTime: -1}).limit(PAGE_SIZE);
+  if (page > 1) {
+    cursor = cursor.skip(PAGE_SIZE * (page - 1));
+  }
+  return await cursor.toArray();
 }
 
 export async function getRoom(roomID) {
@@ -202,6 +216,26 @@ export async function createPlayer(player) {
   }
 }
 
+export async function getCountOfPlayers(active = null) {
+  let filters = {};
+  if (active !== null) {
+    filters.active = active;
+  }
+  return await playersCollection.find(filters).count();
+}
+
+export async function getPageOfPlayers(page, active = null) {
+  let filters = {};
+  if (active !== null) {
+    filters.active = active;
+  }
+  let cursor = playersCollection.find(filters).sort({lastConnectionTime: -1}).limit(PAGE_SIZE);
+  if (page > 1) {
+    cursor = cursor.skip(PAGE_SIZE * (page - 1));
+  }
+  return await cursor.toArray();
+}
+
 export async function getPlayer(playerID) {
   return await playersCollection.findOne({_id: playerID});
 }
@@ -241,6 +275,26 @@ export async function createRoomLinkRequest(roomLinkRequest) {
   if (result.insertedCount !== 1) {
     throw new Error('Failed to create room link request!');
   }
+}
+
+export async function getCountOfRoomLinkRequests(resolution) {
+  let filters = {};
+  if (resolution) {
+    filters.resolution = resolution;
+  }
+  return await roomLinkRequestsCollection.find(filters).count();
+}
+
+export async function getRoomLinkRequests(page, resolution) {
+  let filters = {};
+  if (resolution) {
+    filters.resolution = resolution;
+  }
+  let cursor = roomLinkRequestsCollection.find(filters).sort({createdTime: -1}).limit(PAGE_SIZE);
+  if (page > 1) {
+    cursor = cursor.skip(PAGE_SIZE * (page - 1));
+  }
+  return await cursor.toArray();
 }
 
 export async function getRoomLinkRequest(requestID) {
