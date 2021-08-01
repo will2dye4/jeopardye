@@ -3,13 +3,14 @@ import log from 'log';
 import {
   DEFAULT_PLAYER_ID,
   EventTypes,
+  LeaderboardKeys,
   MAX_PASSWORD_LENGTH,
   ROOM_CODE_LENGTH,
   StatusCodes,
 } from '../../constants.mjs';
 import { Room, validateRoomCode } from '../../models/room.mjs';
 import { RoomLinkRequestResolution } from '../../models/roomLinkRequest.mjs';
-import { WebsocketEvent } from '../../utils.mjs';
+import { getAugmentedPlayerStats, getPlaces, WebsocketEvent } from '../../utils.mjs';
 import {
   createRoom,
   generateUniqueRoomCode,
@@ -175,9 +176,69 @@ async function handleGetRoom(req, res, next) {
   }
 }
 
+async function handleGetRoomLeaderboard(req, res, next) {
+  const handleError = (message, status) => {
+    const error = new Error(message);
+    error.status = status;
+    next(error);
+  }
+
+  const roomID = req.params.roomID;
+  const room = await (roomID.length === ROOM_CODE_LENGTH ? getRoomByCode(roomID) : getRoom(roomID));
+  if (!room) {
+    handleError(`Room "${roomID}" not found`, StatusCodes.NOT_FOUND);
+    return;
+  }
+
+  const playerIDs = room.playerIDs;
+  if (!playerIDs.includes(room.ownerPlayerID)) {
+    playerIDs.push(room.ownerPlayerID);
+  }
+
+  let players = [];
+  try {
+    players = await getPlayers(playerIDs);
+  } catch (e) {
+    handleError('Failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
+    return;
+  }
+
+  /* calculate percentages */
+  players.forEach(player => player.stats = getAugmentedPlayerStats(player.stats));
+
+  /* overall score */
+  players.forEach(player => player.score = player.stats.overallScore);
+  const overallScoreLeaders = getPlaces(players);
+
+  /* single game score */
+  players.forEach(player => player.score = player.stats.highestGameScore);
+  const singleGameScoreLeaders = getPlaces(players);
+
+  /* response accuracy */
+  players.forEach(player => player.score = player.stats.correctPercentage);
+  const responseAccuracyLeaders = getPlaces(players);
+
+  /* daily double accuracy */
+  players.forEach(player => player.score = player.stats.dailyDoublePercentage);
+  const dailyDoubleAccuracyLeaders = getPlaces(players);
+
+  /* winning percentage */
+  players.forEach(player => player.score = player.stats.winningPercentage);
+  const winLeaders = getPlaces(players);
+
+  res.json({
+    [LeaderboardKeys.OVERALL_SCORE]: overallScoreLeaders,
+    [LeaderboardKeys.HIGHEST_GAME_SCORE]: singleGameScoreLeaders,
+    [LeaderboardKeys.CORRECT_PERCENTAGE]: responseAccuracyLeaders,
+    [LeaderboardKeys.DAILY_DOUBLE_PERCENTAGE]: dailyDoubleAccuracyLeaders,
+    [LeaderboardKeys.WINNING_PERCENTAGE]: winLeaders,
+  });
+}
+
 const router = express.Router();
 router.get('/', handleGetRooms);
 router.post('/', handleCreateRoom);
 router.get('/:roomID', handleGetRoom);
+router.get('/:roomID/leaderboard', handleGetRoomLeaderboard);
 
 export default router;

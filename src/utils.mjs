@@ -142,6 +142,23 @@ loop:
   return unplayedClues;
 }
 
+export function getAugmentedPlayerStats(playerStats) {
+  const {
+    gamesPlayed,
+    gamesWon,
+    cluesAnswered,
+    cluesAnsweredCorrectly,
+    dailyDoublesAnswered,
+    dailyDoublesAnsweredCorrectly,
+  } = playerStats;
+  return {
+    ...playerStats,
+    correctPercentage: Math.round((cluesAnswered === 0 ? 0 : (cluesAnsweredCorrectly / cluesAnswered)) * 100),
+    dailyDoublePercentage: Math.round((dailyDoublesAnswered === 0 ? 0 : (dailyDoublesAnsweredCorrectly / dailyDoublesAnswered)) * 100),
+    winningPercentage: Math.round((gamesPlayed === 0 ? 0 : (gamesWon / gamesPlayed)) * 100),
+  };
+}
+
 export function getPlaces(scores) {
   let places = {};
   let i = 0;

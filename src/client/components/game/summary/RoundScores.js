@@ -19,7 +19,10 @@ function RoundScores(props) {
         const fontSize = getFontSize(i);
         return players.map((player, j) => {
           const pt = (j === 0 ? (i < 2 ? 6 : 3) : 2);
-          const placeText = <React.Fragment>{place.substring(0, 1)}<sup>{place.substring(1, place.length)}</sup></React.Fragment>;
+          let placeText = place;
+          if (place !== 'Honorable Mention') {
+            placeText = <React.Fragment>{place.substring(0, place.length - 2)}<sup>{place.substring(place.length - 2, place.length)}</sup></React.Fragment>;
+          }
 
           return (
             <React.Fragment key={player.playerID}>

@@ -48,6 +48,7 @@ function newStoreData() {
     roomLinkRequests: {},
     rooms: {},
     allPlayers: {},
+    leaderboards: null,
   };
 }
 
@@ -519,7 +520,7 @@ export function GameReducer(storeData, action) {
       const room = action.payload;
       if (!room) {
         console.log(`Failed to ${action.type === ActionTypes.CREATE_NEW_ROOM ? 'create' : 'fetch'} room.`);
-        return {...storeData, roomID: null, room: null};
+        return {...storeData, roomID: null, room: null, leaderboards: null};
       }
       if (room.error) {
         if (action.type === ActionTypes.CREATE_NEW_ROOM && room.status) {
@@ -528,12 +529,22 @@ export function GameReducer(storeData, action) {
         return {...storeData, error: room.error};
       }
       if (room.kickedPlayerIDs.hasOwnProperty(storeData.playerID)) {
-        return {...storeData, error: 'Failed to join room.', roomID: null, room: null};
+        return {...storeData, error: 'Failed to join room.', roomID: null, room: null, leaderboards: null};
       }
       if (room.playerIDs.includes(storeData.playerID)) {
-        return {...storeData, redirectToHome: false, roomID: room.roomID, room: room};
+        return {...storeData, redirectToHome: false, roomID: room.roomID, room: room, leaderboards: null};
       }
       return {...storeData, roomID: room.roomID};
+    case ActionTypes.FETCH_ROOM_LEADERBOARDS:
+      const leaderboards = action.payload;
+      if (!leaderboards) {
+        console.log('Failed to fetch room leaderboards.');
+        return {...storeData, leaderboards: null};
+      }
+      if (leaderboards.error) {
+        return {...storeData, error: leaderboards.error};
+      }
+      return {...storeData, leaderboards: leaderboards};
     case ActionTypes.FETCH_ROOMS:
       response = action.payload;
       if (response.error) {

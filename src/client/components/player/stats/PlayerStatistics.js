@@ -1,32 +1,36 @@
 import React from 'react';
-import moment from 'moment';
 import {
-  Flex,
   Heading,
   Modal,
   ModalBody,
   ModalCloseButton,
   ModalContent,
   ModalOverlay,
-  Select,
-  StatGroup,
-  Text,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
 } from '@chakra-ui/react';
-import { formatScore } from '../../../../utils.mjs';
+import { LeaderboardKeys } from '../../../../constants.mjs';
 import Card from '../../common/card/Card';
-import PlayerStatistic from './PlayerStatistic';
+import Leaderboards from './Leaderboards';
+import StatisticsByPlayer from './StatisticsByPlayer';
 
 class PlayerStatistics extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      selectedLeaderboard: LeaderboardKeys.OVERALL_SCORE,
       selectedPlayerID: props.playerID,
     };
+    this.handleLeaderboardChanged = this.handleLeaderboardChanged.bind(this);
     this.handlePlayerChanged = this.handlePlayerChanged.bind(this);
   }
 
   componentDidMount() {
     this.props.fetchPlayer(this.state.selectedPlayerID);
+    this.props.fetchRoomLeaderboards(this.props.roomID);
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -43,6 +47,10 @@ class PlayerStatistics extends React.Component {
     return this.getAllPlayers()[this.state.selectedPlayerID];
   }
 
+  handleLeaderboardChanged(event) {
+    this.setState({selectedLeaderboard: event.target.value});
+  }
+
   handlePlayerChanged(event) {
     this.setState({selectedPlayerID: event.target.value});
   }
@@ -53,20 +61,6 @@ class PlayerStatistics extends React.Component {
       return null;
     }
 
-    const {
-      overallScore,
-      highestGameScore,
-      gamesPlayed,
-      gamesWon,
-      cluesAnswered,
-      cluesAnsweredCorrectly,
-      dailyDoublesAnswered,
-      dailyDoublesAnsweredCorrectly,
-    } = player.stats;
-    const correctPercentage = Math.round((cluesAnswered === 0 ? 0 : (cluesAnsweredCorrectly / cluesAnswered)) * 100);
-    const dailyDoublePercentage = Math.round((dailyDoublesAnswered === 0 ? 0 : (dailyDoublesAnsweredCorrectly / dailyDoublesAnswered)) * 100);
-    const winningPercentage = Math.round((gamesPlayed === 0 ? 0 : (gamesWon / gamesPlayed)) * 100);
-    const groupPadding = 10;
     const selectRef = React.createRef();
 
     return (
@@ -77,30 +71,23 @@ class PlayerStatistics extends React.Component {
           <ModalBody p={0}>
             <Card className="game-settings" px={10} py={6} textAlign="center">
               <Heading mb={8}>Player Statistics</Heading>
-              <Flex align="center" ml={12} py={3}>
-                <Select ref={selectRef} focusBorderColor="jeopardyBlue.500" w="20%" value={this.state.selectedPlayerID} onChange={this.handlePlayerChanged}>
-                  {Object.entries(this.getAllPlayers()).sort(([id1, player1], [id2, player2]) =>
-                    player1.name.localeCompare(player2.name)
-                  ).map(([playerID, player]) =>
-                    <option key={playerID} value={playerID}>{player.name}</option>
-                  )}
-                </Select>
-                <Text ml={5} fontSize="lg" fontStyle="italic" opacity="0.8">
-                  joined {moment(player.createdTime).fromNow()}, last connected {moment(player.lastConnectionTime).fromNow()}
-                </Text>
-              </Flex>
-              <StatGroup py={groupPadding}>
-                <PlayerStatistic label="All-Time Score" value={formatScore(overallScore)} />
-                <PlayerStatistic label="Highest Single Game Score" value={formatScore(highestGameScore)} />
-              </StatGroup>
-              <StatGroup py={groupPadding}>
-                <PlayerStatistic label="Response Accuracy" value={`${correctPercentage}%`}
-                                 helpText={`${cluesAnsweredCorrectly.toLocaleString()} / ${cluesAnswered.toLocaleString()}`} />
-                <PlayerStatistic label="Daily Double Accuracy" value={`${dailyDoublePercentage}%`}
-                                 helpText={`${dailyDoublesAnsweredCorrectly.toLocaleString()} / ${dailyDoublesAnswered.toLocaleString()}`} />
-                <PlayerStatistic label="Winning Percentage" value={`${winningPercentage}%`}
-                                 helpText={`${gamesWon.toLocaleString()} / ${gamesPlayed.toLocaleString()}`} />
-              </StatGroup>
+              <Tabs isFitted isLazy variant="enclosed">
+                <TabList>
+                  <Tab fontSize="xl">Players</Tab>
+                  <Tab fontSize="xl">Leaderboards</Tab>
+                </TabList>
+
+                <TabPanels>
+                  <TabPanel>
+                    <StatisticsByPlayer players={this.getAllPlayers()} selectedPlayer={player} selectRef={selectRef}
+                                        onPlayerChanged={this.handlePlayerChanged} />
+                  </TabPanel>
+                  <TabPanel>
+                    <Leaderboards leaderboards={this.props.leaderboards} selectedLeaderboard={this.state.selectedLeaderboard}
+                                  onLeaderboardChanged={this.handleLeaderboardChanged} />
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
             </Card>
           </ModalBody>
         </ModalContent>

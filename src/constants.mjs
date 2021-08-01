@@ -97,6 +97,14 @@ export const PlayerEditorModes = {
   EDIT: 'edit',
 }
 
+export const LeaderboardKeys = {
+  OVERALL_SCORE: 'overallScore',
+  HIGHEST_GAME_SCORE: 'highestGameScore',
+  CORRECT_PERCENTAGE: 'correctPercentage',
+  DAILY_DOUBLE_PERCENTAGE: 'dailyDoublePercentage',
+  WINNING_PERCENTAGE: 'winningPercentage',
+};
+
 export const DailyDoubleSettings = {
   NONE: 'None',
   NORMAL: 'Normal',
