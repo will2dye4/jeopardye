@@ -10,7 +10,7 @@ import {
   Thead,
   Tr,
 } from '@chakra-ui/react';
-import { Emoji } from '../../../constants.mjs';
+import { Emoji, SORT_ARROW_DESCENDING } from '../../../constants.mjs';
 
 function Rooms(props) {
   let { more, page, playerNames, rooms, total } = props.rooms;
@@ -21,12 +21,12 @@ function Rooms(props) {
       <Table my={4} variant="striped">
         <Thead>
           <Tr>
-            <Th>Code</Th>
+            <Th>Room Code</Th>
             <Th>Owner</Th>
-            <Th>Host</Th>
-            <Th>Created</Th>
+            <Th>Created <Text as="span" fontSize="lg" pl={1}>{SORT_ARROW_DESCENDING}</Text></Th>
             <Th>Active Game</Th>
             <Th>Total Players</Th>
+            <Th>Kicked Players</Th>
             <Th>Total Games</Th>
           </Tr>
         </Thead>
@@ -36,10 +36,10 @@ function Rooms(props) {
               <Tr key={room.roomID}>
                 <Td>{room.roomCode}</Td>
                 <Td>{playerNames[room.ownerPlayerID]}</Td>
-                <Td>{playerNames[room.hostPlayerID]}</Td>
                 <Td>{moment(room.createdTime).fromNow()}</Td>
                 <Td>{room.currentGameID ? `${Emoji.CHECK_MARK} Yes` : `${Emoji.CROSS_MARK} No`}</Td>
                 <Td>{room.playerIDs.length}</Td>
+                <Td>{Object.keys(room.kickedPlayerIDs).length}</Td>
                 <Td>{room.previousGameIDs.length}</Td>
               </Tr>
             )

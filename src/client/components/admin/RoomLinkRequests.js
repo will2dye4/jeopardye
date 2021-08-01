@@ -15,6 +15,7 @@ import {
   Tr,
 } from '@chakra-ui/react';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { SORT_ARROW_DESCENDING } from '../../../constants.mjs';
 import { RoomLinkRequestResolution } from '../../../models/roomLinkRequest.mjs';
 import ActionIcon from '../common/ActionIcon';
 
@@ -51,7 +52,7 @@ function RoomLinkRequests(props) {
           <Tr>
             <Th>Name</Th>
             <Th>Email</Th>
-            <Th>Submitted</Th>
+            <Th>Submitted <Text as="span" fontSize="lg" pl={1}>{SORT_ARROW_DESCENDING}</Text></Th>
             <Th>Resolution</Th>
           </Tr>
         </Thead>

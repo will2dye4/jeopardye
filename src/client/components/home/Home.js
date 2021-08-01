@@ -1,9 +1,11 @@
 import React from 'react';
 import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react';
+import { withRouter } from 'react-router-dom';
 import { DEFAULT_PLAYER_ID } from '../../../constants.mjs';
 import Card from '../common/card/Card';
 import LogoPage from '../common/LogoPage';
 import CreateRoomDialog from './CreateRoomDialog';
+import HomeButtons from './HomeButtons';
 import RequestLinkDialog from './RequestLinkDialog';
 import RoomCodeDialog from './RoomCodeDialog';
 
@@ -11,6 +13,7 @@ class Home extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      roomLinkRequestID: null,
       showCreateRoomDialog: false,
       showRequestLinkDialog: false,
       showRoomCodeDialog: false,
@@ -35,11 +38,15 @@ class Home extends React.Component {
     }
   }
 
-  openCreateRoomDialog() {
+  openCreateRoomDialog(requestID) {
     if (this.props.playerID) {
-      this.setState({showCreateRoomDialog: true});
+      const newState = {showCreateRoomDialog: true};
+      if (requestID) {
+        newState.roomLinkRequestID = requestID;
+      }
+      this.setState(newState);
     } else {
-      this.props.playerEditor.open(() => this.setState({showCreateRoomDialog: true}));
+      this.props.playerEditor.open(() => this.openCreateRoomDialog(requestID));
     }
   }
 
@@ -68,10 +75,22 @@ class Home extends React.Component {
   }
 
   render() {
-    const secondButtonLabel = (this.props.playerID === DEFAULT_PLAYER_ID ? 'Create New Room' : 'Request New Room Link');
-    const secondButtonHandler = (this.props.playerID === DEFAULT_PLAYER_ID ? this.openCreateRoomDialog : this.openRequestLinkDialog);
+    const urlSearchParams = new URLSearchParams(this.props.location.search);
+    let requestID;
+    if (urlSearchParams.has('req')) {
+      requestID = urlSearchParams.get('req');
+    }
+    const isAdmin = (this.props.playerID === DEFAULT_PLAYER_ID);
+    const allowCreate = (isAdmin || !!requestID);
+    const secondButtonLabel = (allowCreate ? 'Create New Room' : 'Request New Room Link');
+    const secondButtonHandler = (allowCreate ? () => this.openCreateRoomDialog(requestID) : this.openRequestLinkDialog);
+    const secondButtonDescription = (allowCreate ?
+        'You can use the other button to create your own room and play with your friends!' :
+        'You can use the other button to request permission to create a new room.'
+    );
     return (
       <LogoPage id="home">
+        <HomeButtons isAdmin={isAdmin} adminDashboard={this.props.adminDashboard} />
         <Flex justify="center">
           <Card className="game-settings" mt={5} px={8} py={8} textAlign="center" w="75%" minW={500}>
             <Heading size="3xl">Welcome!</Heading>
@@ -82,7 +101,7 @@ class Home extends React.Component {
               If you have a room code, click the button below to enter it.
             </Text>
             <Text>
-              You can use the other button to request permission to create a new room.
+              {secondButtonDescription}
             </Text>
             <Flex justify="center" mt={12} mb={3}>
               <VStack spacing={5} minW={250}>
@@ -92,7 +111,8 @@ class Home extends React.Component {
             </Flex>
           </Card>
         </Flex>
-        {this.state.showCreateRoomDialog && <CreateRoomDialog onClose={this.closeCreateRoomDialog} {...this.props} />}
+        {this.state.showCreateRoomDialog && <CreateRoomDialog requestID={this.state.roomLinkRequestID}
+                                                              onClose={this.closeCreateRoomDialog} {...this.props} />}
         {this.state.showRequestLinkDialog && <RequestLinkDialog onClose={this.closeRequestLinkDialog} {...this.props} />}
         {this.state.showRoomCodeDialog && <RoomCodeDialog onClose={this.closeRoomCodeDialog} {...this.props} />}
       </LogoPage>
@@ -100,4 +120,4 @@ class Home extends React.Component {
   }
 }
 
-export default Home;
+export default withRouter(Home);

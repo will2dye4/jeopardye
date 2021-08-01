@@ -312,10 +312,15 @@ class Connector extends React.Component {
             <Route exact path="/">
               {this.props.room ?
                 <Redirect to={`/p/${this.props.room.roomCode}`}/> :
-                <Home kickPlayerDialog={kickPlayerDialog} playerEditor={playerEditor} roomCode={roomCode} {...this.props} />}
+                <Home adminDashboard={adminDashboard}
+                      kickPlayerDialog={kickPlayerDialog}
+                      playerEditor={playerEditor}
+                      roomCode={roomCode}
+                      {...this.props} />}
             </Route>
             <Route path="/p/:roomCode">
               <Room allowJoin={allowJoin}
+                    adminDashboard={adminDashboard}
                     kickPlayerDialog={kickPlayerDialog}
                     playerEditor={playerEditor}
                     playerStats={playerStats}

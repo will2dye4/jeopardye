@@ -8688,6 +8688,11 @@ node-status-codes@^1.0.0:
   resolved "https://artifactory00.cc.pdrop.net:443/artifactory/api/npm/npm-pindrop-ivr-virtual/node-status-codes/-/node-status-codes-1.0.0.tgz#5ae5541d024645d32a58fcddc9ceecea7ae3ac2f"
   integrity sha1-WuVUHQJGRdMqWPzdyc7s6nrjrC8=
 
+nodemailer@^6.6.3:
+  version "6.6.3"
+  resolved "https://artifactory00.cc.pdrop.net:443/artifactory/api/npm/npm-pindrop-ivr-virtual/nodemailer/-/nodemailer-6.6.3.tgz#31fb53dd4d8ae16fc088a65cb9ffa8d928a69b48"
+  integrity sha1-MftT3U2K4W/AiKZcuf+o2Simm0g=
+
 noop6@^1.0.1:
   version "1.0.9"
   resolved "https://artifactory00.cc.pdrop.net:443/artifactory/api/npm/npm-pindrop-ivr-virtual/noop6/-/noop6-1.0.9.tgz#8749944c15c09f2cd2d562ac24f5a8341762a950"

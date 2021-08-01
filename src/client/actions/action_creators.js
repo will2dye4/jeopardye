@@ -1,5 +1,5 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
-import { EventTypes, PLAYER_ID_KEY, StatusCodes } from '../../constants.mjs';
+import { API_BASE, EventTypes, PLAYER_ID_KEY, StatusCodes, WS_BASE } from '../../constants.mjs';
 import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
@@ -29,10 +29,6 @@ export const ActionTypes = {
   REDUX_WEBSOCKET_MESSAGE: 'REDUX_WEBSOCKET::MESSAGE',
 };
 
-// const API_BASE = 'http://192.168.1.246:3333/api';
-// const WS_BASE = 'ws://192.168.1.246:3333/api/ws';
-const API_BASE = 'http://localhost:3333/api';
-const WS_BASE = 'ws://localhost:3333/api/ws';
 const GAME_URL = `${API_BASE}/game`;
 const PLAYER_URL = `${API_BASE}/player`;
 const ROOM_URL = `${API_BASE}/room`;
@@ -73,12 +69,13 @@ function getRoomByID(roomID) {
   );
 }
 
-function createRoom(playerID, roomCode, password) {
+function createRoom(playerID, roomCode, password, requestID) {
   const opts = {
     body: JSON.stringify({
       ownerPlayerID: playerID,
       roomCode: roomCode || null,
       password: password || null,
+      requestID: requestID || null,
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -237,10 +234,10 @@ export function fetchRoom(roomID) {
   };
 }
 
-export function createNewRoom(playerID, roomCode = null, password = null) {
+export function createNewRoom(playerID, roomCode = null, password = null, requestID = null) {
   return {
     type: ActionTypes.CREATE_NEW_ROOM,
-    payload: createRoom(playerID, roomCode, password),
+    payload: createRoom(playerID, roomCode, password, requestID),
   };
 }
 

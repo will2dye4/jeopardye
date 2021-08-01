@@ -16,6 +16,7 @@ import {
   resolveRoomLinkRequest,
   PAGE_SIZE,
 } from '../db.mjs';
+import { sendNewRoomLinkRequestMessage, sendRoomLinkRequestApprovedMessage } from '../mail.mjs';
 
 const logger = log.get('api:room-link-request');
 
@@ -123,7 +124,7 @@ async function handleCreateRoomLinkRequest(req, res, next) {
   res.json(roomLinkRequest);
   logger.info(`Created room link request ${roomLinkRequest.requestID} for ${name} (${email}).`);
 
-  /* TODO - send email to admin to notify of new request */
+  await sendNewRoomLinkRequestMessage(roomLinkRequest);
 }
 
 async function handleGetRoomLinkRequest(req, res, next) {
@@ -181,7 +182,9 @@ async function handleResolveRoomLinkRequest(req, res, next) {
   res.json(roomLinkRequest);
   logger.info(`Resolved room link request ${roomLinkRequest.requestID} (${resolution}).`);
 
-  /* TODO - if approved, send link via email */
+  if (resolution === RoomLinkRequestResolution.APPROVED) {
+    await sendRoomLinkRequestApprovedMessage(roomLinkRequest);
+  }
 }
 
 const router = express.Router();

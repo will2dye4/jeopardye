@@ -2,6 +2,21 @@ export const DEFAULT_PLAYER_ID = 'd38064a4-7c20-4fb6-b076-76eada41d385';
 
 export const JSERVICE_API_BASE = 'http://jservice.io/api';
 
+const BETA_TEST_MODE = false;
+const BETA_TEST_HOST = '192.168.1.246';
+const BETA_TEST_APP_PORT = 8000;
+const BETA_TEST_SERVER_PORT = 8333;
+const DEV_HOST = 'localhost';
+const DEV_APP_PORT = 3000;
+const DEV_SERVER_PORT = 3333;
+const APP_HOST = (BETA_TEST_MODE ? BETA_TEST_HOST : DEV_HOST);
+const APP_PORT = (BETA_TEST_MODE ? BETA_TEST_APP_PORT : DEV_APP_PORT);
+const SERVER_HOST = APP_HOST;
+const SERVER_PORT = (BETA_TEST_MODE ? BETA_TEST_SERVER_PORT : DEV_SERVER_PORT);
+export const APP_BASE = `http://${APP_HOST}:${APP_PORT}`;
+export const API_BASE = `http://${SERVER_HOST}:${SERVER_PORT}/api`;
+export const WS_BASE = `ws://${SERVER_HOST}:${SERVER_PORT}/api/ws`;
+
 export const CATEGORIES_PER_ROUND = 6;
 export const CLUES_PER_CATEGORY = 5;
 
@@ -266,6 +281,9 @@ export const EMOJI_NAME_TO_EMOJI = {
   'timer_clock': Emoji.TIMER_CLOCK,
   'wink': Emoji.WINK,
 };
+
+export const SORT_ARROW_ASCENDING = '\u25B4';
+export const SORT_ARROW_DESCENDING = '\u25BE';
 
 export const StatusCodes = {
   /* success codes */

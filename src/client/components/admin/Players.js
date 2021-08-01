@@ -11,7 +11,7 @@ import {
   Thead,
   Tr,
 } from '@chakra-ui/react';
-import { Emoji } from '../../../constants.mjs';
+import { Emoji, SORT_ARROW_DESCENDING } from '../../../constants.mjs';
 
 function Players(props) {
   let { more, page, players, total } = props.allPlayers;
@@ -34,7 +34,7 @@ function Players(props) {
           <Tr>
             <Th>Name</Th>
             <Th>Joined</Th>
-            <Th>Last Connected</Th>
+            <Th>Last Connected <Text as="span" fontSize="lg" pl={1}>{SORT_ARROW_DESCENDING}</Text></Th>
             <Th>Active</Th>
           </Tr>
         </Thead>

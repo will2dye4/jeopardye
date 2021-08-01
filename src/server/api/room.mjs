@@ -1,7 +1,14 @@
 import express from 'express';
 import log from 'log';
-import { EventTypes, MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes } from '../../constants.mjs';
+import {
+  DEFAULT_PLAYER_ID,
+  EventTypes,
+  MAX_PASSWORD_LENGTH,
+  ROOM_CODE_LENGTH,
+  StatusCodes,
+} from '../../constants.mjs';
 import { Room, validateRoomCode } from '../../models/room.mjs';
+import { RoomLinkRequestResolution } from '../../models/roomLinkRequest.mjs';
 import { WebsocketEvent } from '../../utils.mjs';
 import {
   createRoom,
@@ -11,6 +18,7 @@ import {
   getPlayers,
   getRoom,
   getRoomByCode,
+  getRoomLinkRequest,
   getRooms,
   PAGE_SIZE,
   updatePlayer,
@@ -61,10 +69,7 @@ async function handleGetRooms(req, res, next) {
   }
 
   let uniquePlayerIDs = new Set();
-  rooms.forEach(room => {
-    uniquePlayerIDs.add(room.ownerPlayerID);
-    uniquePlayerIDs.add(room.hostPlayerID);
-  });
+  rooms.forEach(room => uniquePlayerIDs.add(room.ownerPlayerID));
 
   let playerNames = {};
   try {
@@ -122,6 +127,18 @@ async function handleCreateRoom(req, res, next) {
     }
   } else {
     roomCode = await generateUniqueRoomCode();
+  }
+
+  let requestID = req.body.requestID?.toString().trim();
+  if (requestID) {
+    const roomLinkRequest = await getRoomLinkRequest(requestID);
+    if (!roomLinkRequest || roomLinkRequest.resolution !== RoomLinkRequestResolution.APPROVED) {
+      handleError(`Invalid room link request ID "${requestID}"`, StatusCodes.BAD_REQUEST);
+      return;
+    }
+  } else if (ownerPlayerID !== DEFAULT_PLAYER_ID) {
+    handleError(`Missing room link request ID`, StatusCodes.BAD_REQUEST);
+    return;
   }
 
   const room = new Room(roomCode, ownerPlayerID, password);

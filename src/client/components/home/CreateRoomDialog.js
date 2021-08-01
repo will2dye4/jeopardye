@@ -93,7 +93,7 @@ class CreateRoomDialog extends React.Component {
 
   handleSubmit() {
     if (!this.state.roomCode || validateRoomCode(this.state.roomCode)) {
-      this.props.createNewRoom(this.props.playerID, this.state.roomCode, this.state.password);
+      this.props.createNewRoom(this.props.playerID, this.state.roomCode, this.state.password, this.props.requestID);
     } else {
       this.handleError(StatusCodes.BAD_REQUEST);
     }
