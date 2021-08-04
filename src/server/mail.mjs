@@ -40,11 +40,10 @@ Jeopardye Bot
 
 const logger = log.get('jservice');
 
-let testAccount;
 let transporter;
 
-async function setup() {
-  testAccount = await nodemailer.createTestAccount();
+try {
+  const testAccount = await nodemailer.createTestAccount();
   transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
@@ -54,11 +53,15 @@ async function setup() {
       pass: testAccount.pass, // generated ethereal password
     },
   });
+} catch (e) {
+  logger.error(`Failed to initialize mail transport: ${e}`);
 }
 
-setup().catch(e => logger.error(`Failed to setup mail transport: ${e}`));
-
 export async function sendMail(to, subject, body) {
+  if (!transporter) {
+    logger.error('Failed to send mail: mail transport was not initialized successfully');
+    return;
+  }
   const message = {
     from: '"Jeopardye" <noreply@jeopardye.com>',
     to: to,
