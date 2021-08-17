@@ -2,7 +2,7 @@ import React from 'react';
 import { Flex, Select, Table, Tbody, Td, Text, Th, Thead, Tr } from '@chakra-ui/react';
 import { faCrown } from '@fortawesome/free-solid-svg-icons';
 import { LeaderboardKeys } from '../../../../constants.mjs';
-import { formatScore } from '../../../../utils.mjs';
+import { comparePlayerNames, formatScore } from '../../../../utils.mjs';
 import Icon from '../../common/Icon';
 import {
   ALL_TIME_SCORE,
@@ -67,7 +67,7 @@ function Leaderboards(props) {
             const firstPlace = (place === '1st');
             const color = (firstPlace ? 'jeopardyBlue.500' : 'black');
             const fontWeight = (firstPlace ? 'bold' : 'normal');
-            const playerNames = players.sort((player1, player2) => player1.name.localeCompare(player2.name)).map(player => <Text py={2}>{player.name}</Text>);
+            const playerNames = players.sort(comparePlayerNames).map(player => <Text py={2}>{player.name}</Text>);
             return (
               <Tr key={place} textColor={color} fontSize="2xl" fontWeight={fontWeight}>
                 <Td>

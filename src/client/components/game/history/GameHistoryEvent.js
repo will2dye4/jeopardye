@@ -3,7 +3,7 @@ import moment from 'moment';
 import { Box, GridItem, HStack, ListItem, Text } from '@chakra-ui/react';
 import { faGavel } from '@fortawesome/free-solid-svg-icons';
 import { Emoji, EventTypes } from '../../../../constants.mjs';
-import { formatScore, isDailyDouble } from '../../../../utils.mjs';
+import { comparePlayerNames, formatScore, isDailyDouble } from '../../../../utils.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
 import { formatElementList } from '../../../utils';
 import ActionIcon from '../../common/ActionIcon';
@@ -29,7 +29,7 @@ function getRoundStandings(round, places) {
         <GridItem colSpan={4} pb={2} textAlign="center"><Bold>{round.toTitleCase()} Round Standings</Bold></GridItem>
       </GridRow>
       {Object.entries(places).map(([place, players]) => {
-        const playerNames = formatElementList(players.map(player => <PlayerName>{player.name}</PlayerName>));
+        const playerNames = formatElementList(players.sort(comparePlayerNames).map(player => <PlayerName>{player.name}</PlayerName>));
         const score = formatScore(players[0].score);
         return (
           <GridRow key={place} cols={4}>

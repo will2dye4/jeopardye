@@ -1,5 +1,6 @@
 import React from 'react';
 import { List, ListItem } from '@chakra-ui/react';
+import { comparePlayerNames } from '../../../../utils.mjs';
 import Card from '../card/Card';
 import CardHeader from '../card/CardHeader';
 import PlayerListItem from './PlayerListItem';
@@ -9,7 +10,7 @@ function PlayerList(props) {
   const listType = (props.spectators ? 'Spectators' : 'Players');
   let players;
   if (currentPlayers.length) {
-    players = currentPlayers.map(player => {
+    players = currentPlayers.sort(comparePlayerNames).map(player => {
       const playerProps = {
         changeSpectatingStatus: props.changeSpectatingStatus,
         changeHost: () => props.reassignRoomHost(props.room?.roomID, player.playerID),

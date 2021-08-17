@@ -267,7 +267,7 @@ class Game extends React.Component {
       if (newPlayers.length) {
         toast({
           position: 'top',
-          title: `${formatList(newPlayers)} joined the game.`,
+          title: `${formatList(newPlayers.sort())} joined the game.`,
           status: 'info',
           isClosable: true,
         });
@@ -291,7 +291,7 @@ class Game extends React.Component {
       if (leavingPlayers.length) {
         toast({
           position: 'top',
-          title: `${formatList(leavingPlayers)} left the game.`,
+          title: `${formatList(leavingPlayers.sort())} left the game.`,
           status: 'info',
           isClosable: true,
         });
@@ -721,11 +721,8 @@ class Game extends React.Component {
     return getCountdownTimeInMillis(this.isActiveDailyDouble()) / 1000;
   }
 
-  getDefaultTimerUpdater(startingValue) {
+  getDefaultTimerUpdater(startingValue = 100) {
     const interval = this.getCountdownTimeInSeconds() * 10;
-    if (!startingValue) {
-      startingValue = this.state.defaultTimerValue;
-    }
     let value = startingValue;
     return setInterval(function() {
       value -= 1;

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Flex } from '@chakra-ui/react';
 import { MAX_PLAYERS_PER_GAME } from '../../../../constants.mjs';
+import { comparePlayerNames } from '../../../../utils.mjs';
 import Podium from './Podium';
 import SpectatorsMenu from './SpectatorsMenu';
 
-function getSize(players) {
-  const numPlayers = Object.keys(players).length;
+function getSize(numPlayers) {
   if (numPlayers >= MAX_PLAYERS_PER_GAME) {
     return 'xs';
   } else if (numPlayers === MAX_PLAYERS_PER_GAME - 1) {
@@ -17,14 +17,15 @@ function getSize(players) {
 }
 
 function Podiums(props) {
-  const size = getSize(props.players);
-  const allowSpectate = (!props.gameState.playerIsSpectating && !props.gameState.playerHasControl && Object.keys(props.players).length > 1);
-  const podiums = Object.values(props.players).map(player => {
+  const numPlayers = Object.keys(props.players).length;
+  const size = getSize(numPlayers);
+  const allowSpectate = (!props.gameState.playerIsSpectating && !props.gameState.playerHasControl && numPlayers > 1);
+  const podiums = Object.values(props.players).sort(comparePlayerNames).map(player => {
     const isCurrentPlayer = (player.playerID === props.playerID);
     const isHost = (player.playerID === props.room?.hostPlayerID);
     const isChampion = (player.playerID === props.room?.currentChampion);
     const active = (player.playerID === props.playerAnswering);
-    return <Podium key={`${player.playerID}-${Object.keys(props.players).length}`}
+    return <Podium key={`${player.playerID}-${numPlayers}`}
                    player={player}
                    gameState={props.gameState}
                    gameHistory={props.gameHistory}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Flex, Divider, GridItem, Heading } from '@chakra-ui/react';
 import { faCrown } from '@fortawesome/free-solid-svg-icons';
-import { formatScore } from '../../../../utils.mjs';
+import { comparePlayerNames, formatScore } from '../../../../utils.mjs';
 import GridRow from '../../common/GridRow';
 import Icon from '../../common/Icon';
 
@@ -17,7 +17,7 @@ function RoundScores(props) {
     <Box>
       {Object.entries(places).map(([place, players], i) => {
         const fontSize = getFontSize(i);
-        return players.map((player, j) => {
+        return players.sort(comparePlayerNames).map((player, j) => {
           const pt = (j === 0 ? (i < 2 ? 6 : 3) : 2);
           let placeText = place;
           if (place !== 'Honorable Mention') {

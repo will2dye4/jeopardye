@@ -100,6 +100,14 @@ export function isSuperset(set, subset) {
   return true;
 }
 
+export function comparePlayerNames(player1, player2) {
+  return player1.name.localeCompare(player2.name);
+}
+
+export function comparePlayerEntries([id1, player1], [id2, player2]) {
+  return comparePlayerNames(player1, player2);
+}
+
 export function formatScore(score) {
   score = score || 0;
   const scoreString = score.toLocaleString();

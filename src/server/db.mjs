@@ -8,6 +8,22 @@ import { randomChoice, range } from '../utils.mjs';
 
 export const PAGE_SIZE = 10;
 
+const DEFAULT_INSERT_OPTIONS = {
+  writeConcern: {
+    w: 'majority',
+  },
+};
+
+const DEFAULT_TRANSACTION_OPTIONS = {
+  readPreference: 'primary',
+  readConcern: {
+    level: 'local',
+  },
+  writeConcern: {
+    w: 'majority',
+  },
+};
+
 const MONGODB_HOST = 'localhost';
 const MONGODB_PORT = 27017;
 const DB_NAME = 'jeopardye';
@@ -21,6 +37,8 @@ const gamesCollection = db.collection('games');
 const playersCollection = db.collection('players');
 const roomsCollection = db.collection('rooms');
 const roomLinkRequestsCollection = db.collection('roomLinkRequests');
+
+const session = client.startSession();
 
 export function markAllPlayersInactive(callback) {
   playersCollection.updateMany({}, {$set: {active: false}}).then(() => callback());
@@ -43,7 +61,7 @@ export async function createRoom(room) {
     room.roomCode = await generateUniqueRoomCode();
   }
   room._id = room.roomID;
-  const result = await roomsCollection.insertOne(room);
+  const result = await roomsCollection.insertOne(room, DEFAULT_INSERT_OPTIONS);
   if (result.insertedCount !== 1) {
     throw new Error('Failed to create room!');
   }
@@ -126,7 +144,7 @@ export async function createGame(game) {
     game.gameID = uuid.v4();
   }
   game._id = game.gameID;
-  const result = await gamesCollection.insertOne(game);
+  const result = await gamesCollection.insertOne(game, DEFAULT_INSERT_OPTIONS);
   if (result.insertedCount !== 1) {
     throw new Error('Failed to create game!');
   }
@@ -173,15 +191,23 @@ export async function setActiveClue(game, clue) {
 }
 
 export async function setPlayerAnswering(gameID, playerID) {
-  const updates = {
-    $set: {
-      playerAnswering: playerID,
-    },
-    $addToSet: {
-      'activeClue.playersAttempted': playerID,
+  /* Re-fetch the game in a transaction to ensure that there isn't already a player answering.
+   * This is to prevent a race condition where two players may both be recognized as having buzzed in. */
+  await session.withTransaction(async () => {
+    const game = await getGame(gameID);
+    if (game.playerAnswering) {
+      throw new Error('Another player is already answering!');
     }
-  };
-  await updateGameFields(gameID, updates);
+    const updates = {
+      $set: {
+        playerAnswering: playerID,
+      },
+      $addToSet: {
+        'activeClue.playersAttempted': playerID,
+      }
+    };
+    await updateGameFields(gameID, updates);
+  }, DEFAULT_TRANSACTION_OPTIONS);
 }
 
 export async function markActiveClueAsInvalid(gameID, playerID) {
@@ -210,7 +236,7 @@ export async function createPlayer(player) {
     player.playerID = uuid.v4();
   }
   player._id = player.playerID;
-  const result = await playersCollection.insertOne(player);
+  const result = await playersCollection.insertOne(player, DEFAULT_INSERT_OPTIONS);
   if (result.insertedCount !== 1) {
     throw new Error('Failed to create player!');
   }
@@ -271,7 +297,7 @@ export async function createRoomLinkRequest(roomLinkRequest) {
     roomLinkRequest.requestID = uuid.v4();
   }
   roomLinkRequest._id = roomLinkRequest.requestID;
-  const result = await roomLinkRequestsCollection.insertOne(roomLinkRequest);
+  const result = await roomLinkRequestsCollection.insertOne(roomLinkRequest, DEFAULT_INSERT_OPTIONS);
   if (result.insertedCount !== 1) {
     throw new Error('Failed to create room link request!');
   }

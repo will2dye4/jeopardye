@@ -749,7 +749,7 @@ async function handleBuzzIn(ws, event) {
       timer.delayMillis -= elapsedMillis;
     }
     setResponseTimerForClue(game, game.activeClue, playerID);
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to set player answering to ${playerID}: ${e}`));
 }
 
 async function handleSubmitAnswer(ws, event) {
