@@ -318,6 +318,7 @@ class Connector extends React.Component {
                       kickPlayerDialog={kickPlayerDialog}
                       playerEditor={playerEditor}
                       roomCode={roomCode}
+                      toast={toast}
                       {...this.props} />}
             </Route>
             <Route path="/p/:roomCode">
@@ -326,6 +327,7 @@ class Connector extends React.Component {
                     kickPlayerDialog={kickPlayerDialog}
                     playerEditor={playerEditor}
                     playerStats={playerStats}
+                    toast={toast}
                     {...this.props} />
             </Route>
           </Switch>

@@ -18,7 +18,7 @@ function Lobby(props) {
       <LobbyButtons isAdmin={isAdmin} adminDashboard={props.adminDashboard} playerStats={props.playerStats} />
       <GridRow cols={4} gap={8} m={4}>
         <GridItem>
-          <RoomCode code={props.room.roomCode} />
+          <RoomCode code={props.room.roomCode} toast={props.toast} />
           <PlayerLists {...props} />
         </GridItem>
         <GridItem colSpan={3}>

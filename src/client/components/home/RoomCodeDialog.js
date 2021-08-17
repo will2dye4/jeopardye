@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Button,
-  createStandaloneToast,
   Flex,
   FormControl,
   FormHelperText,
@@ -15,12 +14,9 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@chakra-ui/react';
-import {EventTypes, MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes} from '../../../constants.mjs';
-import JEOPARDYE_THEME from '../../theme';
+import { EventTypes, MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes } from '../../../constants.mjs';
 import Card from '../common/card/Card';
 import GridRow from '../common/GridRow';
-
-const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
 class RoomCodeDialog extends React.Component {
   constructor(props) {
@@ -62,8 +58,8 @@ class RoomCodeDialog extends React.Component {
         break;
     }
     this.setState({passwordInvalid: passwordInvalid, roomCodeInvalid: roomCodeInvalid});
-    if (!toast.isActive(title)) {
-      toast({
+    if (!this.props.toast.isActive(title)) {
+      this.props.toast({
         id: title,
         position: 'top',
         title: title,

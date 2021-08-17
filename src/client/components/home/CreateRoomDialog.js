@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Button,
-  createStandaloneToast,
   Flex,
   FormControl,
   FormHelperText,
@@ -18,11 +17,8 @@ import {
 import { MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes } from '../../../constants.mjs';
 import { validateRoomCode } from '../../../models/room.mjs';
 import { ActionTypes } from '../../actions/action_creators';
-import JEOPARDYE_THEME from '../../theme';
 import Card from '../common/card/Card';
 import GridRow from '../common/GridRow';
-
-const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
 class CreateRoomDialog extends React.Component {
   constructor(props) {
@@ -62,8 +58,8 @@ class CreateRoomDialog extends React.Component {
         break;
     }
     this.setState({invalid: invalid});
-    if (!toast.isActive(title)) {
-      toast({
+    if (!this.props.toast.isActive(title)) {
+      this.props.toast({
         id: title,
         position: 'top',
         title: title,

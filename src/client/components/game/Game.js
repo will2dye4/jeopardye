@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, createStandaloneToast } from '@chakra-ui/react';
+import { Box, Text } from '@chakra-ui/react';
 import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
@@ -30,7 +30,6 @@ import {
   getWaitingForBuzzMessage,
 } from '../../messages';
 import { getPlayerName } from '../../reducers/game_reducer';
-import JEOPARDYE_THEME from '../../theme';
 import { isLocalStorageSettingEnabled, markClueAsInvalid, playSound, speakAnswer, speakClue } from '../../utils';
 import './Game.css';
 import Bold from '../common/Bold';
@@ -48,8 +47,6 @@ const SHOW_CLUE_DELAY_MILLIS = 1000;
 const BUZZER_LOCKED_OUT_TOAST_ID = 'buzzer-locked-out';
 
 const LOADING_STATUS = 'Loading...';
-
-const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
 class Game extends React.Component {
   constructor(props) {
@@ -171,7 +168,7 @@ class Game extends React.Component {
             {this.getPlayerName(playerID)} answered "{answer.trim()}" (<Text as="span" whiteSpace="nowrap">{amount}</Text>)
           </React.Fragment>
         );
-        toast({
+        this.props.toast({
           position: 'top',
           title: title,
           status: correct ? 'success' : 'error',
@@ -265,7 +262,7 @@ class Game extends React.Component {
         }
       });
       if (newPlayers.length) {
-        toast({
+        this.props.toast({
           position: 'top',
           title: `${formatList(newPlayers.sort())} joined the game.`,
           status: 'info',
@@ -289,7 +286,7 @@ class Game extends React.Component {
         }
       });
       if (leavingPlayers.length) {
-        toast({
+        this.props.toast({
           position: 'top',
           title: `${formatList(leavingPlayers.sort())} left the game.`,
           status: 'info',
@@ -297,7 +294,7 @@ class Game extends React.Component {
         });
       }
       if (spectatingPlayers.length) {
-        toast({
+        this.props.toast({
           position: 'top',
           title: `${formatList(spectatingPlayers)} started spectating.`,
           status: 'info',
@@ -317,7 +314,7 @@ class Game extends React.Component {
         }
       });
       if (newVoters.length) {
-        toast({
+        this.props.toast({
           position: 'top',
           title: `${formatList(newVoters)} voted to skip this clue.`,
           status: 'info',
@@ -336,7 +333,7 @@ class Game extends React.Component {
         }
       });
       if (newPlayers.length) {
-        toast({
+        this.props.toast({
           position: 'top',
           title: `${formatList(newPlayers)} marked this clue as invalid.`,
           status: 'info',
@@ -352,8 +349,8 @@ class Game extends React.Component {
         const hostName = (this.props.room ? getPlayerName(this.props.room.hostPlayerID) : 'Host');
         const playerName = (playerID === this.props.playerID ? 'your' : `${getPlayerName(playerID)}'s`);
         const toastID = `${playerName}-${value}`;
-        if (!toast.isActive(toastID)) {
-          toast({
+        if (!this.props.toast.isActive(toastID)) {
+          this.props.toast({
             id: toastID,
             position: 'top',
             title: `${hostName} overrode the server's decision on ${playerName} previous answer (+$${value.toLocaleString()}).`,
@@ -379,7 +376,7 @@ class Game extends React.Component {
     if (!prevProps.playerInControlReassigned && this.props.playerInControlReassigned) {
       const playerName = (this.props.playerInControl === this.props.playerID ? 'You' : getPlayerName(this.props.playerInControl));
       const verb = (playerName === 'You' ? 'are' : 'is');
-      toast({
+      this.props.toast({
         position: 'top',
         title: `${playerName} ${verb} now in control of the board.`,
         status: 'info',
@@ -512,7 +509,7 @@ class Game extends React.Component {
     });
     if (!isCurrentPlayer && !dailyDouble && timeElapsed) {
       const amount = this.props.activeClue.value;
-      toast({
+      this.props.toast({
         position: 'top',
         title: getTimeElapsedMessage(false, playerName, amount),
         status: 'error',
@@ -627,8 +624,8 @@ class Game extends React.Component {
     } else {
       /* buzzed too early - lock the player out temporarily */
       this.setState({buzzerLockedOut: true});
-      if (!toast.isActive(BUZZER_LOCKED_OUT_TOAST_ID)) {
-        toast({
+      if (!this.props.toast.isActive(BUZZER_LOCKED_OUT_TOAST_ID)) {
+        this.props.toast({
           id: BUZZER_LOCKED_OUT_TOAST_ID,
           position: 'top',
           title: `You buzzed too early!`,
