@@ -45,7 +45,7 @@ import {
   voteToSkipClue,
   websocketConnect,
 } from '../actions/action_creators';
-import { MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
+import { ADMIN_PLAYER_IDS, MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
 import { getPlayerName } from '../reducers/game_reducer';
 import JEOPARDYE_THEME from '../theme';
 import AdminDashboard from './admin/AdminDashboard';
@@ -286,6 +286,7 @@ class Connector extends React.Component {
 
   render() {
     const allowJoin = (Object.values(this.props.players).filter(player => player.active).length < MAX_PLAYERS_PER_GAME);
+    const isAdmin = ADMIN_PLAYER_IDS.has(this.props.playerID);
     const urlSearchParams = new URLSearchParams(window.location.search);
     let roomCode;
     if (urlSearchParams.has('code')) {
@@ -316,10 +317,10 @@ class Connector extends React.Component {
             <Route exact path="/">
               {this.props.room ?
                 <Redirect to={`/p/${this.props.room.roomCode}`}/> :
-                <Home roomCode={roomCode} modals={modals} toast={toast} {...this.props} />}
+                <Home isAdmin={isAdmin} roomCode={roomCode} modals={modals} toast={toast} {...this.props} />}
             </Route>
             <Route path="/p/:roomCode">
-              <Room allowJoin={allowJoin} modals={modals} toast={toast} {...this.props} />
+              <Room allowJoin={allowJoin} isAdmin={isAdmin} modals={modals} toast={toast} {...this.props} />
             </Route>
           </Switch>
         </Router>

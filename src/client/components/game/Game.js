@@ -842,6 +842,7 @@ class Game extends React.Component {
       playerID: this.props.playerID,
       playerScore: this.props.players[this.props.playerID]?.score || 0,
       playerHasControl: this.playerHasControl(),
+      playerIsAdmin: this.props.isAdmin,
       playerIsHost: this.playerIsHost(),
       playerIsOwner: (!!this.props.playerID && !!this.props.room && this.props.playerID === this.props.room.ownerPlayerID),
       playerIsSpectating: this.playerIsSpectating(),

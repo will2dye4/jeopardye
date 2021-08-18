@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react';
 import { withRouter } from 'react-router-dom';
-import { DEFAULT_PLAYER_ID } from '../../../constants.mjs';
 import Card from '../common/card/Card';
 import LogoPage from '../common/LogoPage';
 import CreateRoomDialog from './CreateRoomDialog';
@@ -80,8 +79,7 @@ class Home extends React.Component {
     if (urlSearchParams.has('req')) {
       requestID = urlSearchParams.get('req');
     }
-    const isAdmin = (this.props.playerID === DEFAULT_PLAYER_ID);
-    const allowCreate = (isAdmin || !!requestID);
+    const allowCreate = (this.props.isAdmin || !!requestID);
     const secondButtonLabel = (allowCreate ? 'Create New Room' : 'Request New Room Link');
     const secondButtonHandler = (allowCreate ? () => this.openCreateRoomDialog(requestID) : this.openRequestLinkDialog);
     const secondButtonDescription = (allowCreate ?
@@ -90,7 +88,7 @@ class Home extends React.Component {
     );
     return (
       <LogoPage id="home">
-        <HomeButtons isAdmin={isAdmin} modals={this.props.modals} />
+        <HomeButtons isAdmin={this.props.isAdmin} modals={this.props.modals} />
         <Flex justify="center">
           <Card className="game-settings" mt={5} px={8} py={8} textAlign="center" w="75%" minW={500}>
             <Heading size="3xl">Welcome!</Heading>

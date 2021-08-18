@@ -1,5 +1,7 @@
 export const DEFAULT_PLAYER_ID = 'd38064a4-7c20-4fb6-b076-76eada41d385';
 
+export const ADMIN_PLAYER_IDS = new Set([DEFAULT_PLAYER_ID]);
+
 export const JSERVICE_API_BASE = 'http://jservice.io/api';
 
 const BETA_TEST_MODE = false;

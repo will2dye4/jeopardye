@@ -12,7 +12,7 @@ import {
   PopoverTrigger,
   Text,
 } from '@chakra-ui/react';
-import { faChartLine, faDoorOpen, faEye, faHistory } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faDoorOpen, faEye, faHistory, faTools } from '@fortawesome/free-solid-svg-icons';
 import { EventContext } from '../../../../utils.mjs';
 import ActionIcon from '../../common/ActionIcon';
 import Icon from '../../common/Icon';
@@ -38,13 +38,21 @@ function SpectatorsMenu(props) {
       icon: faChartLine,
       onClick: props.modals.playerStats.open,
     },
-    {
-      id: (props.gameState.playerIsHost ? 'end-game-icon' : 'leave-game-icon'),
-      title: (props.gameState.playerIsHost ? 'End game' : 'Leave game'),
-      icon: faDoorOpen,
-      onClick: () => setIsConfirmDialogOpen(true),
-    },
   ];
+  if (props.gameState.playerIsAdmin) {
+    buttonIcons.push({
+      id: 'spectator-dashboard-icon',
+      title: 'Show admin dashboard',
+      icon: faTools,
+      onClick: props.modals.adminDashboard.open,
+    });
+  }
+  buttonIcons.push({
+    id: (props.gameState.playerIsHost ? 'end-game-icon' : 'leave-game-icon'),
+    title: (props.gameState.playerIsHost ? 'End game' : 'Leave game'),
+    icon: faDoorOpen,
+    onClick: () => setIsConfirmDialogOpen(true),
+  });
 
   const numSpectators = Object.keys(props.spectators).length;
   const spectating = props.gameState.playerIsSpectating;

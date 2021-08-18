@@ -1,7 +1,7 @@
 import express from 'express';
 import log from 'log';
 import {
-  DEFAULT_PLAYER_ID,
+  ADMIN_PLAYER_IDS,
   EventTypes,
   LeaderboardKeys,
   MAX_PASSWORD_LENGTH,
@@ -137,7 +137,7 @@ async function handleCreateRoom(req, res, next) {
       handleError(`Invalid room link request ID "${requestID}"`, StatusCodes.BAD_REQUEST);
       return;
     }
-  } else if (ownerPlayerID !== DEFAULT_PLAYER_ID) {
+  } else if (!ADMIN_PLAYER_IDS.has(ownerPlayerID)) {
     handleError(`Missing room link request ID`, StatusCodes.BAD_REQUEST);
     return;
   }

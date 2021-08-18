@@ -1,6 +1,15 @@
 import React from 'react';
 import { Flex, Text } from '@chakra-ui/react';
-import { faChartLine, faDoorOpen, faEye, faHistory, faPen, faSignOutAlt, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import {
+  faChartLine,
+  faDoorOpen,
+  faEye,
+  faHistory,
+  faPen,
+  faSignOutAlt,
+  faTools,
+  faUserTie,
+} from '@fortawesome/free-solid-svg-icons';
 import { EventContext } from '../../../../utils.mjs';
 import Icon from '../../common/Icon';
 import Card from '../../common/card/Card';
@@ -47,6 +56,13 @@ function PodiumMenu(props) {
         title: (props.allowSpectate ? null : CANNOT_SPECTATE_MESSAGE),
       },
     ];
+    if (props.gameState.playerIsAdmin) {
+      menuItems.push({
+        icon: faTools,
+        label: 'Dashboard',
+        onClick: props.modals.adminDashboard.open,
+      });
+    }
     if (props.gameState.playerIsHost) {
       menuItems.push({
         icon: faDoorOpen,
