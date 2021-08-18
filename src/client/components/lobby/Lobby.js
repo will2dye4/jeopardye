@@ -15,7 +15,7 @@ function Lobby(props) {
   return (
     <LogoPage id="lobby">
       <LeaveButton onConfirm={() => props.leaveRoom(props.playerID, props.roomID)} />
-      <LobbyButtons isAdmin={isAdmin} adminDashboard={props.adminDashboard} playerStats={props.playerStats} />
+      <LobbyButtons isAdmin={isAdmin} modals={props.modals} />
       <GridRow cols={4} gap={8} m={4}>
         <GridItem>
           <RoomCode code={props.room.roomCode} toast={props.toast} />

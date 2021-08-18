@@ -31,20 +31,20 @@ class GameHistory extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (this.props.gameHistory.scroll && prevProps.eventHistory.length < this.props.eventHistory.length) {
+    if (this.props.modals.gameHistory.scroll && prevProps.eventHistory.length < this.props.eventHistory.length) {
       scrollHistoryToBottom();
     }
   }
 
   toggleScroll() {
-    this.props.gameHistory.toggleScroll();
-    if (!this.props.gameHistory.scroll) {
+    this.props.modals.gameHistory.toggleScroll();
+    if (!this.props.modals.gameHistory.scroll) {
       scrollHistoryToBottom();
     }
   }
 
   render() {
-    const contentProps = (this.props.gameHistory.side === 'left' ?
+    const contentProps = (this.props.modals.gameHistory.side === 'left' ?
       {borderRightColor: 'jeopardyBlue.500', borderRightWidth: 4} :
       {borderLeftColor: 'jeopardyBlue.500', borderLeftWidth: 4});
     let history;
@@ -62,14 +62,14 @@ class GameHistory extends React.Component {
       history = <Text className="empty-list" fontStyle="italic" pt={6} textAlign="center">No events to show</Text>;
     }
     return (
-      <Drawer id="game-history" isOpen={true} placement={this.props.gameHistory.side} onClose={this.props.gameHistory.close}
-              returnFocusOnClose={false} size={this.props.gameHistory.size}>
+      <Drawer id="game-history" isOpen={true} placement={this.props.modals.gameHistory.side} onClose={this.props.modals.gameHistory.close}
+              returnFocusOnClose={false} size={this.props.modals.gameHistory.size}>
         <DrawerOverlay />
         <DrawerContent {...contentProps}>
           <DrawerCloseButton />
           <DrawerHeader borderBottom="1px solid rgba(0, 0, 0, 0.125)" fontSize="3xl">
             Game History
-            <GameHistoryButtons gameHistory={this.props.gameHistory} toggleScroll={this.toggleScroll} />
+            <GameHistoryButtons modals={this.props.modals} toggleScroll={this.toggleScroll} />
           </DrawerHeader>
           <DrawerBody p={0}>
             {history}

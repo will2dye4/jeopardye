@@ -6,23 +6,23 @@ import ActionIcon from '../../common/ActionIcon';
 function GameHistoryButtons(props) {
   const expandButton = {
     id: 'expand-history-icon',
-    title: 'Make history ' + (props.gameHistory.size === 'xs' ? 'bigger' : 'smaller'),
-    icon: (props.gameHistory.size === 'xs' ? faExpandAlt : faCompressAlt),
-    onClick: props.gameHistory.toggleSize,
+    title: 'Make history ' + (props.modals.gameHistory.size === 'xs' ? 'bigger' : 'smaller'),
+    icon: (props.modals.gameHistory.size === 'xs' ? faExpandAlt : faCompressAlt),
+    onClick: props.modals.gameHistory.toggleSize,
   };
   const moveButton = {
     id: 'move-history-icon',
-    title: `Move to ${props.gameHistory.side === 'left' ? 'right' : 'left'} side`,
-    icon: (props.gameHistory.side === 'left' ? faArrowRight : faArrowLeft),
-    onClick: props.gameHistory.toggleSide,
+    title: `Move to ${props.modals.gameHistory.side === 'left' ? 'right' : 'left'} side`,
+    icon: (props.modals.gameHistory.side === 'left' ? faArrowRight : faArrowLeft),
+    onClick: props.modals.gameHistory.toggleSide,
   };
   const scrollButton = {
     id: 'auto-scroll-history-icon',
-    title: (props.gameHistory.scroll ? 'Pause scrolling' : 'Scroll to bottom'),
-    icon: (props.gameHistory.scroll ? faPause : faPlay),
+    title: (props.modals.gameHistory.scroll ? 'Pause scrolling' : 'Scroll to bottom'),
+    icon: (props.modals.gameHistory.scroll ? faPause : faPlay),
     onClick: props.toggleScroll,
   };
-  const buttonIcons = (props.gameHistory.side === 'left' ? [scrollButton, expandButton, moveButton] : [moveButton, expandButton, scrollButton]);
+  const buttonIcons = (props.modals.gameHistory.side === 'left' ? [scrollButton, expandButton, moveButton] : [moveButton, expandButton, scrollButton]);
   return (
     <Flex mt={3}>
       <HStack spacing={8}>

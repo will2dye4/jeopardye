@@ -15,12 +15,12 @@ function PlayerEditor(props) {
   const allowClose = (mode === PlayerEditorModes.EDIT);
   return (
     <Modal isOpen={true} closeOnEsc={allowClose} closeOnOverlayClick={allowClose}
-           onClose={props.playerEditor.close} size="5xl">
+           onClose={props.modals.playerEditor.close} size="5xl">
       <ModalOverlay />
       <ModalContent>
         {allowClose && <ModalCloseButton />}
         <ModalBody p={0}>
-          <PlayerSettings mode={mode} onSubmit={props.playerEditor.close} {...props} />
+          <PlayerSettings mode={mode} onSubmit={props.modals.playerEditor.close} {...props} />
         </ModalBody>
       </ModalContent>
     </Modal>

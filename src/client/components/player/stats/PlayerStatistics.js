@@ -64,7 +64,7 @@ class PlayerStatistics extends React.Component {
     const selectRef = React.createRef();
 
     return (
-      <Modal initialFocusRef={selectRef} isOpen={true} onClose={this.props.playerStats.close} size="5xl">
+      <Modal initialFocusRef={selectRef} isOpen={true} onClose={this.props.modals.playerStats.close} size="5xl">
         <ModalOverlay />
         <ModalContent>
           <ModalCloseButton />

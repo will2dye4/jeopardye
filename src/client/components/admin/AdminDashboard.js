@@ -56,7 +56,7 @@ class AdminDashboard extends React.Component {
 
   render() {
     return (
-      <Modal isOpen={true} onClose={this.props.adminDashboard.close} size="5xl">
+      <Modal isOpen={true} onClose={this.props.modals.adminDashboard.close} size="5xl">
         <ModalOverlay />
         <ModalContent>
           <ModalCloseButton />

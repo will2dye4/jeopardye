@@ -18,7 +18,7 @@ function PodiumMenu(props) {
   }
 
   const reassignRoomHost = () => props.reassignRoomHost(props.gameState.roomID, props.player.playerID);
-  const kickPlayer = () => props.kickPlayerDialog.open(props.player.playerID);
+  const kickPlayer = () => props.modals.kickPlayerDialog.open(props.player.playerID);
 
   let menuItems;
   let onConfirm;
@@ -27,17 +27,17 @@ function PodiumMenu(props) {
       {
         icon: faPen,
         label: 'Settings',
-        onClick: props.playerEditor.open,
+        onClick: props.modals.playerEditor.open,
       },
       {
         icon: faChartLine,
         label: 'Statistics',
-        onClick: props.playerStats.open,
+        onClick: props.modals.playerStats.open,
       },
       {
         icon: faHistory,
         label: 'History',
-        onClick: props.gameHistory.open,
+        onClick: props.modals.gameHistory.open,
       },
       {
         icon: faEye,

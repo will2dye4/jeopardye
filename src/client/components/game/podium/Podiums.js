@@ -28,10 +28,7 @@ function Podiums(props) {
     return <Podium key={`${player.playerID}-${numPlayers}`}
                    player={player}
                    gameState={props.gameState}
-                   gameHistory={props.gameHistory}
-                   kickPlayerDialog={props.kickPlayerDialog}
-                   playerEditor={props.playerEditor}
-                   playerStats={props.playerStats}
+                   modals={props.modals}
                    isCurrentPlayer={isCurrentPlayer}
                    isHost={isHost}
                    isChampion={isChampion}

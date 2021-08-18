@@ -291,21 +291,23 @@ class Connector extends React.Component {
     if (urlSearchParams.has('code')) {
       roomCode = urlSearchParams.get('code');
     }
-    const adminDashboard = {
-      open: this.openAdminDashboard,
-      close: this.closeAdminDashboard,
-    };
-    const kickPlayerDialog = {
-      open: this.openKickPlayerDialog,
-      close: this.closeKickPlayerDialog,
-    };
-    const playerEditor = {
-      open: this.openPlayerEditor,
-      close: this.closePlayerEditor,
-    };
-    const playerStats = {
-      open: this.openPlayerStats,
-      close: this.closePlayerStats,
+    const modals = {
+      adminDashboard: {
+        open: this.openAdminDashboard,
+        close: this.closeAdminDashboard,
+      },
+      kickPlayerDialog: {
+        open: this.openKickPlayerDialog,
+        close: this.closeKickPlayerDialog,
+      },
+      playerEditor: {
+        open: this.openPlayerEditor,
+        close: this.closePlayerEditor,
+      },
+      playerStats: {
+        open: this.openPlayerStats,
+        close: this.closePlayerStats,
+      },
     };
     return (
       <React.Fragment>
@@ -314,31 +316,20 @@ class Connector extends React.Component {
             <Route exact path="/">
               {this.props.room ?
                 <Redirect to={`/p/${this.props.room.roomCode}`}/> :
-                <Home adminDashboard={adminDashboard}
-                      kickPlayerDialog={kickPlayerDialog}
-                      playerEditor={playerEditor}
-                      roomCode={roomCode}
-                      toast={toast}
-                      {...this.props} />}
+                <Home roomCode={roomCode} modals={modals} toast={toast} {...this.props} />}
             </Route>
             <Route path="/p/:roomCode">
-              <Room allowJoin={allowJoin}
-                    adminDashboard={adminDashboard}
-                    kickPlayerDialog={kickPlayerDialog}
-                    playerEditor={playerEditor}
-                    playerStats={playerStats}
-                    toast={toast}
-                    {...this.props} />
+              <Room allowJoin={allowJoin} modals={modals} toast={toast} {...this.props} />
             </Route>
           </Switch>
         </Router>
-        {this.state.showAdminDashboard && <AdminDashboard adminDashboard={adminDashboard} {...this.props} />}
+        {this.state.showAdminDashboard && <AdminDashboard modals={modals} {...this.props} />}
         {this.state.showKickPlayerDialog && <KickPlayerDialog player={this.getPlayer(this.state.kickPlayerID)}
                                                               roomID={this.props.roomID}
-                                                              kickPlayerDialog={kickPlayerDialog}
+                                                              modals={modals}
                                                               kickPlayer={this.props.kickPlayer} />}
-        {this.state.showPlayerEditor && <PlayerEditor playerEditor={playerEditor} {...this.props} />}
-        {this.state.showPlayerStats && <PlayerStatistics playerStats={playerStats} {...this.props} />}
+        {this.state.showPlayerEditor && <PlayerEditor modals={modals} {...this.props} />}
+        {this.state.showPlayerStats && <PlayerStatistics modals={modals} {...this.props} />}
       </React.Fragment>
     );
   }

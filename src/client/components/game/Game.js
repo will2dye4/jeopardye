@@ -665,7 +665,7 @@ class Game extends React.Component {
       } else if (key === 't') {
         console.log('Opening player stats');
         event.preventDefault();
-        this.props.playerStats.open();
+        this.props.modals.playerStats.open();
       }
     }
   }
@@ -833,16 +833,6 @@ class Game extends React.Component {
   }
 
   render() {
-    const gameHistory = {
-      open: this.openGameHistory,
-      close: this.closeGameHistory,
-      scroll: this.state.gameHistoryScroll,
-      side: this.state.gameHistorySide,
-      size: this.state.gameHistorySize,
-      toggleScroll: this.toggleGameHistoryScroll,
-      toggleSide: this.toggleGameHistorySide,
-      toggleSize: this.toggleGameHistorySize,
-    };
     const gameState = {
       roomID: this.props.roomID,
       gameID: this.props.game?.gameID,
@@ -855,6 +845,19 @@ class Game extends React.Component {
       playerIsHost: this.playerIsHost(),
       playerIsOwner: (!!this.props.playerID && !!this.props.room && this.props.playerID === this.props.room.ownerPlayerID),
       playerIsSpectating: this.playerIsSpectating(),
+    };
+    const modals = {
+      ...this.props.modals,
+      gameHistory: {
+        open: this.openGameHistory,
+        close: this.closeGameHistory,
+        scroll: this.state.gameHistoryScroll,
+        side: this.state.gameHistorySide,
+        size: this.state.gameHistorySize,
+        toggleScroll: this.toggleGameHistoryScroll,
+        toggleSide: this.toggleGameHistorySide,
+        toggleSize: this.toggleGameHistorySize,
+      },
     };
     let timer;
     if (this.state.showResponseTimer) {
@@ -895,10 +898,11 @@ class Game extends React.Component {
                markActiveClueAsInvalid={this.markActiveClueAsInvalid}
                voteToSkipActiveClue={this.voteToSkipActiveClue}
                {...this.state} />
-        <StatusBar gameState={gameState} {...this.props} {...this.state} />
-        <Podiums gameHistory={gameHistory} gameState={gameState} {...this.props} />
-        {this.state.showGameHistory && <GameHistory gameHistory={gameHistory} gameState={gameState} {...this.props} />}
-        {this.state.showRoundSummary && <RoundSummary gameState={gameState} {...this.props} />}
+        <StatusBar {...this.props} {...this.state} gameState={gameState} />
+        {/* NOTE: To override modals, it's important to pass modals={modals} AFTER {...this.props} below! */}
+        <Podiums {...this.props} gameState={gameState} modals={modals} />
+        {this.state.showGameHistory && <GameHistory {...this.props} gameState={gameState} modals={modals} />}
+        {this.state.showRoundSummary && <RoundSummary {...this.props} gameState={gameState} />}
       </Box>
     );
   }

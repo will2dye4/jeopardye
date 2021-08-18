@@ -7,7 +7,7 @@ function DashboardButton(props) {
   const title = 'Show admin dashboard';
   return (
     <Badge variant="solid" bg="white" color="black" borderRadius="full" boxShadow="dark-lg" px={3} py={2} fontSize="xl"
-           userSelect="none" title={title} className="hover-pointer" onClick={props.adminDashboard.open}>
+           userSelect="none" title={title} className="hover-pointer" onClick={props.modals.adminDashboard.open}>
       <ActionIcon id="dashboard" icon={faTools} title={title} />
     </Badge>
   );

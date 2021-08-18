@@ -15,13 +15,13 @@ function PlayerList(props) {
         changeSpectatingStatus: props.changeSpectatingStatus,
         changeHost: () => props.reassignRoomHost(props.room?.roomID, player.playerID),
         currentPlayerIsHost: (props.currentPlayerID === props.room?.hostPlayerID),
-        edit: props.edit,
+        edit: props.modals.playerEditor.open,
         isChampion: (player.playerID === props.room?.currentChampion),
         isCurrentPlayer: (player.playerID === props.currentPlayerID),
         isHost: (player.playerID === props.room?.hostPlayerID),
         isOwner: (player.playerID === props.room?.ownerPlayerID),
         isSpectator: props.spectators,
-        kickPlayer: () => props.kickPlayerDialog.open(player.playerID),
+        kickPlayer: () => props.modals.kickPlayerDialog.open(player.playerID),
         player: player,
       };
       return <PlayerListItem key={player.playerID} {...playerProps} />;

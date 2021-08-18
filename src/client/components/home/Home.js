@@ -46,7 +46,7 @@ class Home extends React.Component {
       }
       this.setState(newState);
     } else {
-      this.props.playerEditor.open(() => this.openCreateRoomDialog(requestID));
+      this.props.modals.playerEditor.open(() => this.openCreateRoomDialog(requestID));
     }
   }
 
@@ -66,7 +66,7 @@ class Home extends React.Component {
     if (this.props.playerID) {
       this.setState({showRoomCodeDialog: true});
     } else {
-      this.props.playerEditor.open(() => this.setState({showRoomCodeDialog: true}));
+      this.props.modals.playerEditor.open(() => this.setState({showRoomCodeDialog: true}));
     }
   }
 
@@ -90,7 +90,7 @@ class Home extends React.Component {
     );
     return (
       <LogoPage id="home">
-        <HomeButtons isAdmin={isAdmin} adminDashboard={this.props.adminDashboard} />
+        <HomeButtons isAdmin={isAdmin} modals={this.props.modals} />
         <Flex justify="center">
           <Card className="game-settings" mt={5} px={8} py={8} textAlign="center" w="75%" minW={500}>
             <Heading size="3xl">Welcome!</Heading>

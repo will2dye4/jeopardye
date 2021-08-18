@@ -30,13 +30,13 @@ function SpectatorsMenu(props) {
       id: 'spectator-history-icon',
       title: 'Show game history',
       icon: faHistory,
-      onClick: props.gameHistory.open,
+      onClick: props.modals.gameHistory.open,
     },
     {
       id: 'spectator-stats-icon',
       title: 'Show player statistics',
       icon: faChartLine,
-      onClick: props.playerStats.open,
+      onClick: props.modals.playerStats.open,
     },
     {
       id: (props.gameState.playerIsHost ? 'end-game-icon' : 'leave-game-icon'),
@@ -66,8 +66,8 @@ function SpectatorsMenu(props) {
         <PopoverCloseButton />
         <PopoverBody p={0}>
           <PlayerList spectators={true} players={props.spectators} currentPlayerID={props.playerID}
-                      mb={0} boxShadow="dark-lg" edit={props.playerEditor.open} changeSpectatingStatus={stopSpectating}
-                      kickPlayerDialog={props.kickPlayerDialog} reassignRoomHost={props.reassignRoomHost} room={props.room}>
+                      mb={0} boxShadow="dark-lg" changeSpectatingStatus={stopSpectating} modals={props.modals}
+                      reassignRoomHost={props.reassignRoomHost} room={props.room}>
             {spectating && (
               <ListItem key="buttons" className="list-group-item">
                 <Flex justify="center">

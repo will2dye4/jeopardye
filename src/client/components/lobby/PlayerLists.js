@@ -6,8 +6,7 @@ function PlayerLists(props) {
   const stopSpectating = (props.allowJoin ? (playerID) => props.stopSpectating(props.roomID, playerID, props.gameState?.gameID) : null);
   const listProps = {
     currentPlayerID: props.playerID,
-    edit: props.playerEditor.open,
-    kickPlayerDialog: props.kickPlayerDialog,
+    modals: props.modals,
     reassignRoomHost: props.reassignRoomHost,
     room: props.room,
   };

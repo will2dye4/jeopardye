@@ -45,12 +45,12 @@ class KickPlayerDialog extends React.Component {
   }
   handleSubmit() {
     this.props.kickPlayer(this.props.roomID, this.props.player.playerID, this.state.selectedDuration);
-    this.props.kickPlayerDialog.close();
+    this.props.modals.kickPlayerDialog.close();
   }
 
   render() {
     return (
-      <AlertDialog isOpen={true} leastDestructiveRef={this.state.cancelRef} onClose={this.props.kickPlayerDialog.close}>
+      <AlertDialog isOpen={true} leastDestructiveRef={this.state.cancelRef} onClose={this.props.modals.kickPlayerDialog.close}>
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="2xl" fontWeight="bold">Kick {this.props.player.name}</AlertDialogHeader>
@@ -68,7 +68,7 @@ class KickPlayerDialog extends React.Component {
               </Flex>
             </AlertDialogBody>
             <AlertDialogFooter>
-              <Button ref={this.state.cancelRef} onClick={this.props.kickPlayerDialog.close}>Cancel</Button>
+              <Button ref={this.state.cancelRef} onClick={this.props.modals.kickPlayerDialog.close}>Cancel</Button>
               <Button colorScheme="red" onClick={this.handleSubmit} ml={3}>Kick</Button>
             </AlertDialogFooter>
           </AlertDialogContent>
