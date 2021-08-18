@@ -101,7 +101,7 @@ export function isSuperset(set, subset) {
 }
 
 export function comparePlayerNames(player1, player2) {
-  return player1.name.localeCompare(player2.name);
+  return player1.name.toLowerCase().localeCompare(player2.name.toLowerCase());
 }
 
 export function comparePlayerEntries([id1, player1], [id2, player2]) {
