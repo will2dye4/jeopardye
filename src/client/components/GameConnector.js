@@ -55,6 +55,10 @@ import PlayerEditor from './player/PlayerEditor';
 import PlayerStatistics from './player/stats/PlayerStatistics';
 import Room from './Room';
 
+const CONNECTED_TOAST_ID = 'connected-to-server';
+const DISCONNECTED_TOAST_ID = 'disconnected-from-server';
+const RECONNECT_ATTEMPT_INTERVAL_MILLIS = 5000;
+
 const toast = createStandaloneToast({theme: JEOPARDYE_THEME});
 
 function mapStateToProps(state) {
@@ -120,6 +124,8 @@ class Connector extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      connectionIntervalID: null,
+      disconnected: false,
       kickPlayerID: null,
       onPlayerEditorClose: null,
       showAdminDashboard: false,
@@ -162,9 +168,25 @@ class Connector extends React.Component {
     }
 
     if (prevProps.connected && !this.props.connected && this.props.playerID) {
-      /* TODO - show message to user? */
       console.log('Websocket connection lost. Attempting to reconnect...');
-      this.connectAndFetchCurrentState();
+      if (!toast.isActive(DISCONNECTED_TOAST_ID)) {
+        toast({
+          id: DISCONNECTED_TOAST_ID,
+          position: 'top',
+          title: 'Connection to server lost. Trying to reconnect...',
+          status: 'error',
+          isClosable: true,
+        });
+      }
+      const intervalID = setInterval(function() {
+        if (this.props.connected) {
+          this.cancelConnectionInterval();
+        } else {
+          console.log('Attempting to reconnect...');
+          this.props.websocketConnect();
+        }
+      }.bind(this), RECONNECT_ATTEMPT_INTERVAL_MILLIS);
+      this.setState({connectionIntervalID: intervalID, disconnected: true});
     }
 
     if ((this.props.roomID && prevProps.roomID !== this.props.roomID) || (!prevProps.roomID && this.props.roomID && !this.props.room)) {
@@ -232,6 +254,22 @@ class Connector extends React.Component {
         console.log('Room is full. Becoming a spectator.');
         this.props.startSpectating(this.props.roomID, this.props.playerID);
       }
+    }
+  }
+
+  cancelConnectionInterval() {
+    if (this.state.connectionIntervalID !== null) {
+      if (this.state.disconnected && !toast.isActive(CONNECTED_TOAST_ID)) {
+        toast({
+          id: CONNECTED_TOAST_ID,
+          position: 'top',
+          title: 'Successfully connected to server.',
+          status: 'success',
+          isClosable: true,
+        });
+      }
+      clearInterval(this.state.connectionIntervalID);
+      this.setState({connectionIntervalID: null, disconnected: false});
     }
   }
 

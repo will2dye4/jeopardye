@@ -8,6 +8,8 @@ import {
 import { GameSettings } from '../../models/game.mjs';
 import { getCurrentChampion, isDailyDouble } from '../../utils.mjs';
 
+const WEBSOCKET_CONNECTION_REFUSED_ERROR_MESSAGE = '`redux-websocket` error';
+
 let playerNames = {};
 
 export function getPlayerName(playerID) {
@@ -663,6 +665,12 @@ export function GameReducer(storeData, action) {
       return {...storeData, connected: true};
     case ActionTypes.REDUX_WEBSOCKET_CLOSED:
       return {...storeData, connected: false};
+    case ActionTypes.REDUX_WEBSOCKET_ERROR:
+      const { message, originalAction } = action.meta;
+      if (!originalAction && message === WEBSOCKET_CONNECTION_REFUSED_ERROR_MESSAGE) {
+        return {...storeData, error: 'Failed to connect to server. Trying to reconnect...'};
+      }
+      return storeData;
     case ActionTypes.REDUX_WEBSOCKET_MESSAGE:
       return handleWebsocketEvent(storeData, action.payload);
     default:
