@@ -1,8 +1,16 @@
+import log from 'log';
 import { getPlayers, getRoom, removePlayerFromRoom as removePlayer } from './db.mjs';
+
+const logger = log.get('utils');
 
 export async function findNewHostPlayerID(room) {
   const playerIDs = room.playerIDs.filter(playerID => playerID !== room.hostPlayerID);
-  const players = await getPlayers(playerIDs);
+  let players;
+  try {
+    players = await getPlayers(playerIDs);
+  } catch (e) {
+    logger.error(`Failed to get players to find new host: ${e}`);
+  }
   let newHostPlayerID;
   if (players) {
     newHostPlayerID = players.find(player => player.active && player.currentRoomID === room.roomID && !player.spectating)?.playerID;
@@ -20,7 +28,12 @@ export async function findNewHostPlayerID(room) {
 
 export async function findNewPlayerInControl(game) {
   const playerIDs = game.playerIDs.filter(playerID => playerID !== game.playerInControl);
-  const players = await getPlayers(playerIDs);
+  let players;
+  try {
+    players = await getPlayers(playerIDs);
+  } catch (e) {
+    logger.error(`Failed to get players to find new player in control: ${e}`);
+  }
   return players?.sort((player1, player2) =>
     game.scores[player1.playerID] - game.scores[player2.playerID]
   )?.find(player =>

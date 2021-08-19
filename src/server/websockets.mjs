@@ -263,14 +263,16 @@ function checkForLastClue(game) {
             }
           });
           return Promise.all(playerUpdates);
-        }).then(() => roomLogger.debug(game.roomID, `Marked game ${gameID} as finished and updated player stats.`));
+        }).then(() =>
+          roomLogger.debug(game.roomID, `Marked game ${gameID} as finished and updated player stats.`)
+        ).catch(e => roomLogger.error(game.roomID, `Error occurred while checking for last clue: ${e}`));
       } else {
         updateGame(gameID, {roundSummary: roundSummary}).then(() => {
           roomLogger.info(game.roomID, `Reached the end of the ${currentRound} round for game ${gameID}.`);
-        });
+        }).catch(e => roomLogger.error(game.roomID, `Failed to update game at end of round: ${e}`));
       }
       broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {...roundSummary, gameID: gameID, roomID: game.roomID}));
-    });
+    }).catch(e => roomLogger.error(game.roomID, `Failed to get players while checking for last clue: ${e}`));
   }
 }
 
@@ -335,7 +337,13 @@ async function handleClientConnect(ws, event) {
   }, PING_INTERVAL_MILLIS);
 
   if (room) {
-    const players = await getPlayers(room.playerIDs);
+    let players;
+    try {
+      players = await getPlayers(room.playerIDs);
+    } catch (e) {
+      handleError(ws, event, 'failed to get players in room', StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
     let newPlayers = {};
     players.forEach(player => {
       if (player.currentRoomID === room.roomID) {
@@ -405,7 +413,13 @@ async function joinRoom(player, room, ws, event) {
   if (player.currentRoomID && player.currentRoomID !== room.roomID) {
     removeClient(player.currentRoomID, player.playerID);
   }
-  const players = await getPlayers(room.playerIDs);
+  let players;
+  try {
+    players = await getPlayers(room.playerIDs);
+  } catch (e) {
+    handleError(ws, event, 'failed to get players in room', StatusCodes.INTERNAL_SERVER_ERROR);
+    return;
+  }
   let newPlayers = {};
   players.forEach(player => {
     if (player.currentRoomID === room.roomID) {
@@ -493,7 +507,7 @@ async function handleLeaveRoom(ws, event) {
     if (room.currentGameID) {
       reassignPlayerInControlIfNecessary(room.currentGameID, playerID);
     }
-  });
+  }).catch(e => roomLogger.error(roomID, `Error occurred while removing player ${playerID} from room: ${e}`));
 }
 
 async function handleGameSettingsChanged(ws, event) {
@@ -555,7 +569,7 @@ async function handleJoinGame(ws, event) {
     if (!game.playerIDs.includes(playerID)) {
       incrementPlayerStat(playerID, GAMES_PLAYED_STAT).then(() => roomLogger.debug(roomID, `Incremented games played for ${playerID}.`));
     }
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to add player ${playerID} to game ${gameID}: ${e}`));
 }
 
 async function validateEventContext(ws, event, validateClue = true) {
@@ -606,9 +620,9 @@ function setExpirationTimerForClue(gameID, clue, delayMillis = 0) {
           broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, payload));
           delete buzzTimers[gameID];
           checkForLastClue(game);
-        });
+        }).catch(e => roomLogger.error(game.roomID, `Failed to reset active clue for game ${gameID}: ${e}`));
       }
-    });
+    }).catch(e => logger.error(`Failed to get game ${gameID}: ${e}`));
   }, delayMillis);
   buzzTimers[gameID] = {
     categoryID: clue.categoryID,
@@ -654,9 +668,9 @@ function setResponseTimerForClue(game, clue, playerID, wagering = false) {
             game.scores[playerID] = newScore;
             checkForLastClue(game);
           }
-        });
+        }).catch(e => roomLogger.error(game.roomID, `Failed to reset player answering for game ${game.gameID}: ${e}`));
       }
-    });
+    }).catch(e => roomLogger.error(game.roomID, `Failed to get game ${game.gameID} in response timeout handler: ${e}`));
   }, delayMillis);
   responseTimers[game.gameID] = {
     playerID: playerID,
@@ -678,7 +692,7 @@ function setTimerForActiveClue(game, clue, playerID) {
           broadcast(new WebsocketEvent(EventTypes.WAITING_PERIOD_ENDED, {context: EventContext.fromGameAndClue(game, clue)}));
           setExpirationTimerForClue(game.gameID, clue);
         }
-      });
+      }).catch(e => roomLogger.error(game.roomID, `Failed to get game ${game.gameID} to end waiting period: ${e}`));
     }, getClueReadingDelayInMillis(clue));
   }
 }
@@ -711,7 +725,7 @@ async function handleSelectClue(ws, event) {
     roomLogger.info(roomID, `Playing ${category.name} for $${clue.value}.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_SELECTED_CLUE, event.payload));
     setTimerForActiveClue(game, clue, playerID);
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to set active clue for game ${game.gameID}: ${e}`));
 }
 
 async function handleBuzzIn(ws, event) {
@@ -799,12 +813,12 @@ async function handleSubmitAnswer(ws, event) {
       checkForLastClue(game);
     }
     if (correct) {
-      incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).then(() => roomLogger.debug(roomID, `Incremented correct answer count for ${name}.`));
+      incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct answer count for ${name}: ${e}`));
       if (dailyDouble) {
-        incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).then(() => roomLogger.debug(roomID, `Incremented correct daily double count for ${name}.`));
+        incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct daily double count for ${name}: ${e}`));
       }
     }
-  });
+  }).catch(e => roomLogger.error(roomID, `Error occurred while submitting answer: ${e}`));
 }
 
 function submitWager(game, categoryID, clueID, playerID, wager) {
@@ -820,7 +834,7 @@ function submitWager(game, categoryID, clueID, playerID, wager) {
       clearTimeout(timer.timerID);
     }
     setResponseTimerForClue(game, game.activeClue, playerID);
-  });
+  }).catch(e => roomLogger.error(game.roomID, `Error occurred while submitting wager: ${e}`));
 }
 
 async function handleSubmitWager(ws, event) {
@@ -865,7 +879,7 @@ async function handleStartSpectating(ws, event) {
   updatePlayer(playerID, {spectating: true}).then(() => {
     roomLogger.info(roomID, `${getPlayerName(playerID)} started spectating.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_STARTED_SPECTATING, event.payload));
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to start spectating for ${playerID}: ${e}`));
 }
 
 async function handleStopSpectating(ws, event) {
@@ -905,7 +919,7 @@ async function handleStopSpectating(ws, event) {
   updatePlayer(playerID, {spectating: false}).then(() => {
     roomLogger.info(roomID, `${getPlayerName(playerID)} stopped spectating.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_STOPPED_SPECTATING, {roomID, playerID}));
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to stop spectating for ${playerID}: ${e}`));
 }
 
 async function handleMarkClueAsInvalid(ws, event) {
@@ -929,7 +943,7 @@ async function handleMarkClueAsInvalid(ws, event) {
   markActiveClueAsInvalid(gameID, playerID).then(() => {
     roomLogger.info(roomID, `${getPlayerName(playerID)} marked clue ${clueID} (category ${categoryID}) as invalid.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_MARKED_CLUE_AS_INVALID, event.payload));
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to mark clue as invalid: ${e}`));
 }
 
 async function handleVoteToSkipClue(ws, event) {
@@ -973,9 +987,9 @@ async function handleVoteToSkipClue(ws, event) {
         clearTimeout(buzzTimers[gameID].timerID);
         delete buzzTimers[gameID];
         checkForLastClue(game);
-      });
+      }).catch(e => roomLogger.error(roomID, `Failed to skip active clue: ${e}`));
     }
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to vote to skip active clue: ${e}`));
 }
 
 async function handleOverrideServerDecision(ws, event) {
@@ -1020,11 +1034,11 @@ async function handleOverrideServerDecision(ws, event) {
     const name = getPlayerName(playerID);
     roomLogger.info(roomID, `Host overrode server's decision on ${name}'s previous answer (+$${increment.toLocaleString()}).`);
     broadcast(new WebsocketEvent(EventTypes.HOST_OVERRODE_SERVER_DECISION, {...event.payload, clue: clue, value: increment, score: score}));
-    incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).then(() => roomLogger.debug(roomID, `Incremented correct answer count for ${name}.`));
+    incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct answer count for ${name}: ${e}`));
     if (dailyDouble) {
-      incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).then(() => roomLogger.debug(roomID, `Incremented correct daily double count for ${name}.`));
+      incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct daily double count for ${name}: ${e}`));
     }
-  });
+  }).catch(e => roomLogger.error(roomID, `Error occurred while overriding server decision: ${e}`));
 }
 
 async function handleAbandonGame(ws, event) {
@@ -1041,7 +1055,7 @@ async function handleAbandonGame(ws, event) {
   setCurrentGameForRoom(room, null).then(() => {
     roomLogger.info(roomID, `Host abandoned game ${gameID}.`);
     broadcast(new WebsocketEvent(EventTypes.HOST_ABANDONED_GAME, event.payload));
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to abandon game: ${e}`));
 }
 
 async function handleKickPlayer(ws, event) {
@@ -1087,7 +1101,7 @@ async function handleKickPlayer(ws, event) {
     if (room.currentGameID) {
       reassignPlayerInControlIfNecessary(room.currentGameID, playerID);
     }
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to kick player ${playerID}: ${e}`));
 }
 
 function advanceRound(roomID, game, players) {
@@ -1100,7 +1114,7 @@ function advanceRound(roomID, game, players) {
     roomLogger.info(roomID, `Advanced to the ${round} round in game ${game.gameID}.`);
     const payload = {roomID: roomID, gameID: game.gameID, round: round, playerInControl: playerInControl};
     broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, payload));
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to advance to next round: ${e}`));
 }
 
 async function handleAdvanceToNextRound(ws, event) {
@@ -1177,7 +1191,7 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
     if (game.playersReadyForNextRound.length === numPlayers - 1) {
       advanceRound(roomID, game, players);
     }
-  });
+  }).catch(e => roomLogger.error(roomID, `Failed to mark player ${playerID} as ready for next round: ${e}`));
 }
 
 const eventHandlers = {
@@ -1205,7 +1219,13 @@ const eventHandlers = {
 
 export function handleWebsocket(ws, req) {
   ws.on('message', async function(msg) {
-    const event = JSON.parse(msg);
+    let event;
+    try {
+      event = JSON.parse(msg);
+    } catch (e) {
+      logger.error(`Failed to parse message "${msg}" as JSON: ${e}`);
+      return;
+    }
     const eventType = event.eventType;
     if (eventHandlers.hasOwnProperty(eventType)) {
       const handler = eventHandlers[eventType];
@@ -1261,8 +1281,8 @@ export function handleWebsocket(ws, req) {
               if (room.currentGameID) {
                 reassignPlayerInControlIfNecessary(room.currentGameID, playerID);
               }
-            });
-          });
+            }).catch(e => roomLogger.error(roomID, `Failed to get room to check for reassigning player in control: ${e}`));
+          }).catch(e => roomLogger.error(roomID, `Failed to mark player ${playerID} as inactive: ${e}`));
         }
       });
     });
