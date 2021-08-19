@@ -34,6 +34,7 @@ function newStoreData() {
     players: {},
     answerDelayMillis: 0,
     activeClue: null,
+    skippedClue: false,
     playerAnswering: null,
     playerInControl: null,
     playerInControlReassigned: false,
@@ -274,6 +275,7 @@ function handlePlayerSelectedClue(storeData, event) {
     playersVotingToSkipClue: [],
     prevAnswer: null,
     revealAnswer: false,
+    skippedClue: false,
   };
 }
 
@@ -305,10 +307,8 @@ function handlePlayerAnswered(storeData, event) {
     newStoreData.activeClue = null;
     newStoreData.playerInControl = playerID;
     newStoreData.revealAnswer = false;
-  } else {
-    if (dailyDouble) {
-      newStoreData.revealAnswer = true;
-    }
+  } else if (dailyDouble) {
+    newStoreData.revealAnswer = true;
   }
   return newStoreData;
 }
@@ -431,7 +431,7 @@ function handleBuzzingPeriodEnded(storeData, event) {
   const { categoryID, clueID } = event.payload.context;
   if (storeData.activeClue?.clueID === clueID) {
     console.log(`Time expired for clue ${clueID} (category ${categoryID}).`);
-    return {...storeData, playerAnswering: null, allowAnswers: false, revealAnswer: true};
+    return {...storeData, playerAnswering: null, allowAnswers: false, revealAnswer: true, skippedClue: event.payload.skipped};
   }
   return storeData;
 }
@@ -635,7 +635,16 @@ export function GameReducer(storeData, action) {
       });
       return {...storeData, roomLinkRequests: newReqs};
     case ActionTypes.DISMISS_CLUE:
-      return {...storeData, activeClue: null, playerAnswering: null, prevAnswer: null, allowAnswers: false, revealAnswer: false, responseTimerElapsed: false};
+      return {
+        ...storeData,
+        activeClue: null,
+        playerAnswering: null,
+        prevAnswer: null,
+        allowAnswers: false,
+        revealAnswer: false,
+        responseTimerElapsed: false,
+        skippedClue: false,
+      };
     case ActionTypes.CLEAR_CURRENT_GAME:
       const { gameID } = action.payload;
       if (storeData.game?.gameID === gameID) {

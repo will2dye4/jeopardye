@@ -54,7 +54,7 @@ class ActiveClue extends React.Component {
     const width = (board ? board.offsetWidth : '100%');
     const height = (board ? board.offsetHeight : '100%');
 
-    let content;
+    let content, title;
     if (this.props.gameState.isDailyDouble && !this.props.currentWager && !this.props.revealAnswer) {
       content = <Image src="/images/daily_double.jpg" alt="Daily Double" w={width} h={height} objectFit="cover" />;
     } else {
@@ -70,11 +70,12 @@ class ActiveClue extends React.Component {
           {!this.props.gameState.playerIsSpectating && <ActiveClueButtons {...this.props} />}
         </React.Fragment>
       );
+      title = `${this.props.activeClue.category} (for $${(this.props.currentWager || this.props.activeClue.value).toLocaleString()})`;
     }
 
     return (
       <Flex align="center" justify="center" className={containerClasses} w={width} h={height} userSelect="none"
-            onClick={this.handleClick}>
+            onClick={this.handleClick} title={title}>
         {content}
       </Flex>
     );

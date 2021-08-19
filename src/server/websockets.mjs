@@ -965,7 +965,8 @@ async function handleVoteToSkipClue(ws, event) {
     roomLogger.info(roomID, `${getPlayerName(playerID)} voted to skip clue ${clueID} (category ${categoryID}).`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_VOTED_TO_SKIP_CLUE, event.payload));
     const numPlayers = players.filter(player => player.active && !player.spectating).length;
-    if (game.activeClue.playersVotingToSkip.length === numPlayers - 1) {
+    const votingPlayers = [...new Set(game.activeClue.playersVotingToSkip.concat(game.activeClue.playersAttempted))];
+    if (votingPlayers.length >= numPlayers - 1) {
       roomLogger.info(roomID, `Skipping clue ${clueID} (category ${categoryID}).`);
       updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
         broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, {context: event.payload.context, skipped: true}));

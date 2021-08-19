@@ -555,7 +555,7 @@ class Game extends React.Component {
     let status;
     let emoji = 'timer_clock';
     if (setStatus) {
-      if (this.props.playersVotingToSkipClue.length === Object.keys(this.props.players).length) {
+      if (this.props.skippedClue) {
         emoji = 'skip_forward';
         status = 'Everyone voted to skip this clue.';
       } else if (isCurrentPlayer) {
