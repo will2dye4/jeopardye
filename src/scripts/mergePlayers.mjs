@@ -1,5 +1,5 @@
 import { LeaderboardKeys } from '../constants.mjs';
-import db, { getPlayer, getRoom, removePlayerFromRoom, updatePlayer } from '../server/db.mjs';
+import db, { getPlayer, removePlayerFromRoom, updatePlayer } from '../server/db.mjs';
 
 const SOURCE_PLAYER_ID = '';
 const TARGET_PLAYER_ID = '';
@@ -27,13 +27,25 @@ if (!targetPlayer) {
   die(`Failed to find target player (${TARGET_PLAYER_ID})!`);
 }
 
-let room;
-if (sourcePlayer.currentRoomID) {
-  room = await getRoom(sourcePlayer.currentRoomID);
-  if (room && (room.hostPlayerID === SOURCE_PLAYER_ID || room.ownerPlayerID === SOURCE_PLAYER_ID)) {
+/* NOTE: This will attempt to load all rooms in memory at once! Refactor when number of rooms becomes large. */
+const cursor = await db.collection('rooms').find();
+const rooms = await cursor.toArray();
+
+rooms.forEach(room => {
+  if (room.hostPlayerID === SOURCE_PLAYER_ID || room.ownerPlayerID === SOURCE_PLAYER_ID) {
     die(`Refusing to delete source player (${SOURCE_PLAYER_ID}) because they are the host/owner of room ${room.roomCode}!`);
   }
-}
+})
+
+rooms.forEach(async room => {
+  if (room.playerIDs.includes(SOURCE_PLAYER_ID)) {
+    try {
+      await removePlayerFromRoom(room.roomID, SOURCE_PLAYER_ID);
+    } catch (e) {
+      die(`Failed to remove source player (${SOURCE_PLAYER_ID}) from room ${room.roomCode}: ${e}`);
+    }
+  }
+})
 
 Object.entries(sourcePlayer.stats).forEach(([key, value]) => {
   if (key === LeaderboardKeys.HIGHEST_GAME_SCORE) {
@@ -47,18 +59,6 @@ try {
   await updatePlayer(TARGET_PLAYER_ID, {stats: targetPlayer.stats});
 } catch (e) {
   die(`Failed to update stats for target player (${TARGET_PLAYER_ID}): ${e}`);
-}
-
-/* NOTE: This will only work for the player's current room ID.
- * If any other rooms have this player in their list of player IDs,
- * you also need to manually remove the player from those rooms like so (using the Mongo shell):
- * db.rooms.update({_id: 'roomID'}, {$pull: {playerIDs: 'playerID'}}) */
-if (room && room.playerIDs.includes(SOURCE_PLAYER_ID)) {
-  try {
-    await removePlayerFromRoom(room.roomID, SOURCE_PLAYER_ID);
-  } catch (e) {
-    die(`Failed to remove source player (${SOURCE_PLAYER_ID}) from room ${room.roomCode}: ${e}`);
-  }
 }
 
 try {

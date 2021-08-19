@@ -84,7 +84,7 @@ class PlayerStatistics extends React.Component {
                   </TabPanel>
                   <TabPanel>
                     <Leaderboards leaderboards={this.props.leaderboards} selectedLeaderboard={this.state.selectedLeaderboard}
-                                  onLeaderboardChanged={this.handleLeaderboardChanged} />
+                                  playerID={this.props.playerID} onLeaderboardChanged={this.handleLeaderboardChanged} />
                   </TabPanel>
                 </TabPanels>
               </Tabs>

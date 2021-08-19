@@ -66,10 +66,12 @@ function Leaderboards(props) {
             }
             const firstPlace = (place === '1st');
             const color = (firstPlace ? 'jeopardyBlue.500' : 'black');
-            const fontWeight = (firstPlace ? 'bold' : 'normal');
-            const playerNames = players.sort(comparePlayerNames).map(player => <Text py={2}>{player.name}</Text>);
+            const isPlayerPlace = players.map(player => player.playerID).includes(props.playerID);
+            const playerNames = players.sort(comparePlayerNames).map(player =>
+              <Text fontWeight={firstPlace || player.playerID === props.playerID ? 'bold' : 'normal'} py={2}>{player.name}</Text>
+            );
             return (
-              <Tr key={place} textColor={color} fontSize="2xl" fontWeight={fontWeight}>
+              <Tr key={place} textColor={color} fontSize="2xl" fontWeight={firstPlace || isPlayerPlace ? 'bold' : 'normal'}>
                 <Td>
                   {place.substring(0, place.length - 2)}<sup>{place.substring(place.length - 2, place.length)}</sup>
                   {firstPlace && <Text as="span" color="jeopardyYellow.500" ml={3}><Icon id="first-place-icon" icon={faCrown} title="1st Place" clickable={false} /></Text>}
