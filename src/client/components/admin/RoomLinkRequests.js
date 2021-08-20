@@ -54,6 +54,7 @@ function RoomLinkRequests(props) {
             <Th>Email</Th>
             <Th>Submitted <Text as="span" fontSize="lg" pl={1}>{SORT_ARROW_DESCENDING}</Text></Th>
             <Th>Resolution</Th>
+            <Th>Room Code</Th>
           </Tr>
         </Thead>
         <Tbody fontSize="lg">
@@ -74,6 +75,7 @@ function RoomLinkRequests(props) {
                     {getResolveButtons(props, request)}
                   </Flex>
                 </Td>
+                <Td>{request.roomCode}</Td>
               </Tr>
             );
           })}

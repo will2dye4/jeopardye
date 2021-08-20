@@ -12,6 +12,8 @@ export class RoomLinkRequest {
     this.name = name;
     this.email = email;
     this.resolution = RoomLinkRequestResolution.UNRESOLVED;
+    this.roomID = null;
+    this.roomCode = null;
     this.createdTime = new Date();
     this.resolvedTime = null;
   }

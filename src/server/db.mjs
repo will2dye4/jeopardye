@@ -335,4 +335,8 @@ export async function resolveRoomLinkRequest(requestID, resolution, resolvedTime
   await roomLinkRequestsCollection.updateOne({_id: requestID}, {$set: {resolution: resolution, resolvedTime: resolvedTime}});
 }
 
+export async function setRoomForRoomLinkRequest(requestID, roomID, roomCode) {
+  await roomLinkRequestsCollection.updateOne({_id: requestID}, {$set: {roomID: roomID, roomCode: roomCode}});
+}
+
 export default db;

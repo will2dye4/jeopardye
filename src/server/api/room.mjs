@@ -22,6 +22,7 @@ import {
   getRoomLinkRequest,
   getRooms,
   PAGE_SIZE,
+  setRoomForRoomLinkRequest,
   updatePlayer,
 } from '../db.mjs';
 import { removePlayerFromRoom } from '../utils.mjs';
@@ -137,6 +138,10 @@ async function handleCreateRoom(req, res, next) {
       handleError(`Invalid room link request ID "${requestID}"`, StatusCodes.BAD_REQUEST);
       return;
     }
+    if (roomLinkRequest.roomID) {
+      handleError(`Room link request "${requestID}" has already been redeemed`, StatusCodes.BAD_REQUEST);
+      return;
+    }
   } else if (!ADMIN_PLAYER_IDS.has(ownerPlayerID)) {
     handleError(`Missing room link request ID`, StatusCodes.BAD_REQUEST);
     return;
@@ -148,6 +153,15 @@ async function handleCreateRoom(req, res, next) {
   } catch (e) {
     handleError(`Failed to save room to database: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
     return;
+  }
+
+  if (requestID) {
+    try {
+      await setRoomForRoomLinkRequest(requestID, room.roomID, roomCode);
+    } catch (e) {
+      handleError(`Failed to update room link request in database: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
   }
 
   await updatePlayer(ownerPlayerID, {currentRoomID: room.roomID});
