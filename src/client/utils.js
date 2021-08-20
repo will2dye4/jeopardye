@@ -65,7 +65,7 @@ export function speakText(text, delay = SPEECH_DELAY_MILLIS, volume = DEFAULT_SP
 }
 
 export function markClueAsInvalid(clueID) {
-  return fetch(`${INVALID_CLUE_URL}?id=${clueID}`).then(response => {
+  return fetch(`${INVALID_CLUE_URL}?id=${clueID}`, {method: 'POST'}).then(response => {
     if (response.ok) {
       console.log(`Marked clue ${clueID} as invalid.`);
     } else {
