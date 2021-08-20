@@ -1,23 +1,14 @@
-export const DEFAULT_PLAYER_ID = 'd38064a4-7c20-4fb6-b076-76eada41d385';
+import config from './config.json';
 
-export const ADMIN_PLAYER_IDS = new Set([DEFAULT_PLAYER_ID]);
+export const ADMIN_PLAYER_IDS = new Set(config.admin.playerIDs);
 
-export const JSERVICE_API_BASE = 'http://jservice.io/api';
-
-const BETA_TEST_MODE = false;
-const BETA_TEST_HOST = '192.168.1.246';
-const BETA_TEST_APP_PORT = 8000;
-const BETA_TEST_SERVER_PORT = 8333;
-const DEV_HOST = 'localhost';
-const DEV_APP_PORT = 3000;
-const DEV_SERVER_PORT = 3333;
-const APP_HOST = (BETA_TEST_MODE ? BETA_TEST_HOST : DEV_HOST);
-const APP_PORT = (BETA_TEST_MODE ? BETA_TEST_APP_PORT : DEV_APP_PORT);
-const SERVER_HOST = APP_HOST;
-const SERVER_PORT = (BETA_TEST_MODE ? BETA_TEST_SERVER_PORT : DEV_SERVER_PORT);
-export const APP_BASE = `http://${APP_HOST}:${APP_PORT}`;
+const SERVER_HOST = config.server.host;
+const SERVER_PORT = config.server.port;
+export const APP_BASE = config.webapp.url;
 export const API_BASE = `http://${SERVER_HOST}:${SERVER_PORT}/api`;
 export const WS_BASE = `ws://${SERVER_HOST}:${SERVER_PORT}/api/ws`;
+
+export const JSERVICE_API_BASE = 'http://jservice.io/api';
 
 export const CATEGORIES_PER_ROUND = 6;
 export const CLUES_PER_CATEGORY = 5;

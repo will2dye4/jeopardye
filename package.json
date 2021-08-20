@@ -45,7 +45,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server": "LOG_LEVEL=info LOG_TIME=rel node src/server/server.mjs"
+    "server": "LOG_LEVEL=info LOG_TIME=rel node --experimental-json-modules src/server/server.mjs"
   },
   "eslintConfig": {
     "extends": [

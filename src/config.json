@@ -1,0 +1,25 @@
+{
+  "admin": {
+    "email": "test@example.com",
+    "playerIDs": [
+      "d38064a4-7c20-4fb6-b076-76eada41d385"
+    ]
+  },
+  "db": {
+    "host": "localhost",
+    "port": 27017
+  },
+  "server": {
+    "host": "localhost",
+    "port": 3333
+  },
+  "smtp": {
+    "host": "smtp.ethereal.email",
+    "port": 587,
+    "user": "test@example.com",
+    "password": "secret"
+  },
+  "webapp": {
+    "url": "http://localhost:3000"
+  }
+}

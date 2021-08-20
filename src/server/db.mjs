@@ -2,6 +2,7 @@ import mongodb from 'mongodb';
 const { MongoClient } = mongodb;
 
 import uuid from 'uuid';
+import config from '../config.json';
 import { ROOM_CODE_CHARACTERS, ROOM_CODE_LENGTH } from '../constants.mjs';
 import { RoomLinkRequestResolution } from '../models/roomLinkRequest.mjs';
 import { randomChoice, range } from '../utils.mjs';
@@ -24,8 +25,8 @@ const DEFAULT_TRANSACTION_OPTIONS = {
   },
 };
 
-const MONGODB_HOST = 'localhost';
-const MONGODB_PORT = 27017;
+const MONGODB_HOST = config.db.host;
+const MONGODB_PORT = config.db.port;
 const DB_NAME = 'jeopardye';
 
 const client = new MongoClient(`mongodb://${MONGODB_HOST}:${MONGODB_PORT}/`, {useUnifiedTopology: true});

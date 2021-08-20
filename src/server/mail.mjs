@@ -1,11 +1,16 @@
 import log from 'log';
 import nodemailer from 'nodemailer';
+import config from '../config.json';
 import { APP_BASE } from '../constants.mjs';
 
-const ADMIN_EMAIL = 'dilliamwye@gmail.com';
+const ADMIN_EMAIL = config.admin.email;
 
-const SMTP_HOST = 'smtp.ethereal.email';
-const SMTP_PORT = 587;
+const SMTP_HOST = config.smtp.host;
+const SMTP_PORT = config.smtp.port;
+const SMTP_USER = config.smtp.user;
+const SMTP_PASSWORD = config.smtp.password;
+
+const TEST_SMTP_HOST = 'smtp.ethereal.email';
 
 const EMAIL_PLACEHOLDER = '{{EMAIL}}';
 const NAME_PLACEHOLDER = '{{NAME}}';
@@ -43,14 +48,22 @@ const logger = log.get('jservice');
 let transporter;
 
 try {
-  const testAccount = await nodemailer.createTestAccount();
+  let user, password;
+  if (SMTP_HOST === TEST_SMTP_HOST) {
+    const testAccount = await nodemailer.createTestAccount();
+    user = testAccount.user;
+    password = testAccount.pass;
+  } else {
+    user = SMTP_USER;
+    password = SMTP_PASSWORD;
+  }
   transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: testAccount.user, // generated ethereal user
-      pass: testAccount.pass, // generated ethereal password
+      user: user,
+      pass: password,
     },
   });
 } catch (e) {
