@@ -21,6 +21,14 @@ export function formatElementList(items) {
   );
 }
 
+export function isChrome() {
+  return !!window.chrome;
+}
+
+export function isSafari() {
+  return !!window.safari;
+}
+
 export function isLocalStorageSettingEnabled(key) {
   return (localStorage.getItem(key) === 'true');
 }

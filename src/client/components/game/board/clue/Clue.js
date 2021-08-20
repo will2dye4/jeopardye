@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from '@chakra-ui/react';
+import { isSafari } from '../../../../utils';
 
 class Clue extends React.Component {
   constructor(props) {
@@ -15,6 +16,7 @@ class Clue extends React.Component {
 
   render() {
     const isActiveClue = (this.props.clue.clueID === this.props.activeClue?.clueID);
+    const fontWeight = (isSafari() ? 'bold' : 'normal');
     let classes = 'clue-border';
     let text = <br />;
     if ((!this.props.clue.played && this.props.clue.value) || isActiveClue) {
@@ -26,7 +28,7 @@ class Clue extends React.Component {
       text = `$${this.props.clue.value}`;
     }
     return (
-      <Box className="clue" userSelect="none" onClick={this.handleClick}>
+      <Box className="clue" fontWeight={fontWeight} userSelect="none" onClick={this.handleClick}>
         <Box className={classes} py={1}>{text}</Box>
       </Box>
     );

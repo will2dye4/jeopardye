@@ -1,9 +1,11 @@
 import React from 'react';
 import { Heading } from '@chakra-ui/react';
+import { isChrome } from '../../utils';
 
 function Logo() {
+  const textStroke = (isChrome() ? '0.1px' : '2px') + ' white';
   return (
-    <Heading as="h1" className="logo" userSelect="none">Jeopardye!</Heading>
+    <Heading as="h1" className="logo" style={{'-webkit-text-stroke': textStroke}} userSelect="none">Jeopardye!</Heading>
   );
 }
 

@@ -209,7 +209,6 @@ html, body {
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    -webkit-text-stroke: 2px white;
 }
 
 button[role=tab]:focus {
