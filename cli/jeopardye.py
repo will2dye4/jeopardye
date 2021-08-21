@@ -269,6 +269,7 @@ class JeopardyeMain:
             self.deploy_app()
         elif self.command == Command.DEPLOY_BOTH:
             is_new_version = self.deploy_app()
+            print()
             self.deploy_server(is_new_version)
         elif self.command == Command.DEPLOY_SERVER:
             self.deploy_server()
