@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import './Common.css';
+import Footer from './Footer';
 import Logo from './Logo';
 
 function LogoPage(props) {
@@ -9,6 +10,7 @@ function LogoPage(props) {
       <Logo />
       <Box className="logo-page-content">
         {props.children}
+        <Footer />
       </Box>
     </Flex>
   );
