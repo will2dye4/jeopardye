@@ -8,6 +8,8 @@
     "port": 27017
   },
   "server": {
+    "protocol": "http",
+    "websocketProtocol": "ws",
     "host": "localhost",
     "port": 3333
   },
@@ -16,6 +18,10 @@
     "port": 587,
     "user": "test@example.com",
     "password": "secret"
+  },
+  "ssl": {
+  	"certPath": "",
+  	"keyPath": ""
   },
   "webapp": {
     "url": "http://localhost:3000"

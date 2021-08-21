@@ -5,8 +5,8 @@ export const ADMIN_PLAYER_IDS = new Set(config.admin.playerIDs);
 const SERVER_HOST = config.server.host;
 const SERVER_PORT = config.server.port;
 export const APP_BASE = config.webapp.url;
-export const API_BASE = `http://${SERVER_HOST}:${SERVER_PORT}/api`;
-export const WS_BASE = `ws://${SERVER_HOST}:${SERVER_PORT}/api/ws`;
+export const API_BASE = `${config.server.protocol}://${SERVER_HOST}:${SERVER_PORT}/api`;
+export const WS_BASE = `${config.server.websocketProtocol}://${SERVER_HOST}:${SERVER_PORT}/api/ws`;
 
 export const JSERVICE_API_BASE = 'http://jservice.io/api';
 
