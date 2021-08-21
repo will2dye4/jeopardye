@@ -21,13 +21,13 @@ $ brew install mongodb-community
 If hosting the app yourself, you may also choose to install nginx (or the Web server of your choice).
 
 ```
-brew install nginx
+$ brew install nginx
 ```
 
 Start MongoDB.
 
 ```
-brew services start mongodb-community
+$ brew services start mongodb-community
 ```
 
 **NOTE:** If installing on an M1 Mac, you will need to run `softwareupdate --install-rosetta`
@@ -48,13 +48,13 @@ This section assumes you have followed the installation instructions above.
 To start the server (on port 3333 by default):
 
 ```
-yarn server
+$ yarn server
 ```
 
 To start the webapp in development mode (on port 3000 by default):
 
 ```
-yarn start
+$ yarn start
 ```
 
 ## Configuration
