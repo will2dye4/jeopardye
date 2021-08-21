@@ -53,8 +53,8 @@ function RoomLinkRequests(props) {
             <Th>Name</Th>
             <Th>Email</Th>
             <Th>Submitted <Text as="span" fontSize="lg" pl={1}>{SORT_ARROW_DESCENDING}</Text></Th>
-            <Th>Resolution</Th>
             <Th>Room Code</Th>
+            <Th>Resolution</Th>
           </Tr>
         </Thead>
         <Tbody fontSize="lg">
@@ -69,13 +69,13 @@ function RoomLinkRequests(props) {
                 <Td>{request.name}</Td>
                 <Td>{request.email}</Td>
                 <Td>{moment(request.createdTime).fromNow()}</Td>
+                <Td>{request.roomCode}</Td>
                 <Td>
                   <Flex direction="row" w="100px">
                     <Badge colorScheme={color} userSelect="none">{request.resolution.toTitleCase()}</Badge>
                     {getResolveButtons(props, request)}
                   </Flex>
                 </Td>
-                <Td>{request.roomCode}</Td>
               </Tr>
             );
           })}

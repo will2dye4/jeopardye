@@ -32,8 +32,7 @@ Dear ${NAME_PLACEHOLDER},
 
 Your request to create a new room in Jeopardye has just been approved!
 
-Please visit ${APP_BASE}?req=${REQUEST_ID_PLACEHOLDER} and click "Create New Room" to create your room.
-If you have never played Jeopardye before, you will have to create a player before you can create a room.
+Please visit ${APP_BASE}?req=${REQUEST_ID_PLACEHOLDER} and click "Create New Room" to create your room. If you have never played Jeopardye before, you will have to create a player before you can create a room.
 
 Once you have created your room, you can send the room code or a link to the room to your friends, and they can join your room and play with you.
 
@@ -85,7 +84,10 @@ export async function sendMail(to, subject, body) {
   try {
     const info = await transporter.sendMail(message);
     logger.info(`Successfully sent mail to "${to}" with subject "${subject}".`);
-    logger.info(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+    const previewURL = nodemailer.getTestMessageUrl(info);
+    if (previewURL) {
+      logger.info(`Preview URL: ${previewURL}`);
+    }
   } catch (e) {
     logger.error(`Failed to send mail to "${to}" with subject "${subject}": ${e}`);
   }
