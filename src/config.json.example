@@ -1,9 +1,7 @@
 {
   "admin": {
     "email": "test@example.com",
-    "playerIDs": [
-      "d38064a4-7c20-4fb6-b076-76eada41d385"
-    ]
+    "playerIDs": []
   },
   "db": {
     "host": "localhost",

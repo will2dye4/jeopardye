@@ -4,6 +4,7 @@ import express from 'express';
 import expressWs from 'express-ws';
 import log from 'log';
 import logNode from 'log-node';
+import config from '../config.json';
 import db, { markAllPlayersInactive } from './db.mjs';
 import game from './api/game.mjs';
 import player from './api/player.mjs';
@@ -11,7 +12,7 @@ import room from './api/room.mjs';
 import roomLinkRequest from './api/roomLinkRequest.mjs';
 import { handleWebsocket } from './websockets.mjs';
 
-const PORT = 3333;
+const PORT = config.server.port;
 
 logNode();
 const logger = log.get('server');
