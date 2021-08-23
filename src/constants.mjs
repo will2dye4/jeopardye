@@ -154,6 +154,7 @@ export const MAX_GAME_HISTORY_LENGTH = 100;
 export const EventTypes = {
   ERROR: 'error',
   /* game events */
+  GAME_CREATION_FAILED: 'game_creation_failed',
   GAME_STARTING: 'game_starting',
   GAME_STARTED: 'game_started',
   GAME_SETTINGS_CHANGED: 'game_settings_changed',

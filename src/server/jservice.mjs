@@ -35,7 +35,8 @@ export async function fetchRandomCategories(count) {
   let i = 0;
   while (categories.length < count) {
     let clue = clues[i];
-    if (!usedCategories.has(clue.category.title) && clue.category.clues_count >= CLUES_PER_CATEGORY) {
+    if (clue.category && clue.category.title && !usedCategories.has(clue.category.title) &&
+        clue.category.clues_count >= CLUES_PER_CATEGORY) {
       const category = await fetchCategory(clue.category_id);
       categories.push(category);
       usedCategories.add(clue.category.title);

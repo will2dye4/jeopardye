@@ -140,7 +140,14 @@ async function handleCreateGame(req, res, next) {
   }
 
   if (finalJeopardye) {
-    rounds[Rounds.FINAL] = await createRound(Rounds.FINAL);
+    const round = Rounds.FINAL;
+    try {
+      rounds[round] = await createRound(round);
+    } catch (e) {
+      handleError(`Failed to fetch ${round} round categories from JService: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
+
   }
 
   const game = new Game(roomID, rounds, playerIDs, playerInControl);

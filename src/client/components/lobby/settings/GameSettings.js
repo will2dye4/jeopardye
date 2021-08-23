@@ -16,7 +16,6 @@ class GameSettings extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      creatingGame: false,
       dailyDoubles: props.gameSettings.dailyDoubles,
       finalJeopardye: false, /* TODO - revert once Final Jeopardye is implemented: props.gameSettings.finalJeopardye, */
       numRounds: props.gameSettings.numRounds,
@@ -34,6 +33,11 @@ class GameSettings extends React.Component {
         finalJeopardye: this.props.gameSettings.finalJeopardye,
         numRounds: this.props.gameSettings.numRounds,
       });
+    }
+
+    if (prevProps.gameStarting && !this.props.gameStarting && !this.props.game &&
+        this.props.playerID === this.props.room?.hostPlayerID) {
+      this.props.createNewGameFailed(this.props.roomID);
     }
   }
 
@@ -62,14 +66,13 @@ class GameSettings extends React.Component {
   }
 
   createNewGame() {
-    this.setState({creatingGame: true});
     const playerIDs = Object.keys(this.props.players);
     const gameSettings = new Settings(this.props.roomID, this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye, playerIDs);
     this.props.fetchNewGame(gameSettings);
   }
 
   render() {
-    if (this.props.gameStarting || this.state.creatingGame) {
+    if (this.props.gameStarting) {
       return (
         <Card className="game-settings">
           <Box className="game-starting" textAlign="center">

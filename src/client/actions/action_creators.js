@@ -367,6 +367,10 @@ export function clearCurrentGame(gameID) {
   }
 }
 
+export function createNewGameFailed(roomID) {
+  return send(new WebsocketEvent(EventTypes.GAME_CREATION_FAILED, {roomID}));
+}
+
 export function joinRoom(playerID, roomID) {
   return send(new WebsocketEvent(EventTypes.JOIN_ROOM, {playerID, roomID}));
 }

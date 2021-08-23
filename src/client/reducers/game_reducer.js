@@ -119,8 +119,13 @@ function handleNewGame(storeData, newGame) {
   };
 }
 
+function handleGameCreationFailed(storeData, _) {
+  console.log('New game creation failed.');
+  return {...storeData, gameStarting: false};
+}
+
 function handleGameStarting(storeData, _) {
-  console.log(`New game starting...`);
+  console.log('New game starting...');
   return {...storeData, gameStarting: true};
 }
 
@@ -461,6 +466,7 @@ function handleWaitingPeriodEnded(storeData, event) {
 
 const eventHandlers = {
   [EventTypes.ERROR]: handleError,
+  [EventTypes.GAME_CREATION_FAILED]: handleGameCreationFailed,
   [EventTypes.GAME_STARTING]: handleGameStarting,
   [EventTypes.GAME_STARTED]: handleGameStarted,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,

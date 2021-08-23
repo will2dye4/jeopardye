@@ -510,6 +510,11 @@ async function handleLeaveRoom(ws, event) {
   }).catch(e => roomLogger.error(roomID, `Error occurred while removing player ${playerID} from room: ${e}`));
 }
 
+async function handleGameCreationFailed(ws, event) {
+  roomLogger.info(event.payload.roomID, 'New game creation failed.');
+  broadcast(event);
+}
+
 async function handleGameSettingsChanged(ws, event) {
   roomLogger.info(event.payload.roomID, 'Game settings changed.');
   broadcast(event);
@@ -1200,6 +1205,7 @@ const eventHandlers = {
   [EventTypes.JOIN_ROOM]: handleJoinRoom,
   [EventTypes.JOIN_ROOM_WITH_CODE]: handleJoinRoomWithCode,
   [EventTypes.LEAVE_ROOM]: handleLeaveRoom,
+  [EventTypes.GAME_CREATION_FAILED]: handleGameCreationFailed,
   [EventTypes.GAME_SETTINGS_CHANGED]: handleGameSettingsChanged,
   [EventTypes.JOIN_GAME]: handleJoinGame,
   [EventTypes.SELECT_CLUE]: handleSelectClue,
