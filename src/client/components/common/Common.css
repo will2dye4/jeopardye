@@ -99,6 +99,15 @@
     src: url("../../fonts/Square_721_Bold_BT.woff");
 }
 
+@keyframes pulsating-background {
+    from {
+        background: #1D08A3;
+    }
+    to {
+        background: #8D2AB5;
+    }
+}
+
 html, body {
     height: 100%;
 }
@@ -219,4 +228,11 @@ button[role=tab]:focus {
 button[role=tab][aria-selected=true] {
     color: #1D08A3;
     font-weight: bold;
+}
+
+.animate-pulsating-background {
+    animation-name: pulsating-background;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
 }

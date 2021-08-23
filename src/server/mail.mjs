@@ -42,7 +42,7 @@ Best,
 Jeopardye Bot
 `;
 
-const logger = log.get('jservice');
+const logger = log.get('mail');
 
 let transporter;
 

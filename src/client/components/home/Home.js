@@ -80,6 +80,7 @@ class Home extends React.Component {
       requestID = urlSearchParams.get('req');
     }
     const allowCreate = (this.props.isAdmin || !!requestID);
+    const secondButtonClasses = (allowCreate && !this.props.isAdmin ? 'animate-pulsating-background' : '');
     const secondButtonLabel = (allowCreate ? 'Create New Room' : 'Request New Room Link');
     const secondButtonHandler = (allowCreate ? () => this.openCreateRoomDialog(requestID) : this.openRequestLinkDialog);
     const secondButtonDescription = (allowCreate ?
@@ -104,7 +105,9 @@ class Home extends React.Component {
             <Flex justify="center" mt={12} mb={3}>
               <VStack spacing={5} minW={250}>
                 <Button colorScheme="jeopardyBlue" size="lg" w="100%" onClick={this.openRoomCodeDialog}>Enter Room Code</Button>
-                <Button colorScheme="jeopardyBlue" size="lg" w="100%" onClick={secondButtonHandler}>{secondButtonLabel}</Button>
+                <Button className={secondButtonClasses} colorScheme="jeopardyBlue" size="lg" w="100%" onClick={secondButtonHandler}>
+                  {secondButtonLabel}
+                </Button>
               </VStack>
             </Flex>
           </Card>
