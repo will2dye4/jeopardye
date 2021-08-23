@@ -612,7 +612,7 @@ class Game extends React.Component {
   }
 
   handleBuzz(event) {
-    if (!this.props.activeClue || this.props.playerAnswering || this.state.buzzerLockedOut ||
+    if (!this.props.activeClue || this.props.playerAnswering || this.props.revealAnswer || this.state.buzzerLockedOut ||
         this.isActiveDailyDouble() || this.props.activeClue.playersAttempted.includes(this.props.playerID)) {
       return;
     }
