@@ -298,4 +298,5 @@ export const StatusCodes = {
   CONFLICT: 409,
   /* server error codes */
   INTERNAL_SERVER_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
 };
