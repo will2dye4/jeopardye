@@ -14,7 +14,6 @@ import { broadcast, playerNames } from '../websockets.mjs';
 import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, StatusCodes } from '../../constants.mjs';
 import { Player, validatePlayerName } from '../../models/player.mjs';
 import { WebsocketEvent } from '../../utils.mjs';
-import {RoomLinkRequestResolution} from "../../models/roomLinkRequest.mjs";
 
 const logger = log.get('api:player');
 

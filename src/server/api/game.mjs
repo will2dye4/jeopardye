@@ -164,7 +164,7 @@ async function handleCreateGame(req, res, next) {
     res.json(game);
     broadcast(new WebsocketEvent(EventTypes.GAME_STARTED, {roomID, game}));
     logger.info(`Created game ${game.gameID}.`);
-  });
+  }).catch(e => logger.error(`Failed to handle processing of new game ${game.gameID} for room ${roomID}: ${e}`));
 }
 
 async function handleGetGame(req, res, next) {
