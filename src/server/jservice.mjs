@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import { CLUES_PER_CATEGORY, JSERVICE_API_BASE } from '../constants.mjs';
 
 const CATEGORY_URL = `${JSERVICE_API_BASE}/category`;
+const INVALID_CLUE_URL =`${JSERVICE_API_BASE}/invalid`;
 const RANDOM_CLUES_URL = `${JSERVICE_API_BASE}/random`;
 
 const MIN_CLUES_TO_FETCH = 25;
@@ -11,7 +12,7 @@ const MAX_CLUES_TO_FETCH = 100;  /* Limit of 100 is enforced by the JService API
 const logger = log.get('jservice');
 
 export async function fetchCategory(categoryID) {
-  let response = await fetch(`${CATEGORY_URL}?id=${categoryID}`);
+  const response = await fetch(`${CATEGORY_URL}?id=${categoryID}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch category ${categoryID}: ${response.status} ${response.statusText}`);
   }
@@ -20,7 +21,7 @@ export async function fetchCategory(categoryID) {
 
 export async function fetchRandomClues(count) {
   logger.info(`Fetching ${count} random clues`);
-  let response = await fetch(`${RANDOM_CLUES_URL}?count=${count}`);
+  const response = await fetch(`${RANDOM_CLUES_URL}?count=${count}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch random clues: ${response.status} ${response.statusText}`);
   }
@@ -48,4 +49,13 @@ export async function fetchRandomCategories(count) {
     }
   }
   return categories;
+}
+
+export async function markClueAsInvalid(clueID) {
+  const response = await fetch(`${INVALID_CLUE_URL}?id=${clueID}`, {method: 'POST'});
+  if (response.ok) {
+    logger.info(`Marked clue ${clueID} as invalid.`);
+  } else {
+    throw new Error(`Failed to mark clue ${clueID} as invalid: ${response.status} ${response.statusText}`)
+  }
 }

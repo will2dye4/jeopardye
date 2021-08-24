@@ -58,6 +58,7 @@ import {
   updateRoom,
   voteToSkipActiveClue,
 } from './db.mjs';
+import { markClueAsInvalid } from './jservice.mjs';
 import {
   findNewHostPlayerID,
   findNewPlayerInControl,
@@ -936,6 +937,7 @@ async function handleMarkClueAsInvalid(ws, event) {
     handleError(ws, event, 'invalid mark invalid attempt - no active clue', StatusCodes.BAD_REQUEST);
     return;
   }
+
   const { roomID, gameID, playerID, categoryID, clueID } = event.payload.context;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
     handleError(ws, event, `invalid mark invalid attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
@@ -945,6 +947,14 @@ async function handleMarkClueAsInvalid(ws, event) {
     handleError(ws, event, `invalid mark invalid attempt - player ${playerID} has already marked clue ${clueID}`, StatusCodes.BAD_REQUEST);
     return;
   }
+
+  try {
+    await markClueAsInvalid(clueID);
+  } catch (e) {
+    handleError(ws, event, `Failed to mark clue ${clueID} as invalid using JService API: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
+    return;
+  }
+
   markActiveClueAsInvalid(gameID, playerID).then(() => {
     roomLogger.info(roomID, `${getPlayerName(playerID)} marked clue ${clueID} (category ${categoryID}) as invalid.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_MARKED_CLUE_AS_INVALID, event.payload));

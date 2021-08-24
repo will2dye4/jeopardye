@@ -1,6 +1,6 @@
 {
   "name": "jeopardye",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "dependencies": {
     "@chakra-ui/react": "^1.6.3",

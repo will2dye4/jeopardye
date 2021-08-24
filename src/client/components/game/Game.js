@@ -30,7 +30,7 @@ import {
   getWaitingForBuzzMessage,
 } from '../../messages';
 import { getPlayerName } from '../../reducers/game_reducer';
-import { isLocalStorageSettingEnabled, markClueAsInvalid, playSound, speakAnswer, speakClue } from '../../utils';
+import { isLocalStorageSettingEnabled, playSound, speakAnswer, speakClue } from '../../utils';
 import './Game.css';
 import Bold from '../common/Bold';
 import Board from './board/Board';
@@ -674,11 +674,7 @@ class Game extends React.Component {
     if (event) {
       event.stopPropagation();
     }
-    markClueAsInvalid(this.props.activeClue.clueID).then(response => {
-      if (response.ok) {
-        this.props.markClueAsInvalid(EventContext.fromProps(this.props));
-      }
-    });
+    this.props.markClueAsInvalid(EventContext.fromProps(this.props));
   }
 
   voteToSkipActiveClue(event) {

@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  JSERVICE_API_BASE,
   SOUND_EFFECTS_ENABLED_KEY,
   SPEAK_CLUES_ENABLED_KEY,
   SPEAK_ANSWERS_ENABLED_KEY,
@@ -8,8 +7,6 @@ import {
 
 const DEFAULT_SOUND_EFFECT_VOLUME = 0.5;
 const DEFAULT_SPEECH_VOLUME = 0.4;
-
-const INVALID_CLUE_URL =`${JSERVICE_API_BASE}/invalid`;
 
 const SPEECH_DELAY_MILLIS = 500;
 
@@ -62,15 +59,4 @@ export function speakText(text, delay = SPEECH_DELAY_MILLIS, volume = DEFAULT_SP
       window.speechSynthesis.speak(message);
     }, delay);
   }
-}
-
-export function markClueAsInvalid(clueID) {
-  return fetch(`${INVALID_CLUE_URL}?id=${clueID}`, {method: 'POST'}).then(response => {
-    if (response.ok) {
-      console.log(`Marked clue ${clueID} as invalid.`);
-    } else {
-      console.log(`Failed to mark clue ${clueID} as invalid: ${response.status} ${response.statusText}`)
-    }
-    return response;
-  });
 }
