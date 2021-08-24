@@ -77,7 +77,7 @@ class GameSettings extends React.Component {
         <Card className="game-settings">
           <Box className="game-starting" textAlign="center">
             <Heading>A new game is starting, please wait...</Heading>
-            <Progress hasStripe isAnimated borderRadius="md" colorScheme="jeopardyBlue" size="lg" mx={8} mt={10} value={100} />
+            <Progress hasStripe isAnimated borderRadius="md" colorScheme="jeopardyeBlue" size="lg" mx={8} mt={10} value={100} />
           </Box>
         </Card>
       );
@@ -104,7 +104,7 @@ class GameSettings extends React.Component {
         <Flex justify="center" mt={5} mb={3}>
           {disabled ?
             <Heading size="lg">Waiting for {hostName} to start a new game...</Heading> :
-            <Button colorScheme="jeopardyBlue" size="lg" disabled={startGameDisabled} onClick={this.createNewGame}>Start New Game</Button>
+            <Button colorScheme="jeopardyeBlue" size="lg" disabled={startGameDisabled} onClick={this.createNewGame}>Start New Game</Button>
           }
         </Flex>
       </Card>

@@ -47,7 +47,7 @@ function Leaderboards(props) {
   return (
     <React.Fragment>
       <Flex align="center" justify="center" py={3}>
-        <Select focusBorderColor="jeopardyBlue.500" w="30%" value={props.selectedLeaderboard} onChange={props.onLeaderboardChanged}>
+        <Select focusBorderColor="jeopardyeBlue.500" w="30%" value={props.selectedLeaderboard} onChange={props.onLeaderboardChanged}>
           {Object.entries(LEADERBOARDS).map(([key, value]) => <option key={key} value={key}>{value.optionLabel}</option>)}
         </Select>
       </Flex>
@@ -65,7 +65,7 @@ function Leaderboards(props) {
               return null;
             }
             const firstPlace = (place === '1st');
-            const color = (firstPlace ? 'jeopardyBlue.500' : 'black');
+            const color = (firstPlace ? 'jeopardyeBlue.500' : 'black');
             const isPlayerPlace = players.map(player => player.playerID).includes(props.playerID);
             const playerNames = players.sort(comparePlayerNames).map(player =>
               <Text fontWeight={firstPlace || player.playerID === props.playerID ? 'bold' : 'normal'} py={2}>{player.name}</Text>
@@ -74,7 +74,7 @@ function Leaderboards(props) {
               <Tr key={place} textColor={color} fontSize="2xl" fontWeight={firstPlace || isPlayerPlace ? 'bold' : 'normal'}>
                 <Td>
                   {place.substring(0, place.length - 2)}<sup>{place.substring(place.length - 2, place.length)}</sup>
-                  {firstPlace && <Text as="span" color="jeopardyYellow.500" ml={3}><Icon id="first-place-icon" icon={faCrown} title="1st Place" clickable={false} /></Text>}
+                  {firstPlace && <Text as="span" color="jeopardyeYellow.500" ml={3}><Icon id="first-place-icon" icon={faCrown} title="1st Place" clickable={false} /></Text>}
                 </Td>
                 <Td>{playerNames}</Td>
                 <Td>{formatter(players[0].score)}</Td>

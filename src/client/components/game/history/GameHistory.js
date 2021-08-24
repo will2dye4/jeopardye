@@ -45,8 +45,8 @@ class GameHistory extends React.Component {
 
   render() {
     const contentProps = (this.props.modals.gameHistory.side === 'left' ?
-      {borderRightColor: 'jeopardyBlue.500', borderRightWidth: 4} :
-      {borderLeftColor: 'jeopardyBlue.500', borderLeftWidth: 4});
+      {borderRightColor: 'jeopardyeBlue.500', borderRightWidth: 4} :
+      {borderLeftColor: 'jeopardyeBlue.500', borderLeftWidth: 4});
     let history;
     if (this.props.eventHistory.length) {
       let eventHistory = this.props.eventHistory;

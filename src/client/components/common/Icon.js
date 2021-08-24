@@ -4,7 +4,7 @@ import JEOPARDYE_THEME from '../../theme';
 
 function Icon(props) {
   const clickable = (props.clickable ?? true);
-  const color = (props.color === 'jeopardyBlue' ? JEOPARDYE_THEME.colors.jeopardyBlue['500'] : (props.color || 'inherit'));
+  const color = (props.color === 'jeopardyeBlue' ? JEOPARDYE_THEME.colors.jeopardyeBlue['500'] : (props.color || 'inherit'));
   let classes = props.className || '';
   if (clickable) {
     classes += ' hover-pointer';

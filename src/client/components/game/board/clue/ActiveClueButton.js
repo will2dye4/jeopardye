@@ -10,7 +10,7 @@ function ActiveClueButton(props) {
   return (
     <Flex align="center">
       <Icon className={classes} id={props.id} icon={props.icon} title={props.title} />
-      <Badge bg="white" color="jeopardyBlue.500" borderRadius="full" ml={1} px={1} fontSize="md">
+      <Badge bg="white" color="jeopardyeBlue.500" borderRadius="full" ml={1} px={1} fontSize="md">
         {props.badge}
       </Badge>
     </Flex>

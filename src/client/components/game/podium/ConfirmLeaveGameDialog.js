@@ -19,7 +19,7 @@ function ConfirmLeaveGameDialog(props) {
     heading = 'End Game';
   } else {
     action = `leave the ${props.gameID ? 'game' : 'room'}`;
-    colorScheme = 'jeopardyBlue';
+    colorScheme = 'jeopardyeBlue';
     destination = 'home page';
     heading = `Leave ${props.gameID ? 'Game' : 'Room'}`;
   }

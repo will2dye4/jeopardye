@@ -47,7 +47,7 @@ function Rooms(props) {
         </Tbody>
       </Table>
       {total === 0 && <Text className="empty-list" fontStyle="italic" textAlign="center">No rooms to show</Text>}
-      {more && <Link color="jeopardyBlue.500" onClick={() => props.fetchRooms(page + 1)}>Load More</Link>}
+      {more && <Link color="jeopardyeBlue.500" onClick={() => props.fetchRooms(page + 1)}>Load More</Link>}
     </React.Fragment>
   );
 }

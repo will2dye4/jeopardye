@@ -60,7 +60,7 @@ class KickPlayerDialog extends React.Component {
               </Text>
               <Flex align="center" justify="center" direction="row" mt={8} mb={2}>
                 <Text mr={3}>Kick {this.props.player.name} for</Text>
-                <Select focusBorderColor="jeopardyBlue.500" w="50%" value={this.state.selectedDuration} onChange={this.handleDurationChanged}>
+                <Select focusBorderColor="jeopardyeBlue.500" w="50%" value={this.state.selectedDuration} onChange={this.handleDurationChanged}>
                   {Object.entries(DURATIONS).map(([label, value]) =>
                     <option key={label} value={value}>{label}</option>
                   )}

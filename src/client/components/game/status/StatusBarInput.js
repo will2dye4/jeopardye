@@ -49,7 +49,7 @@ class StatusBarInput extends React.Component {
       isInvalid: this.state.invalid,
       bg: 'white',
       mr: 8,
-      focusBorderColor: 'jeopardyBlue.500',
+      focusBorderColor: 'jeopardyeBlue.500',
       autoFocus: true,
       onChange: this.handleChange,
       onKeyUp: this.handleKeyUp,
@@ -58,7 +58,7 @@ class StatusBarInput extends React.Component {
     if (this.props.leftElement) {
       input = (
         <InputGroup size="lg" w={inputWidth}>
-          <InputLeftElement pointerEvents="none" color="jeopardyBlue.500" fontSize="1em" w={8}>
+          <InputLeftElement pointerEvents="none" color="jeopardyeBlue.500" fontSize="1em" w={8}>
             {this.props.leftElement}
           </InputLeftElement>
           <Input sx={{paddingStart: 7, paddingInlineStart: 7}} {...inputProps} />
@@ -71,7 +71,7 @@ class StatusBarInput extends React.Component {
       <Flex align="center" justify="center" textAlign="center" px={4} w={width}>
         <Text as="label" htmlFor={this.props.id} minWidth={minLabelWidth} mr={5}>{this.props.label}</Text>
         {input}
-        <Button colorScheme="jeopardyBlue" size="lg" type="submit" onClick={this.handleSubmit}>
+        <Button colorScheme="jeopardyeBlue" size="lg" type="submit" onClick={this.handleSubmit}>
           {this.props.submitText || 'Submit'}
         </Button>
       </Flex>

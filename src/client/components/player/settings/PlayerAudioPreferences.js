@@ -14,7 +14,7 @@ function PlayerAudioPreferences(props) {
     <Accordion allowToggle>
       <AccordionItem>
         <h2>
-          <AccordionButton _expanded={{bg: 'jeopardyBlue.500', color: 'white'}}>
+          <AccordionButton _expanded={{bg: 'jeopardyeBlue.500', color: 'white'}}>
             <Box flex="1" fontWeight="bold" fontSize="2xl" textAlign="left">Audio Preferences</Box>
             <AccordionIcon />
           </AccordionButton>

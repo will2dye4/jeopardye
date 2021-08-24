@@ -21,7 +21,7 @@ function Players(props) {
       <Flex direction="row" align="center" w="100%">
         <Flex direction="row" align="center" my={2}>
           <Text fontSize="lg" fontWeight="bold" ml={5} mr={4}>Active</Text>
-          <Select focusBorderColor="jeopardyBlue.500" minW="100px" value={props.activeFilter} onChange={props.onActiveFilterChanged}>
+          <Select focusBorderColor="jeopardyeBlue.500" minW="100px" value={props.activeFilter} onChange={props.onActiveFilterChanged}>
             {['all', 'yes', 'no'].map(activeFilter =>
               <option key={activeFilter} value={activeFilter === 'all' ? '' : (activeFilter === 'yes')}>{activeFilter}</option>
             )}
@@ -52,7 +52,7 @@ function Players(props) {
         </Tbody>
       </Table>
       {total === 0 && <Text className="empty-list" fontStyle="italic" textAlign="center">No players to show</Text>}
-      {more && <Link color="jeopardyBlue.500" onClick={() => props.fetchPlayers(props.activeFilter, page + 1)}>Load More</Link>}
+      {more && <Link color="jeopardyeBlue.500" onClick={() => props.fetchPlayers(props.activeFilter, page + 1)}>Load More</Link>}
     </React.Fragment>
   );
 }

@@ -59,7 +59,7 @@ function RoundSummary(props) {
             <Flex justify="center" mt={12} mb={3}>
               <VStack w="100%">
                 {showWaitingPlayers && <Heading size="lg" pb={3}>{waitingText}</Heading>}
-                {(!showWaitingPlayers || props.gameState.playerIsHost) && <Button colorScheme="jeopardyBlue" size="lg" w="25%" onClick={onClick}>{buttonLabel}</Button>}
+                {(!showWaitingPlayers || props.gameState.playerIsHost) && <Button colorScheme="jeopardyeBlue" size="lg" w="25%" onClick={onClick}>{buttonLabel}</Button>}
               </VStack>
             </Flex>
           </Card>

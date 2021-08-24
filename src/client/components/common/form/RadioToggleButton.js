@@ -4,9 +4,9 @@ import { Button } from '@chakra-ui/react';
 function RadioToggleButton(props) {
   const id = `${props.name}-${props.value}`;
   const variant = (props.checked ? 'solid' : 'outline');
-  const hoverStyle = (props.disabled ? null : {bg: 'jeopardyBlue.500', borderColor: 'jeopardyBlue.500', color: 'white'});
+  const hoverStyle = (props.disabled ? null : {bg: 'jeopardyeBlue.500', borderColor: 'jeopardyeBlue.500', color: 'white'});
   return (
-    <Button className="radio-toggle-button" colorScheme="jeopardyBlue" disabled={props.disabled} variant={variant}
+    <Button className="radio-toggle-button" colorScheme="jeopardyeBlue" disabled={props.disabled} variant={variant}
             _hover={hoverStyle} onClick={() => document.getElementById(id).click()}>
       <input type="radio"
              className="btn-check"

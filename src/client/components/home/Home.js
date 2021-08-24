@@ -104,8 +104,8 @@ class Home extends React.Component {
             </Text>
             <Flex justify="center" mt={12} mb={3}>
               <VStack spacing={5} minW={250}>
-                <Button colorScheme="jeopardyBlue" size="lg" w="100%" onClick={this.openRoomCodeDialog}>Enter Room Code</Button>
-                <Button className={secondButtonClasses} colorScheme="jeopardyBlue" size="lg" w="100%" onClick={secondButtonHandler}>
+                <Button colorScheme="jeopardyeBlue" size="lg" w="100%" onClick={this.openRoomCodeDialog}>Enter Room Code</Button>
+                <Button className={secondButtonClasses} colorScheme="jeopardyeBlue" size="lg" w="100%" onClick={secondButtonHandler}>
                   {secondButtonLabel}
                 </Button>
               </VStack>

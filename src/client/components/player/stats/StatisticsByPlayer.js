@@ -31,7 +31,7 @@ function StatisticsByPlayer(props) {
   return (
     <React.Fragment>
       <Flex align="center" ml={12} py={3}>
-        <Select ref={props.selectRef} focusBorderColor="jeopardyBlue.500" w="20%" value={player.playerID} onChange={props.onPlayerChanged}>
+        <Select ref={props.selectRef} focusBorderColor="jeopardyeBlue.500" w="20%" value={player.playerID} onChange={props.onPlayerChanged}>
           {Object.entries(props.players).sort(comparePlayerEntries).map(([playerID, player]) =>
             <option key={playerID} value={playerID}>{player.name}</option>
           )}

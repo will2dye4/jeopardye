@@ -133,7 +133,7 @@ class PlayerSettings extends React.Component {
                                 speakCluesEnabled={this.state.speakCluesEnabled} onSpeakCluesChanged={this.handleSpeakCluesChanged}
                                 speakAnswersEnabled={this.state.speakAnswersEnabled} onSpeakAnswersChanged={this.handleSpeakAnswersChanged} />
         <Flex justify="center" mt={8} mb={3}>
-          <Button colorScheme="jeopardyBlue" size="lg" w="25%" isDisabled={this.state.invalid} onClick={this.handleSubmit}>
+          <Button colorScheme="jeopardyeBlue" size="lg" w="25%" isDisabled={this.state.invalid} onClick={this.handleSubmit}>
             {buttonLabel}
           </Button>
         </Flex>

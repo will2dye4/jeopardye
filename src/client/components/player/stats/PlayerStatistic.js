@@ -5,7 +5,7 @@ function PlayerStatistic(props) {
   return (
     <Stat>
       <StatLabel fontSize="xl">{props.label}</StatLabel>
-      <StatNumber color="jeopardyBlue.500" fontSize="5xl" fontWeight="bold">{props.value}</StatNumber>
+      <StatNumber color="jeopardyeBlue.500" fontSize="5xl" fontWeight="bold">{props.value}</StatNumber>
       {!!props.helpText && <StatHelpText fontSize="lg">{props.helpText}</StatHelpText>}
     </Stat>
   );

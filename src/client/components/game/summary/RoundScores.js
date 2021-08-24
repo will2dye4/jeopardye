@@ -27,13 +27,13 @@ function RoundScores(props) {
           return (
             <React.Fragment key={player.playerID}>
               <GridRow cols={3}>
-                <GridItem mr={3} mt={2} pt={pt} color="jeopardyBlue.500" d="flex" alignItems="center" justifySelf="right">
+                <GridItem mr={3} mt={2} pt={pt} color="jeopardyeBlue.500" d="flex" alignItems="center" justifySelf="right">
                   {(j === 0 ? <Heading size={fontSize}>{placeText}</Heading> : <br />)}
                 </GridItem>
                 <GridItem colSpan={2} textAlign="left" ml={8} mt={2} pt={pt} d="flex" alignItems="center">
                   <Heading size={fontSize}>{player.name} ({formatScore(player.score)})</Heading>
                   {gameOver && place === '1st' && (
-                    <Heading color="jeopardyYellow.500" size={getFontSize(i + 2)} ml={3}>
+                    <Heading color="jeopardyeYellow.500" size={getFontSize(i + 2)} ml={3}>
                       <Icon id="winner-icon" icon={faCrown} title="Champion" clickable={false} />
                     </Heading>
                   )}

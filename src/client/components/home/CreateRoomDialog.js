@@ -111,7 +111,7 @@ class CreateRoomDialog extends React.Component {
                     <FormHelperText fontStyle="italic" mt={0}>{ROOM_CODE_LENGTH} letters (leave blank for random)</FormHelperText>
                   </GridItem>
                   <GridItem colSpan={2} d="flex" alignItems="center">
-                    <Input bg="white" focusBorderColor="jeopardyBlue.500" size="lg" ml={2} w="75%" value={this.state.roomCode}
+                    <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.roomCode}
                            onChange={this.handleRoomCodeChanged} onKeyUp={this.handleKeyUp} autoFocus={true} aria-label="room-code" />
                   </GridItem>
                 </GridRow>
@@ -123,13 +123,13 @@ class CreateRoomDialog extends React.Component {
                     <FormHelperText fontStyle="italic" mt={0}>optional</FormHelperText>
                   </GridItem>
                   <GridItem colSpan={2} d="flex" alignItems="center">
-                    <Input bg="white" focusBorderColor="jeopardyBlue.500" size="lg" ml={2} w="75%" value={this.state.password}
+                    <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.password}
                            onChange={this.handlePasswordChanged} onKeyUp={this.handleKeyUp} type="password" aria-label="room-password" />
                   </GridItem>
                 </GridRow>
               </FormControl>
               <Flex justify="center" mt={8} mb={3}>
-                <Button colorScheme="jeopardyBlue" size="lg" w="75%" onClick={this.handleSubmit}>
+                <Button colorScheme="jeopardyeBlue" size="lg" w="75%" onClick={this.handleSubmit}>
                   Create Room
                 </Button>
               </Flex>

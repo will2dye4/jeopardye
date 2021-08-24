@@ -11,7 +11,7 @@ function PlayerListItem(props) {
         <Text cursor="default">
           {props.player.name}
           {props.isHost && <Text as="span" color="purple.500" ml={3}><Icon id="host-icon" icon={faUserTie} title="Host" clickable={false} /></Text>}
-          {props.isChampion && <Text as="span" color="jeopardyYellow.500" ml={3}><Icon id="champion-icon" icon={faCrown} title="Champion" clickable={false} /></Text>}
+          {props.isChampion && <Text as="span" color="jeopardyeYellow.500" ml={3}><Icon id="champion-icon" icon={faCrown} title="Champion" clickable={false} /></Text>}
         </Text>
         <Spacer minW={10} />
         {(props.isCurrentPlayer || props.currentPlayerIsHost) && <PlayerListItemIcons {...props} />}

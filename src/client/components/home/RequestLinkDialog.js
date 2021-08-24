@@ -88,7 +88,7 @@ class RequestLinkDialog extends React.Component {
                     <FormLabel fontSize="lg" fontWeight="bold">Your Name</FormLabel>
                   </GridItem>
                   <GridItem colSpan={2} d="flex" alignItems="center">
-                    <Input bg="white" focusBorderColor="jeopardyBlue.500" size="lg" ml={2} w="75%" value={this.state.name}
+                    <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.name}
                            onChange={this.handleNameChanged} onKeyUp={this.handleKeyUp} autoFocus={true} aria-label="name" />
                   </GridItem>
                 </GridRow>
@@ -99,13 +99,13 @@ class RequestLinkDialog extends React.Component {
                     <FormLabel fontSize="lg" fontWeight="bold" mb={0}>Email Address</FormLabel>
                   </GridItem>
                   <GridItem colSpan={2} d="flex" alignItems="center">
-                    <Input bg="white" focusBorderColor="jeopardyBlue.500" size="lg" ml={2} w="75%" value={this.state.email}
+                    <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.email}
                            onChange={this.handleEmailChanged} onKeyUp={this.handleKeyUp} type="email" aria-label="email" />
                   </GridItem>
                 </GridRow>
               </FormControl>
               <Flex justify="center" mt={8} mb={3}>
-                <Button colorScheme="jeopardyBlue" size="lg" w="75%" onClick={this.handleSubmit}>
+                <Button colorScheme="jeopardyeBlue" size="lg" w="75%" onClick={this.handleSubmit}>
                   Request
                 </Button>
               </Flex>

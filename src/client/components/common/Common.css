@@ -1,4 +1,4 @@
-/* Jeopardy logo font face */
+/* Jeopardye logo font face */
 @font-face {
     font-family: "Gyparody";
     src: url("../../fonts/gyparody.woff");
@@ -150,7 +150,7 @@ html, body {
 }
 
 .list-group-menu-item:hover {
-    background: var(--chakra-colors-jeopardyBlue-500);
+    background: var(--chakra-colors-jeopardyeBlue-500);
     color: white;
 }
 

@@ -39,7 +39,7 @@ function RoomLinkRequests(props) {
       <Flex direction="row" align="center" w="100%">
         <Flex direction="row" align="center" my={2}>
           <Text fontSize="lg" fontWeight="bold" ml={5} mr={4}>Resolution</Text>
-          <Select focusBorderColor="jeopardyBlue.500" minW="100px" value={props.resolution} onChange={props.onResolutionChanged}>
+          <Select focusBorderColor="jeopardyeBlue.500" minW="100px" value={props.resolution} onChange={props.onResolutionChanged}>
             {['all'].concat(Object.values(RoomLinkRequestResolution).sort()).map(resolution =>
               <option key={resolution} value={resolution === 'all' ? '' : resolution}>{resolution}</option>
             )}
@@ -82,7 +82,7 @@ function RoomLinkRequests(props) {
         </Tbody>
       </Table>
       {total === 0 && <Text className="empty-list" fontStyle="italic" textAlign="center">No requests to show</Text>}
-      {more && <Link color="jeopardyBlue.500"
+      {more && <Link color="jeopardyeBlue.500"
                      onClick={() => props.fetchRoomLinkRequests(props.resolution, page + 1)}>Load More</Link>}
     </React.Fragment>
   );
