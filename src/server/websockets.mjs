@@ -1121,7 +1121,7 @@ async function handleKickPlayer(ws, event) {
 
 function advanceRound(roomID, game, players) {
   const round = getNextRound(game);
-  const places = getCurrentPlaces(game, players);
+  const places = getCurrentPlaces(game, players.filter(player => player.active && !player.spectating));
   const placeKeys = Object.keys(places);
   const lastPlacePlayers = places[placeKeys[placeKeys.length - 1]];
   const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers)).playerID;
