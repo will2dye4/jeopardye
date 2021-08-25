@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Flex, Image } from '@chakra-ui/react';
+import { formatDate } from '../../../../../utils.mjs';
 import ActiveClueButtons from './ActiveClueButtons';
 
 const LONG_CLUE_LENGTH_THRESHOLD = 150;
@@ -41,6 +42,13 @@ class ActiveClue extends React.Component {
     }
   }
 
+  getTitle() {
+    const category = this.props.activeClue.category;
+    const value = this.props.currentWager || this.props.activeClue.value;
+    const airDate = (this.props.activeClue.airDate ? `aired ${formatDate(this.props.activeClue.airDate)}` : 'unknown air date');
+    return `${category} for $${value.toLocaleString()} (${airDate})`;
+  }
+
   render() {
     let containerClasses = 'active-clue-container';
     if (this.props.showClueAnimation) {
@@ -70,7 +78,7 @@ class ActiveClue extends React.Component {
           {!this.props.gameState.playerIsSpectating && <ActiveClueButtons {...this.props} />}
         </React.Fragment>
       );
-      title = `${this.props.activeClue.category} (for $${(this.props.currentWager || this.props.activeClue.value).toLocaleString()})`;
+      title = this.getTitle();
     }
 
     return (

@@ -16,10 +16,10 @@ const DAILY_DOUBLE_CLUES_TO_SKIP = 2;
 
 export class Clue {
   static fromJService(clue, value) {
-    return new Clue(clue.id, clue.category_id, clue.answer, clue.question, value);
+    return new Clue(clue.id, clue.category_id, clue.answer, clue.question, value, clue.airdate);
   }
 
-  constructor(clueID, categoryID, answer, question, value, played) {
+  constructor(clueID, categoryID, answer, question, value, airDate, played) {
     this.clueID = clueID;
     this.categoryID = categoryID;
     this.answer = sanitizeQuestionText(answer);
@@ -27,6 +27,7 @@ export class Clue {
     this.question = sanitizeQuestionText(question);
     this.rawQuestion = question;
     this.value = value;
+    this.airDate = airDate || null;
     this.played = played || false;
   }
 }

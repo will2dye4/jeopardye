@@ -14,6 +14,8 @@ import {
 const { StemmerEn, StopwordsEn } = langEn;
 const { leven } = similarity;
 
+const DEFAULT_LOCALE = 'en';
+
 /* anything@anything.anything */
 const EMAIL_REGEX = /\S+@\S+\.\S+/;
 
@@ -106,6 +108,16 @@ export function comparePlayerNames(player1, player2) {
 
 export function comparePlayerEntries([id1, player1], [id2, player2]) {
   return comparePlayerNames(player1, player2);
+}
+
+export function formatDate(date) {
+  if (typeof date === 'string') {
+    date = new Date(date);
+  }
+  const month = new Intl.DateTimeFormat(DEFAULT_LOCALE, {month: 'short'}).format(date);
+  const day = new Intl.DateTimeFormat(DEFAULT_LOCALE, {day: 'numeric'}).format(date);
+  const year = new Intl.DateTimeFormat(DEFAULT_LOCALE, {year: 'numeric'}).format(date);
+  return `${month} ${day}, ${year}`;
 }
 
 export function formatScore(score) {

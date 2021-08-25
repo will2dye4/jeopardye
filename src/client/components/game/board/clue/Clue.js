@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from '@chakra-ui/react';
+import { formatDate } from '../../../../../utils.mjs';
 import { isSafari } from '../../../../utils';
 
 class Clue extends React.Component {
@@ -19,6 +20,7 @@ class Clue extends React.Component {
     const fontWeight = (isSafari() ? 'bold' : 'normal');
     let classes = 'clue-border';
     let text = <br />;
+    let title;
     if ((!this.props.clue.played && this.props.clue.value) || isActiveClue) {
       if (isActiveClue) {
         classes += ' selected-clue';
@@ -26,10 +28,11 @@ class Clue extends React.Component {
         classes += ' selectable-clue hover-pointer';
       }
       text = `$${this.props.clue.value}`;
+      title = (this.props.clue.airDate ? `Aired ${formatDate(this.props.clue.airDate)}` : 'Unknown air date');
     }
     return (
       <Box className="clue" fontWeight={fontWeight} userSelect="none" onClick={this.handleClick}>
-        <Box className={classes} py={1}>{text}</Box>
+        <Box className={classes} py={1} title={title}>{text}</Box>
       </Box>
     );
   }
