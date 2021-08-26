@@ -12,6 +12,7 @@ const MAX_CLUES_TO_FETCH = 100;  /* Limit of 100 is enforced by the JService API
 const logger = log.get('jservice');
 
 export async function fetchCategory(categoryID) {
+  logger.debug(`Fetching category ${categoryID}`)
   const response = await fetch(`${CATEGORY_URL}?id=${categoryID}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch category ${categoryID}: ${response.status} ${response.statusText}`);

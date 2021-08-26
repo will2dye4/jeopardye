@@ -59,6 +59,8 @@ export const MAX_NUM_ROUNDS = Object.keys(Rounds).length - 1;
 
 export const MAX_PLAYERS_PER_GAME = 6;
 
+export const MAX_INVALID_COUNT = 5;
+
 export const DEFAULT_FONT_STYLE = 'Dancing Script';
 export const ALL_FONT_STYLES = [
   DEFAULT_FONT_STYLE,

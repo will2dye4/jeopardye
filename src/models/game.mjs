@@ -6,6 +6,7 @@ import {
   DEFAULT_DAILY_DOUBLE_SETTING,
   DEFAULT_FINAL_JEOPARDYE,
   DEFAULT_NUM_ROUNDS,
+  MAX_INVALID_COUNT,
   NUM_DAILY_DOUBLES,
   Rounds,
   VALUE_INCREMENTS,
@@ -13,6 +14,19 @@ import {
 import { randomChoice, sanitizeQuestionText, titleizeCategoryName } from '../utils.mjs';
 
 const DAILY_DOUBLE_CLUES_TO_SKIP = 2;
+
+export function isValidClue(clue) {
+  return (!!clue && !!clue.answer && !!clue.question && (!clue.invalid_count || clue.invalid_count <= MAX_INVALID_COUNT));
+}
+
+export function isValidCategory(category, round) {
+  if (category) {
+    const numClues = (round === Rounds.FINAL ? 1 : CLUES_PER_CATEGORY);
+    const clues = category.clues || [];
+    return clues.filter(isValidClue).length >= numClues;
+  }
+  return false;
+}
 
 export class Clue {
   static fromJService(clue, value) {
@@ -41,7 +55,7 @@ export class Category {
     let clues = [];
     let usedClues = new Set();
     category.clues.forEach(clue => {
-      if (clues.length < numClues && !!clue.question && !!clue.answer && !usedClues.has(clue.question)) {
+      if (clues.length < numClues && isValidClue(clue) && !usedClues.has(clue.question)) {
         clues.push(Clue.fromJService(clue, valueIncrement * i));
         usedClues.add(clue.question);
         i += 1;

@@ -13,7 +13,7 @@ import {
   Rounds,
   StatusCodes,
 } from '../../constants.mjs';
-import { Category, Game, Round } from '../../models/game.mjs';
+import { Category, Game, isValidCategory, Round } from '../../models/game.mjs';
 import { GAMES_PLAYED_STAT } from '../../models/player.mjs';
 import { range, WebsocketEvent } from '../../utils.mjs';
 import { createGame, getGame, getPlayers, getRoom, incrementPlayerStat, setCurrentGameForRoom } from '../db.mjs';
@@ -32,7 +32,7 @@ async function createRound(round, dailyDoubles = DailyDoubleSettings.NORMAL) {
 
   while (Object.keys(roundCategories).length < numCategories) {
     const category = categories[i];
-    if (category) {
+    if (isValidCategory(category, round)) {
       const name = category.title;
       if (!categoryNames.has(name)) {
         let transformedCategory = Category.fromJService(category, round);
@@ -41,6 +41,8 @@ async function createRound(round, dailyDoubles = DailyDoubleSettings.NORMAL) {
           roundCategories[transformedCategory.categoryID] = transformedCategory;
         }
       }
+    } else {
+      logger.debug(`Skipping invalid category ${category?.id}`);
     }
     i += 1;
     if (i >= categories.length) {
