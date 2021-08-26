@@ -427,6 +427,11 @@ async function joinRoom(player, room, ws, event) {
       newPlayers[player.playerID] = player;
     }
   });
+  if (!player.spectating && Object.values(newPlayers).filter(player => player.active && !player.spectating).length > MAX_PLAYERS_PER_GAME) {
+    roomLogger.info(room.roomID, `Room is full. ${player.name} is becoming a spectator.`);
+    await updatePlayer(player.playerID, {spectating: true});
+    newPlayers[player.playerID].spectating = true;
+  }
   broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED_ROOM, {roomID: room.roomID, playerID: player.playerID, players: newPlayers}));
 }
 

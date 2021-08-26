@@ -252,10 +252,6 @@ class Connector extends React.Component {
     if (this.props.connected && this.props.room && this.props.playerID && !this.props.room.playerIDs.includes(this.props.playerID)) {
       console.log('Joining room...');
       this.props.joinRoom(this.props.playerID, this.props.roomID);
-      if (Object.values(this.props.players).filter(player => player.active).length >= MAX_PLAYERS_PER_GAME) {
-        console.log('Room is full. Becoming a spectator.');
-        this.props.startSpectating(this.props.roomID, this.props.playerID);
-      }
     }
   }
 
