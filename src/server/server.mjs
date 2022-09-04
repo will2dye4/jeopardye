@@ -7,7 +7,7 @@ import http from 'http';
 import https from 'https';
 import log from 'log';
 import logNode from 'log-node';
-import config from '../config.json';
+import config from '../config.json' assert { type: 'json' };
 import db, { markAllPlayersInactive } from './db.mjs';
 import game from './api/game.mjs';
 import player from './api/player.mjs';

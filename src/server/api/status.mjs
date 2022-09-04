@@ -1,7 +1,7 @@
 import express from 'express';
 import log from 'log';
 import { StatusCodes } from '../../constants.mjs';
-import packageJSON from '../../package.alias.json';
+import packageJSON from '../../package.alias.json' assert { type: 'json' };
 import db from '../db.mjs';
 
 const logger = log.get('api:status');

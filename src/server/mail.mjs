@@ -1,6 +1,6 @@
 import log from 'log';
 import nodemailer from 'nodemailer';
-import config from '../config.json';
+import config from '../config.json' assert { type: 'json' };
 import { APP_BASE } from '../constants.mjs';
 
 const ADMIN_EMAIL = config.admin.email;

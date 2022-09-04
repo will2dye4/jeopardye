@@ -1,4 +1,4 @@
-import config from './config.json';
+import config from './config.json' assert { type: 'json' };
 
 export const ADMIN_PLAYER_IDS = new Set(config.admin.playerIDs);
 

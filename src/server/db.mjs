@@ -2,7 +2,7 @@ import mongodb from 'mongodb';
 const { MongoClient } = mongodb;
 
 import uuid from 'uuid';
-import config from '../config.json';
+import config from '../config.json' assert { type: 'json' };
 import { ROOM_CODE_CHARACTERS, ROOM_CODE_LENGTH } from '../constants.mjs';
 import { RoomLinkRequestResolution } from '../models/roomLinkRequest.mjs';
 import { randomChoice, range } from '../utils.mjs';
