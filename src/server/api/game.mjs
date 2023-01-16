@@ -39,7 +39,11 @@ async function createRound(round, dailyDoubles = DailyDoubleSettings.NORMAL) {
         if (transformedCategory) {
           categoryNames.add(name);
           roundCategories[transformedCategory.categoryID] = transformedCategory;
+        } else {
+          logger.debug(`Skipping invalid category ${category.id}`)
         }
+      } else {
+        logger.debug(`Skipping duplicate category "${name}" (${category.id})`)
       }
     } else {
       logger.debug(`Skipping invalid category ${category?.id}`);
