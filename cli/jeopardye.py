@@ -209,6 +209,7 @@ class JeopardyeMain:
 
     @staticmethod
     def print_logs() -> None:
+        print(bold(f'Server logs (from {JEOPARDYE_LOG_FILE}):\n'))
         try:
             subprocess.run(['tail', '-f', JEOPARDYE_LOG_FILE])
         except KeyboardInterrupt:
@@ -220,7 +221,7 @@ class JeopardyeMain:
 
     @staticmethod
     def get_server_pid() -> str:
-        process = subprocess.run("ps aux | grep 'server.mjs' | grep -v grep | awk '{print $2}'",
+        process = subprocess.run(r"ps aux | grep 'server\.mjs' | grep 'name=jeopardye' | grep -v grep | awk '{print $2}'",
                                  capture_output=True, shell=True)
         return process.stdout.decode('utf-8').strip()
 

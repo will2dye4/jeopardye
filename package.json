@@ -3,6 +3,7 @@
   "version": "1.0.9",
   "private": true,
   "dependencies": {
+    "@babel/plugin-syntax-import-assertions": "^7.20.0",
     "@chakra-ui/react": "^1.6.3",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
@@ -43,11 +44,11 @@
     "ws": "^7.4.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server": "LOG_LEVEL=info LOG_TIME=abs node --experimental-json-modules src/server/server.mjs"
+    "server": "LOG_LEVEL=info LOG_TIME=abs node --experimental-json-modules src/server/server.mjs -- --name=jeopardye"
   },
   "eslintConfig": {
     "extends": [
