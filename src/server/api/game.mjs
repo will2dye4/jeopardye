@@ -24,7 +24,7 @@ const logger = log.get('api:game');
 
 async function createRound(round, dailyDoubles = DailyDoubleSettings.NORMAL) {
   const numCategories = (round === Rounds.FINAL ? 1 : CATEGORIES_PER_ROUND);
-  const numCategoriesToFetch = numCategories * 3;
+  const numCategoriesToFetch = numCategories * 2;
   let categories = await fetchRandomCategories(numCategoriesToFetch);
   let categoryNames = new Set();
   let roundCategories = {};
