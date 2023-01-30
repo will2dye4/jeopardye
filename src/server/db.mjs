@@ -34,6 +34,10 @@ const client = new MongoClient(`mongodb://${MONGODB_HOST}:${MONGODB_PORT}/`, {us
 await client.connect();
 
 const db = client.db(DB_NAME);
+const categoriesCollection = db.collection('categories');
+const cluesCollection = db.collection('clues');
+const contestantsCollection = db.collection('contestants');
+const episodesCollection = db.collection('episodes');
 const gamesCollection = db.collection('games');
 const playersCollection = db.collection('players');
 const roomsCollection = db.collection('rooms');
@@ -338,6 +342,106 @@ export async function resolveRoomLinkRequest(requestID, resolution, resolvedTime
 
 export async function setRoomForRoomLinkRequest(requestID, roomID, roomCode) {
   await roomLinkRequestsCollection.updateOne({_id: requestID}, {$set: {roomID: roomID, roomCode: roomCode}});
+}
+
+export async function getEpisodeByEpisodeID(episodeID) {
+  return await getEpisodeByFilter({episodeID: episodeID});
+}
+
+export async function getEpisodeByEpisodeNumber(episodeNumber) {
+  return await getEpisodeByFilter({episodeNumber: episodeNumber});
+}
+
+export async function getEpisodeByAirDate(airDate) {
+  return await getEpisodeByFilter({airDate: airDate});
+}
+
+export async function getEpisodeByFilter(filter) {
+  let cursor = await episodesCollection.aggregate([
+    {$match: filter},
+    {
+      $lookup: {
+        from: 'contestants',
+        localField: 'metadata.contestantIDs',
+        foreignField: 'contestantID',
+        as: 'metadata.contestants',
+      }
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'rounds.single.categoryIDs',
+        foreignField: 'categoryID',
+        as: 'rounds.single.categories',
+      }
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'rounds.double.categoryIDs',
+        foreignField: 'categoryID',
+        as: 'rounds.double.categories',
+      }
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'rounds.final.categoryIDs',
+        foreignField: 'categoryID',
+        as: 'rounds.final.categories',
+      }
+    },
+  ]);
+  let episodes = await cursor.toArray();
+  if (!episodes) {
+    return null;
+  }
+  return episodes.pop();
+}
+
+export async function getCategoryCluesByEpisodeID(episodeID) {
+  let categoriesCursor = await cluesCollection.aggregate([
+    {$match: {episodeID: episodeID}},
+    {$group: {_id: '$categoryID', clues: {$push: '$$ROOT'}}},
+    {$sort: {index: 1}},
+  ]);
+  let allCategories = await categoriesCursor.toArray();
+  let categoryClues = {};
+  for (let category of allCategories) {
+    categoryClues[category._id] = category.clues;
+  }
+  return categoryClues;
+}
+
+export async function getEpisodeCluesByCategoryID(categoryID) {
+  let categoriesCursor = await cluesCollection.aggregate([
+    {$match: {categoryID: categoryID}},
+    {$group: {_id: '$episodeID', clues: {$push: '$$ROOT'}}},
+    {$sort: {index: 1}},
+  ]);
+  let allCategories = await categoriesCursor.toArray();
+  let episodeClues = {};
+  for (let category of allCategories) {
+    episodeClues[category._id] = category.clues;
+  }
+  return episodeClues;
+}
+
+export async function getCategorySummaries() {
+  const cursor = await categoriesCollection.aggregate([
+    {$addFields: {clueCount: {$size: '$clueIDs'}, episodeCount: {$size: '$episodeIDs'}}},
+    {$sort: {name: 1}},
+    {$project: {_id: 0, categoryID: 1, name: 1, clueCount: 1, episodeCount: 1, unrevealedClueCount: 1}},
+  ]);
+  return await cursor.toArray();
+}
+
+export async function getCategoryByID(categoryID) {
+  return await categoriesCollection.findOne({categoryID: categoryID});
+}
+
+export async function getContestantByID(contestantID) {
+  return await contestantsCollection.findOne({contestantID: contestantID});
 }
 
 export default db;

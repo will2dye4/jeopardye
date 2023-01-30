@@ -11,7 +11,7 @@ import {
   Rounds,
   VALUE_INCREMENTS,
 } from '../constants.mjs';
-import { randomChoice, sanitizeQuestionText, titleizeCategoryName } from '../utils.mjs';
+import { randomChoice, sanitizeQuestionText } from '../utils.mjs';
 
 const DAILY_DOUBLE_CLUES_TO_SKIP = 2;
 
@@ -29,6 +29,12 @@ export function isValidCategory(category, round) {
 }
 
 export class Clue {
+  static fromEpisode(clue, airDate, isGame = false) {
+    // If we're playing a game and the clue was unrevealed, mark it as played so it won't show up on the board.
+    const played = (isGame ? clue.unrevealed || false : null);
+    return new Clue(clue.clueID, clue.categoryID, clue.answer, clue.clue, clue.value, airDate, played);
+  }
+
   static fromJService(clue, value) {
     return new Clue(clue.id, clue.category_id, clue.answer, clue.question, value, clue.airdate);
   }
@@ -36,17 +42,38 @@ export class Clue {
   constructor(clueID, categoryID, answer, question, value, airDate, played) {
     this.clueID = clueID;
     this.categoryID = categoryID;
-    this.answer = sanitizeQuestionText(answer);
-    this.rawAnswer = answer;
-    this.question = sanitizeQuestionText(question);
-    this.rawQuestion = question;
-    this.value = value;
-    this.airDate = airDate || null;
-    this.played = played || false;
+    if (!answer || !question) {
+      this.unrevealed = true;
+    } else {
+      this.answer = sanitizeQuestionText(answer);
+      this.rawAnswer = answer;
+      this.question = sanitizeQuestionText(question);
+      this.rawQuestion = question;
+      this.value = value;
+    }
+    if (airDate !== null) {
+      this.airDate = airDate;
+    }
+    if (played !== null) {
+      this.played = played || false;
+    }
   }
 }
 
 export class Category {
+  static fromEpisode(category, clues, episodeID, airDate, isGame = false) {
+    if (!isGame) {
+      airDate = null;
+    }
+    clues = clues.map(clue => Clue.fromEpisode(clue, airDate, isGame));
+    episodeID = episodeID.toString();
+    let comments = '';
+    if (category.hasOwnProperty('comments') && category.comments.hasOwnProperty(episodeID)) {
+      comments = category.comments[episodeID];
+    }
+    return new Category(category.categoryID, category.name, clues, comments);
+  }
+
   static fromJService(category, round) {
     const valueIncrement = VALUE_INCREMENTS[round];
     const numClues = (round === Rounds.FINAL ? 1 : CLUES_PER_CATEGORY);
@@ -68,14 +95,21 @@ export class Category {
     return new Category(category.id, category.title, clues);
   }
 
-  constructor(categoryID, name, clues) {
+  constructor(categoryID, name, clues, comments) {
     this.categoryID = categoryID;
-    this.name = titleizeCategoryName(name);
+    this.name = name;  // titleizeCategoryName(name);
     this.clues = clues || [];
+    if (comments) {
+      this.comments = comments;
+    }
   }
 }
 
 export class Round {
+  static fromEpisode(categories, round, dailyDoubles) {
+    return new Round(categories, round, DailyDoubleSettings.FROM_EPISODE, dailyDoubles);
+  }
+
   static chooseDailyDoubles(categories, round, dailyDoubleSetting) {
     const numDailyDoubles = NUM_DAILY_DOUBLES[round] * DAILY_DOUBLE_MULTIPLIERS[dailyDoubleSetting];
     let dailyDoubles = [];
@@ -103,14 +137,35 @@ export class Round {
     return dailyDoubles;
   }
 
-  constructor(categories, round, dailyDoubleSetting) {
+  constructor(categories, round, dailyDoubleSetting, dailyDoubles) {
     this.categories = categories;
-    this.dailyDoubles = Round.chooseDailyDoubles(categories, round || Rounds.SINGLE, dailyDoubleSetting || DailyDoubleSettings.NORMAL);
+    if (dailyDoubleSetting === DailyDoubleSettings.FROM_EPISODE) {
+      this.dailyDoubles = dailyDoubles;
+    } else {
+      this.dailyDoubles = Round.chooseDailyDoubles(categories, round || Rounds.SINGLE, dailyDoubleSetting || DailyDoubleSettings.NORMAL);
+    }
   }
 }
 
 export class Game {
-  constructor(roomID, rounds, playerIDs, playerInControl, playerAnswering, currentRound, activeClue, currentWager) {
+  static fromEpisode(episode, roomID, playerIDs, playerInControl) {
+    if (!episode.hasOwnProperty('metadata')) {
+      episode.metadata = {};
+    }
+    episode.metadata.episodeID = episode.episodeID;
+    episode.metadata.episodeNumber = episode.episodeNumber;
+    episode.metadata.seasonNumber = episode.seasonNumber;
+    episode.metadata.airDate = episode.airDate;
+    if (episode.hasUnrevealedClues) {
+      episode.metadata.hasUnrevealedClues = true;
+    }
+    if (episode.hasInvalidRounds) {
+      episode.metadata.hasInvalidRounds = true;
+    }
+    return new Game(roomID, episode.rounds, playerIDs, playerInControl, null, Rounds.SINGLE, null, null, episode.metadata);
+  }
+
+  constructor(roomID, rounds, playerIDs, playerInControl, playerAnswering, currentRound, activeClue, currentWager, episodeMetadata) {
     this.gameID = uuid.v4();
     this.roomID = roomID;
     this.rounds = rounds;
@@ -125,6 +180,10 @@ export class Game {
     this.roundSummary = null;
     this.createdTime = new Date();
     this.finishedTime = null;
+
+    if (episodeMetadata) {
+      this.episodeMetadata = episodeMetadata;
+    }
 
     this.scores = {};
     this.playerIDs.forEach(playerID => this.scores[playerID] = 0);

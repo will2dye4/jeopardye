@@ -105,6 +105,7 @@ export const DailyDoubleSettings = {
   NORMAL: 'Normal',
   DOUBLE: 'Double',
   QUADRUPLE: 'Quadruple',
+  FROM_EPISODE: 'From Episode',
 }
 export const DEFAULT_DAILY_DOUBLE_SETTING = 'NORMAL';
 
