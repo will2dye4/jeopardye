@@ -10,7 +10,11 @@ function shouldReduceSize(name) {
 function CategoryHeading(props) {
   let classes = 'category-heading';
   let name = <br />;
+  let title;
   if (props.category) {
+    if (props.category.hasOwnProperty('comments')) {
+      title = props.category.comments;
+    }
     let finished = true;
     props.category.clues.forEach(clue => {
       if (!clue.played) {
@@ -25,7 +29,7 @@ function CategoryHeading(props) {
     }
   }
   return (
-    <Flex className={classes} align="center" justify="center" px={3} py={2} userSelect="none">
+    <Flex className={classes} align="center" justify="center" px={3} py={2} title={title} userSelect="none">
       {name}
     </Flex>
   );

@@ -29,6 +29,8 @@ class Clue extends React.Component {
       }
       text = `$${this.props.clue.value}`;
       title = (this.props.clue.airDate ? `Aired ${formatDate(this.props.clue.airDate)}` : 'Unknown air date');
+    } else if (this.props.clue.unrevealed) {
+      title = 'This clue was not revealed during the show.';
     }
     return (
       <Box className="clue" fontWeight={fontWeight} userSelect="none" onClick={this.handleClick}>

@@ -5,6 +5,7 @@ import {
   faDoorOpen,
   faEye,
   faHistory,
+  faInfoCircle,
   faPen,
   faSignOutAlt,
   faTools,
@@ -56,6 +57,13 @@ function PodiumMenu(props) {
         title: (props.allowSpectate ? null : CANNOT_SPECTATE_MESSAGE),
       },
     ];
+    if (props.gameState.episodeMetadata) {
+      menuItems.splice(2, 0, {
+        icon: faInfoCircle,
+        label: 'Episode Info',
+        onClick: props.modals.episodeInfo.open,
+      });
+    }
     if (props.gameState.playerIsAdmin) {
       menuItems.push({
         icon: faTools,

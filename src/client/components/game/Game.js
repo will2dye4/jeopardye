@@ -15,6 +15,7 @@ import {
   formatList,
   getCountdownTimeInMillis,
   getUnplayedClues,
+  getUnrevealedClues,
   hasMoreRounds,
   isDailyDouble,
 } from '../../../utils.mjs';
@@ -35,6 +36,7 @@ import './Game.css';
 import Bold from '../common/Bold';
 import Board from './board/Board';
 import CountdownTimer from './CountdownTimer';
+import EpisodeInfo from './episode/EpisodeInfo';
 import GameHistory from './history/GameHistory';
 import Podiums from './podium/Podiums';
 import RoundSummary from './summary/RoundSummary';
@@ -59,6 +61,7 @@ class Game extends React.Component {
       showActiveClue: !!props.activeClue,
       showClueAnimation: !!props.activeClue,
       showDailyDoubleWager: false,
+      showEpisodeInfo: false,
       showGameHistory: false,
       showRoundSummary: !!props.roundSummary,
       status: this.getInitialStatus(props),
@@ -78,12 +81,14 @@ class Game extends React.Component {
       responseTimerValue: 100,
       showResponseTimer: false,
     };
+    this.closeEpisodeInfo = this.closeEpisodeInfo.bind(this);
     this.closeGameHistory = this.closeGameHistory.bind(this);
     this.dismissActiveClue = this.dismissActiveClue.bind(this);
     this.handleBuzz = this.handleBuzz.bind(this);
     this.handleClueClick = this.handleClueClick.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
     this.markActiveClueAsInvalid = this.markActiveClueAsInvalid.bind(this);
+    this.openEpisodeInfo = this.openEpisodeInfo.bind(this);
     this.openGameHistory = this.openGameHistory.bind(this);
     this.revealAnswer = this.revealAnswer.bind(this);
     this.toggleGameHistoryScroll = this.toggleGameHistoryScroll.bind(this);
@@ -451,7 +456,9 @@ class Game extends React.Component {
     } else if (!props.players.hasOwnProperty(props.playerInControl)) {
       status = LOADING_STATUS;
     } else {
-      const isNewRound = (getUnplayedClues(props.board).length === CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY);
+      const fullBoardSize = CATEGORIES_PER_ROUND * CLUES_PER_CATEGORY;
+      const unplayedClueCount = getUnplayedClues(props.board).length;
+      const isNewRound = (unplayedClueCount === fullBoardSize || fullBoardSize - unplayedClueCount === getUnrevealedClues(props.board).length);
       const playerHasControl = this.playerHasControl();
       const playerName = props.players[props.playerInControl]?.name;
       status = getStartOfRoundMessage(props.game.currentRound, isNewRound, playerHasControl, props.playerInControlReassigned, playerName);
@@ -684,6 +691,14 @@ class Game extends React.Component {
     this.props.voteToSkipClue(EventContext.fromProps(this.props));
   }
 
+  openEpisodeInfo() {
+    this.setState({showEpisodeInfo: true});
+  }
+
+  closeEpisodeInfo() {
+    this.setState({showEpisodeInfo: false});
+  }
+
   openGameHistory() {
     this.setState({showGameHistory: true});
   }
@@ -834,6 +849,7 @@ class Game extends React.Component {
       gameID: this.props.game?.gameID,
       currentRound: this.props.game?.currentRound,
       categories: this.props.board?.categories,
+      episodeMetadata: this.props.game?.episodeMetadata,
       isDailyDouble: (this.props.board && this.props.activeClue ? this.isActiveDailyDouble() : false),
       playerID: this.props.playerID,
       playerScore: this.props.players[this.props.playerID]?.score || 0,
@@ -845,6 +861,10 @@ class Game extends React.Component {
     };
     const modals = {
       ...this.props.modals,
+      episodeInfo: {
+        open: this.openEpisodeInfo,
+        close: this.closeEpisodeInfo,
+      },
       gameHistory: {
         open: this.openGameHistory,
         close: this.closeGameHistory,
@@ -898,6 +918,7 @@ class Game extends React.Component {
         <StatusBar {...this.props} {...this.state} gameState={gameState} />
         {/* NOTE: To override modals, it's important to pass modals={modals} AFTER {...this.props} below! */}
         <Podiums {...this.props} gameState={gameState} modals={modals} />
+        {this.state.showEpisodeInfo && <EpisodeInfo {...this.props} gameState={gameState} modals={modals} />}
         {this.state.showGameHistory && <GameHistory {...this.props} gameState={gameState} modals={modals} />}
         {this.state.showRoundSummary && <RoundSummary {...this.props} gameState={gameState} />}
       </Box>

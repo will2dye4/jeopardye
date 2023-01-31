@@ -110,14 +110,22 @@ export function comparePlayerEntries([id1, player1], [id2, player2]) {
   return comparePlayerNames(player1, player2);
 }
 
-export function formatDate(date) {
+export function formatDate(date, fullMonthName = false) {
   if (typeof date === 'string') {
     date = new Date(date);
   }
-  const month = new Intl.DateTimeFormat(DEFAULT_LOCALE, {month: 'short'}).format(date);
-  const day = new Intl.DateTimeFormat(DEFAULT_LOCALE, {day: 'numeric'}).format(date);
-  const year = new Intl.DateTimeFormat(DEFAULT_LOCALE, {year: 'numeric'}).format(date);
+  const monthOption = (fullMonthName ? 'long' : 'short');
+  const month = new Intl.DateTimeFormat(DEFAULT_LOCALE, {month: monthOption, timeZone: 'GMT'}).format(date);
+  const day = new Intl.DateTimeFormat(DEFAULT_LOCALE, {day: 'numeric', timeZone: 'GMT'}).format(date);
+  const year = new Intl.DateTimeFormat(DEFAULT_LOCALE, {year: 'numeric', timeZone: 'GMT'}).format(date);
   return `${month} ${day}, ${year}`;
+}
+
+export function formatWeekday(date) {
+  if (typeof date === 'string') {
+    date = new Date(date);
+  }
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE, {weekday: 'long', timeZone: 'GMT'}).format(date);
 }
 
 export function formatScore(score) {
@@ -160,6 +168,18 @@ loop:
     }
   }
   return unplayedClues;
+}
+
+export function getUnrevealedClues(board) {
+  let unrevealedClues = [];
+  for (const category of Object.values(board.categories)) {
+    for (const clue of category.clues) {
+      if (clue.unrevealed) {
+        unrevealedClues.push(clue);
+      }
+    }
+  }
+  return unrevealedClues;
 }
 
 export function getAugmentedPlayerStats(playerStats) {
