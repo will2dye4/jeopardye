@@ -12,7 +12,7 @@ import {
   PopoverTrigger,
   Text,
 } from '@chakra-ui/react';
-import { faChartLine, faDoorOpen, faEye, faHistory, faTools } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faDoorOpen, faEye, faHistory, faInfoCircle, faTools } from '@fortawesome/free-solid-svg-icons';
 import { EventContext } from '../../../../utils.mjs';
 import ActionIcon from '../../common/ActionIcon';
 import Icon from '../../common/Icon';
@@ -39,6 +39,14 @@ function SpectatorsMenu(props) {
       onClick: props.modals.playerStats.open,
     },
   ];
+  if (props.gameState.episodeMetadata) {
+    buttonIcons.push({
+      id: 'spectator-episode-icon',
+      title: 'Show episode info',
+      icon: faInfoCircle,
+      onClick: props.modals.episodeInfo.open,
+    });
+  }
   if (props.gameState.playerIsAdmin) {
     buttonIcons.push({
       id: 'spectator-dashboard-icon',

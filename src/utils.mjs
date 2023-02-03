@@ -1,15 +1,21 @@
 import langEn from '@nlpjs/lang-en';
 import similarity from '@nlpjs/similarity';
 import '@gouch/to-title-case';
+import moment from 'moment';
 import {
   DAILY_DOUBLE_COUNTDOWN_SECONDS,
   DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS,
   DAILY_DOUBLE_MINIMUM_WAGER,
+  DAY_OF_WEEK_SATURDAY,
+  DAY_OF_WEEK_SUNDAY,
   DEFAULT_COUNTDOWN_SECONDS,
+  EARLIEST_EPISODE_DATE,
   MAX_CLUE_READING_DELAY_SECONDS,
   MIN_CLUE_READING_DELAY_SECONDS,
   READING_SPEED_SECONDS_PER_WORD,
 } from './constants.mjs';
+import missingEpisodeDates from './config/missingEpisodeDates.json' assert { type: 'json' };
+import yearSeasonDates from './config/yearSeasonDates.json' assert { type: 'json' };
 
 const { StemmerEn, StopwordsEn } = langEn;
 const { leven } = similarity;
@@ -148,6 +154,47 @@ export function formatList(items) {
     }
   });
   return result;
+}
+
+export function getISODateString(date) {
+  return date.toISOString().substring(0, 10);
+}
+
+export function parseISODateString(date) {
+  const [year, month, day] = date.split('-');
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+}
+
+export function isValidEpisodeDate(date, latestEpisodeDate) {
+  date = moment(date);
+  if (!date) {
+    return false;
+  }
+
+  if (date.isBefore(moment(EARLIEST_EPISODE_DATE), 'day') || date.isAfter(moment(latestEpisodeDate), 'day')) {
+    return false;
+  }
+
+  const year = date.year().toString();
+  const yearSeasonInfo = yearSeasonDates[year];
+  if (yearSeasonInfo) {
+    const lastSeasonEnd = yearSeasonInfo.seasonEnd;
+    const nextSeasonStart = yearSeasonInfo.seasonStart;
+    if (date.isAfter(moment(lastSeasonEnd), 'day') && date.isBefore(moment(nextSeasonStart), 'day')) {
+      return false;
+    }
+  }
+
+  const dayOfWeek = date.day();
+  if (dayOfWeek === DAY_OF_WEEK_SATURDAY || dayOfWeek === DAY_OF_WEEK_SUNDAY) {
+    return false;
+  }
+  const month = (date.month() + 1).toString();
+  if (missingEpisodeDates.hasOwnProperty(year) && missingEpisodeDates[year].hasOwnProperty(month) &&
+    missingEpisodeDates[year][month].includes(date.date())) {
+    return false;
+  }
+  return true;
 }
 
 export function validateEmail(email) {

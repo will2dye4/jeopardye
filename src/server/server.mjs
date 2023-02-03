@@ -16,6 +16,7 @@ import game from './api/game.mjs';
 import player from './api/player.mjs';
 import room from './api/room.mjs';
 import roomLinkRequest from './api/roomLinkRequest.mjs';
+import season from './api/season.mjs';
 import status from './api/status.mjs';
 import { handleWebsocket } from './websockets.mjs';
 
@@ -48,6 +49,7 @@ app.use('/api/game', game);
 app.use('/api/player', player);
 app.use('/api/room', room);
 app.use('/api/request', roomLinkRequest);
+app.use('/api/season', season);
 app.use('/api/status', status);
 app.ws('/api/ws', handleWebsocket);
 

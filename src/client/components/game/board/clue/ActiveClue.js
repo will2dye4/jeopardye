@@ -74,7 +74,7 @@ class ActiveClue extends React.Component {
       }
       content = (
         <React.Fragment>
-          <Box className={classes} p={5}>{this.state.text}</Box>
+          <Box className={classes} p={5} whiteSpace="pre-wrap">{this.state.text}</Box>
           {!this.props.gameState.playerIsSpectating && <ActiveClueButtons {...this.props} />}
         </React.Fragment>
       );

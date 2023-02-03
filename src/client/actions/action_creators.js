@@ -1,6 +1,6 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
 import { API_BASE, EventTypes, PLAYER_ID_KEY, StatusCodes, WS_BASE } from '../../constants.mjs';
-import { getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
+import {getISODateString, getUnplayedClues, WebsocketEvent} from '../../utils.mjs';
 
 export const ActionTypes = {
   FETCH_ROOM: 'JEOPARDYE::FETCH_ROOM',
@@ -24,6 +24,7 @@ export const ActionTypes = {
   CLEAR_HOST_OVERRIDE: 'JEOPARDYE::CLEAR_HOST_OVERRIDE',
   CLEAR_PLAYER_IN_CONTROL_REASSIGNED: 'JEOPARDYE::CLEAR_PLAYER_IN_CONTROL_REASSIGNED',
   CLEAR_ROOM_LINK_REQUEST_SUCCEEDED: 'JEOPARDYE::CLEAR_ROOM_LINK_REQUEST_SUCCEEDED',
+  FETCH_SEASON_SUMMARIES: 'JEOPARDYE::FETCH_SEASON_SUMMARIES',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -35,6 +36,7 @@ const GAME_URL = `${API_BASE}/game`;
 const PLAYER_URL = `${API_BASE}/player`;
 const ROOM_URL = `${API_BASE}/room`;
 const ROOM_REQUEST_URL = `${API_BASE}/request`;
+const SEASON_URL = `${API_BASE}/season`;
 
 function getJSON(response, errorMessage) {
   if (response.ok) {
@@ -107,9 +109,19 @@ function getGameByID(gameID) {
   );
 }
 
+function convertGameSettings(gameSettings) {
+  if (gameSettings.hasOwnProperty('startDate')) {
+    gameSettings.startDate = getISODateString(gameSettings.startDate);
+  }
+  if (gameSettings.hasOwnProperty('endDate')) {
+    gameSettings.endDate = getISODateString(gameSettings.endDate);
+  }
+  return gameSettings;
+}
+
 function createNewGame(gameSettings = null) {
   const opts = {
-    body: JSON.stringify(gameSettings || {}),
+    body: JSON.stringify(convertGameSettings(gameSettings || {})),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -227,6 +239,14 @@ function submitRoomLinkRequestResolution(requestID, resolution) {
     getJSON(response, 'Error occurred while resolving room link request.')
   ).catch(e =>
     handleError(e, 'Unexpected error occurred while resolving room link request.')
+  );
+}
+
+function getSeasonSummaries() {
+  return fetch(SEASON_URL).then(response =>
+    getJSON(response, 'Error occurred while fetching season summaries.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while fetching season summaries.')
   );
 }
 
@@ -348,6 +368,13 @@ export function resolveRoomLinkRequest(requestID, resolution) {
   };
 }
 
+export function fetchSeasonSummaries() {
+  return {
+    type: ActionTypes.FETCH_SEASON_SUMMARIES,
+    payload: getSeasonSummaries(),
+  };
+}
+
 export function startSpectating(roomID, playerID) {
   return send(new WebsocketEvent(EventTypes.START_SPECTATING, {roomID, playerID}));
 }
@@ -444,7 +471,7 @@ export function clientConnect(playerID, roomID = null) {
 }
 
 export function updateGameSettings(settings) {
-  return send(new WebsocketEvent(EventTypes.GAME_SETTINGS_CHANGED, {roomID: settings.roomID, settings: settings}));
+  return send(new WebsocketEvent(EventTypes.GAME_SETTINGS_CHANGED, {roomID: settings.roomID, settings: convertGameSettings(settings)}));
 }
 
 export function dismissActiveClue() {

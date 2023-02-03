@@ -87,10 +87,22 @@ export const SOUND_EFFECTS_ENABLED_KEY = 'soundEffectsEnabled';
 export const SPEAK_CLUES_ENABLED_KEY = 'speakCluesEnabled';
 export const SPEAK_ANSWERS_ENABLED_KEY = 'speakAnswersEnabled';
 
+export const GameSettingModes = {
+  BY_DATE: 'date',
+  RANDOM: 'random',
+};
+
+export const DEFAULT_GAME_SETTINGS_MODE = GameSettingModes.RANDOM;
+
+export const GameDateSelectionModes = {
+  DATE_RANGE: 'date',
+  SEASON: 'season',
+};
+
 export const PlayerEditorModes = {
   CREATE: 'create',
   EDIT: 'edit',
-}
+};
 
 export const LeaderboardKeys = {
   OVERALL_SCORE: 'overallScore',
@@ -153,6 +165,13 @@ export const SECONDS_PER_MONTH = SECONDS_PER_DAY * DAYS_PER_MONTH;
 export const MAX_KICK_DURATION_SECONDS = SECONDS_PER_MONTH;
 
 export const MAX_GAME_HISTORY_LENGTH = 100;
+
+export const EARLIEST_EPISODE_DATE = new Date(1984, 8, 10);  // September 10, 1984
+
+export const DEFAULT_HIGHEST_SEASON_NUMBER = 39;
+
+export const DAY_OF_WEEK_SATURDAY = 6;
+export const DAY_OF_WEEK_SUNDAY = 0;
 
 export const EventTypes = {
   ERROR: 'error',

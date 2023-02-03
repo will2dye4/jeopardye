@@ -6,7 +6,7 @@ import {
   StatusCodes,
 } from '../../constants.mjs';
 import { GameSettings } from '../../models/game.mjs';
-import { getCurrentChampion, isDailyDouble } from '../../utils.mjs';
+import { getCurrentChampion, isDailyDouble, parseISODateString } from '../../utils.mjs';
 
 const WEBSOCKET_CONNECTION_REFUSED_ERROR_MESSAGE = '`redux-websocket` error';
 
@@ -52,6 +52,7 @@ function newStoreData() {
     rooms: {},
     allPlayers: {},
     leaderboards: null,
+    seasonSummaries: null,
   };
 }
 
@@ -137,6 +138,12 @@ function handleGameStarted(storeData, event) {
 
 function handleGameSettingsChanged(storeData, event) {
   const { settings } = event.payload;
+  if (settings.hasOwnProperty('startDate')) {
+    settings.startDate = parseISODateString(settings.startDate);
+  }
+  if (settings.hasOwnProperty('endDate')) {
+    settings.endDate = parseISODateString(settings.endDate);
+  }
   console.log('Game settings changed.');
   return {...storeData, gameSettings: settings};
 }
@@ -640,6 +647,16 @@ export function GameReducer(storeData, action) {
         }
       });
       return {...storeData, roomLinkRequests: newReqs};
+    case ActionTypes.FETCH_SEASON_SUMMARIES:
+      const seasons = action.payload;
+      if (!seasons) {
+        console.log('Failed to fetch season summaries.');
+        return {...storeData, seasonSummaries: null};
+      }
+      if (seasons.error) {
+        return {...storeData, error: seasons.error};
+      }
+      return {...storeData, seasonSummaries: seasons};
     case ActionTypes.DISMISS_CLUE:
       return {
         ...storeData,

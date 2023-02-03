@@ -5,6 +5,8 @@ import {
   getEpisodeByEpisodeID,
   getEpisodeByEpisodeNumber,
   getEpisodeByAirDate,
+  getRandomEpisodeFromDateRange,
+  getRandomEpisodeFromSeason,
 } from './db.mjs';
 
 export async function getFullEpisodeByEpisodeID(episodeID, isGame = false) {
@@ -19,6 +21,16 @@ export async function getFullEpisodeByEpisodeNumber(episodeNumber, isGame = fals
 
 export async function getFullEpisodeByAirDate(airDate, isGame = false) {
   const episode = await getEpisodeByAirDate(airDate);
+  return await getFullEpisode(episode, isGame);
+}
+
+export async function getFullRandomEpisodeFromDateRange(startDate, endDate, isGame = false) {
+  const episode = await getRandomEpisodeFromDateRange(startDate, endDate);
+  return await getFullEpisode(episode, isGame);
+}
+
+export async function getFullRandomEpisodeFromSeason(seasonNumber, isGame = false) {
+  const episode = await getRandomEpisodeFromSeason(seasonNumber);
   return await getFullEpisode(episode, isGame);
 }
 

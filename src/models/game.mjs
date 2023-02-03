@@ -5,7 +5,9 @@ import {
   DailyDoubleSettings,
   DEFAULT_DAILY_DOUBLE_SETTING,
   DEFAULT_FINAL_JEOPARDYE,
+  DEFAULT_GAME_SETTINGS_MODE,
   DEFAULT_NUM_ROUNDS,
+  GameSettingModes,
   MAX_INVALID_COUNT,
   NUM_DAILY_DOUBLES,
   Rounds,
@@ -196,11 +198,32 @@ export class Game {
 }
 
 export class GameSettings {
-  constructor(roomID, numRounds, dailyDoubles, finalJeopardye, playerIDs, playerInControl) {
+  static byDateMode(roomID, seasonNumber, startDate, endDate, playerIDs) {
+    return new GameSettings(roomID, GameSettingModes.BY_DATE, null, null, null, seasonNumber, startDate, endDate, playerIDs);
+  }
+
+  static randomMode(roomID, numRounds, dailyDoubles, finalJeopardye, playerIDs) {
+    return new GameSettings(roomID, GameSettingModes.RANDOM, numRounds, dailyDoubles, finalJeopardye, null, null, null, playerIDs);
+  }
+
+  constructor(roomID, mode, numRounds, dailyDoubles, finalJeopardye, seasonNumber, startDate, endDate, playerIDs, playerInControl) {
     this.roomID = roomID;
-    this.numRounds = numRounds || DEFAULT_NUM_ROUNDS;
-    this.dailyDoubles = dailyDoubles || DEFAULT_DAILY_DOUBLE_SETTING;
-    this.finalJeopardye = finalJeopardye ?? DEFAULT_FINAL_JEOPARDYE;
+    this.mode = mode || DEFAULT_GAME_SETTINGS_MODE;
+    if (this.mode === GameSettingModes.BY_DATE) {
+      if (seasonNumber) {
+        this.seasonNumber = seasonNumber;
+      }
+      if (startDate) {
+        this.startDate = startDate;
+      }
+      if (endDate) {
+        this.endDate = endDate;
+      }
+    } else if (this.mode === GameSettingModes.RANDOM) {
+      this.numRounds = numRounds || DEFAULT_NUM_ROUNDS;
+      this.dailyDoubles = dailyDoubles || DEFAULT_DAILY_DOUBLE_SETTING;
+      this.finalJeopardye = finalJeopardye ?? DEFAULT_FINAL_JEOPARDYE;
+    }
     this.playerIDs = playerIDs || [];
     this.playerInControl = playerInControl || null;
   }

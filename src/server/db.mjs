@@ -3,7 +3,7 @@ const { MongoClient } = mongodb;
 
 import uuid from 'uuid';
 import config from '../config.json' assert { type: 'json' };
-import { ROOM_CODE_CHARACTERS, ROOM_CODE_LENGTH } from '../constants.mjs';
+import { DEFAULT_HIGHEST_SEASON_NUMBER, ROOM_CODE_CHARACTERS, ROOM_CODE_LENGTH } from '../constants.mjs';
 import { RoomLinkRequestResolution } from '../models/roomLinkRequest.mjs';
 import { randomChoice, range } from '../utils.mjs';
 
@@ -356,6 +356,43 @@ export async function getEpisodeByAirDate(airDate) {
   return await getEpisodeByFilter({airDate: airDate});
 }
 
+export async function getLatestEpisodeAirDate() {
+  const cursor = await episodesCollection.aggregate([
+    {$group: {_id: null, maxAirDate: {$max: '$airDate'}}},
+  ]);
+  const results = await cursor.toArray();
+  if (!results) {
+    return DEFAULT_HIGHEST_SEASON_NUMBER;
+  }
+  return results[0].maxAirDate;
+}
+
+export async function getRandomEpisodeFromDateRange(startDate, endDate) {
+  const cursor = episodesCollection.aggregate([
+    {$match: {airDate: {$gte: startDate, $lte: endDate}}},
+    {$project: {_id: 0, episodeID: 1}},
+    {$sample: {size: 1}},
+  ]);
+  const episodeIDs = await cursor.toArray();
+  if (!episodeIDs) {
+    return null;
+  }
+  return await getEpisodeByEpisodeID(episodeIDs[0].episodeID);
+}
+
+export async function getRandomEpisodeFromSeason(seasonNumber) {
+  const cursor = episodesCollection.aggregate([
+    {$match: {seasonNumber: seasonNumber}},
+    {$project: {_id: 0, episodeID: 1}},
+    {$sample: {size: 1}},
+  ]);
+  const episodeIDs = await cursor.toArray();
+  if (!episodeIDs) {
+    return null;
+  }
+  return await getEpisodeByEpisodeID(episodeIDs[0].episodeID);
+}
+
 export async function getEpisodeByFilter(filter) {
   let cursor = await episodesCollection.aggregate([
     {$match: filter},
@@ -442,6 +479,32 @@ export async function getCategoryByID(categoryID) {
 
 export async function getContestantByID(contestantID) {
   return await contestantsCollection.findOne({contestantID: contestantID});
+}
+
+export async function getHighestSeasonNumber() {
+  const cursor = await episodesCollection.aggregate([
+    {$group: {_id: null, maxSeasonNumber: {$max: '$seasonNumber'}}},
+  ]);
+  const results = await cursor.toArray();
+  if (!results) {
+    return DEFAULT_HIGHEST_SEASON_NUMBER;
+  }
+  return results[0].maxSeasonNumber;
+}
+
+export async function getSeasonSummaries() {
+  const cursor = await episodesCollection.aggregate([
+    {$group: {
+      _id: '$seasonNumber',
+      episodeCount: {$sum: 1},
+      seasonStartDate: {$min: '$airDate'},
+      seasonEndDate: {$max: '$airDate'},
+    }},
+    {$addFields: {seasonNumber: '$_id'}},
+    {$sort: {_id: 1}},
+    {$project: {_id: 0}},
+  ]);
+  return await cursor.toArray();
 }
 
 export default db;
