@@ -5,11 +5,12 @@
   "dependencies": {
     "@babel/plugin-syntax-import-assertions": "^7.20.0",
     "@chakra-ui/react": "^1.6.3",
+    "@choc-ui/chakra-autocomplete": "^5.1.4",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@fortawesome/fontawesome-free": "^5.15.3",
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
-    "@fortawesome/free-solid-svg-icons": "^5.15.3",
+    "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@fortawesome/react-fontawesome": "^0.1.14",
     "@giantmachines/redux-websocket": "^1.5.1",
     "@gouch/to-title-case": "^2.2.1",
