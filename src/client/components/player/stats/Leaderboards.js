@@ -68,7 +68,7 @@ function Leaderboards(props) {
             const color = (firstPlace ? 'jeopardyeBlue.500' : 'black');
             const isPlayerPlace = players.map(player => player.playerID).includes(props.playerID);
             const playerNames = players.sort(comparePlayerNames).map(player =>
-              <Text fontWeight={firstPlace || player.playerID === props.playerID ? 'bold' : 'normal'} py={2}>{player.name}</Text>
+              <Text key={player.playerID} fontWeight={firstPlace || player.playerID === props.playerID ? 'bold' : 'normal'} py={2}>{player.name}</Text>
             );
             return (
               <Tr key={place} textColor={color} fontSize="2xl" fontWeight={firstPlace || isPlayerPlace ? 'bold' : 'normal'}>

@@ -315,6 +315,17 @@ class GameSettings extends React.Component {
     }
     const disabled = !this.playerIsHost();
     const tabClassName = (disabled ? 'hover-not-allowed' : '');
+    const selectedTabStyles = {
+      borderBottom: 'none',
+      borderLeftColor: 'jeopardyeBlue.500',
+      borderRightColor: 'jeopardyeBlue.500',
+      borderTopColor: 'jeopardyeBlue.500',
+    };
+    const SettingTab = (props) => (
+      <Tab className={tabClassName} fontSize="xl" isDisabled={disabled} borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={selectedTabStyles}>
+        {props.children}
+      </Tab>
+    );
     const startGameDisabled = (disabled || Object.keys(this.props.players).length === 0 ||
       (this.state.mode === GameSettingModes.CATEGORY && this.state.selectedCategories.length < CATEGORIES_PER_ROUND));
     const hostName = (this.props.room ? getPlayerName(this.props.room.hostPlayerID) : 'host');
@@ -323,19 +334,19 @@ class GameSettings extends React.Component {
         <Heading mb={8} textAlign="center">Game Settings</Heading>
         <Tabs isFitted isLazy index={Object.values(GameSettingModes).findIndex(mode => mode === this.state.mode)}
               onChange={this.onModeChanged} variant="enclosed">
-          <TabList>
-            <Tab className={tabClassName} fontSize="xl" isDisabled={disabled}>
+          <TabList border="none">
+            <SettingTab>
               By Date
               <Badge colorScheme="green" ml={4} userSelect="none">New!</Badge>
-            </Tab>
-            <Tab className={tabClassName} fontSize="xl" isDisabled={disabled}>
+            </SettingTab>
+            <SettingTab>
               By Category
               <Badge colorScheme="green" ml={4} userSelect="none">New!</Badge>
-            </Tab>
-            <Tab className={tabClassName} fontSize="xl" isDisabled={disabled}>Random</Tab>
+            </SettingTab>
+            <SettingTab>Random</SettingTab>
           </TabList>
 
-          <TabPanels>
+          <TabPanels pt={3}>
             <TabPanel>
               <ByDateGameSettings disabled={disabled} maxDate={this.state.maxDate} startDate={this.state.startDate} endDate={this.state.endDate}
                                   onStartDateChanged={this.onStartDateChanged} onEndDateChanged={this.onEndDateChanged}

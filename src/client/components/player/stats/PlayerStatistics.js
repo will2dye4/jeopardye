@@ -62,6 +62,12 @@ class PlayerStatistics extends React.Component {
     }
 
     const selectRef = React.createRef();
+    const selectedTabStyles = {
+      borderBottom: 'none',
+      borderLeftColor: 'jeopardyeBlue.500',
+      borderRightColor: 'jeopardyeBlue.500',
+      borderTopColor: 'jeopardyeBlue.500',
+    };
 
     return (
       <Modal initialFocusRef={selectRef} isOpen={true} onClose={this.props.modals.playerStats.close} size="5xl">
@@ -72,9 +78,9 @@ class PlayerStatistics extends React.Component {
             <Card className="game-settings" px={10} py={6} textAlign="center">
               <Heading mb={8}>Player Statistics</Heading>
               <Tabs isFitted isLazy variant="enclosed">
-                <TabList>
-                  <Tab fontSize="xl">Players</Tab>
-                  <Tab fontSize="xl">Leaderboards</Tab>
+                <TabList border="none">
+                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={selectedTabStyles}>Players</Tab>
+                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={selectedTabStyles}>Leaderboards</Tab>
                 </TabList>
 
                 <TabPanels>

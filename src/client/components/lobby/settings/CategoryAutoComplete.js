@@ -52,9 +52,15 @@ class CategoryAutoComplete extends React.Component {
       const episodeCount = this.props.categoryStats.episodeCount.toLocaleString();
       placeholder = `Search ${categoryCount} categories from ${episodeCount} episodes...`;
     }
+    const emptyText = (this.state.searchTerm.length < MIN_CATEGORY_SEARCH_TERM_LENGTH ?
+                        'Search for categories...' :
+                        (this.props.searchResults.searchTerm === this.state.searchTerm ?
+                          `No categories found matching: ${this.state.searchTerm}` :
+                          'Searching...'));
+    const emptyState = <Text fontSize="md" fontWeight="bold" fontStyle="italic" px={3}>{emptyText}</Text>;
     return (
-      <AutoComplete onSelectOption={this.props.onCategorySelected} listAllValuesOnFocus openOnFocus>
-        <AutoCompleteInput bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} mb={5} onChange={this.onSearchTermChanged}
+      <AutoComplete onSelectOption={this.props.onCategorySelected} listAllValuesOnFocus openOnFocus emptyState={emptyState}>
+        <AutoCompleteInput bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} onChange={this.onSearchTermChanged}
                            placeholder={placeholder} value={this.state.searchTerm} ref={this.state.inputRef}
                            disabled={!this.props.disabled && this.props.selectedCategories.length === CATEGORIES_PER_ROUND} />
         <AutoCompleteList>

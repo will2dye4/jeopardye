@@ -16,7 +16,7 @@ function SelectedCategoryList(props) {
     iconTitle = '';
   }
   return (
-    <Box pl={2}>
+    <Box pt={5} pl={2}>
       <Card className="player-list" fontSize="lg">
         <CardHeader>Selected Categories ({props.selectedCategories.length}/{CATEGORIES_PER_ROUND})</CardHeader>
         <List className="list-group">

@@ -1,5 +1,7 @@
 import React from 'react';
 import { Flex } from '@chakra-ui/react';
+import { faMessage } from '@fortawesome/free-solid-svg-icons';
+import Icon from '../../../common/Icon';
 
 function shouldReduceSize(name) {
   const words = name.split(' ');
@@ -9,10 +11,10 @@ function shouldReduceSize(name) {
 
 function CategoryHeading(props) {
   let classes = 'category-heading';
+  let finished = true;
   let name = <br />;
   let title;
   if (props.category) {
-    let finished = true;
     let allUnrevealed = true;
     props.category.clues.forEach(clue => {
       if (!clue.played) {
@@ -35,8 +37,13 @@ function CategoryHeading(props) {
     }
   }
   return (
-    <Flex className={classes} align="center" justify="center" px={3} py={2} title={title} userSelect="none">
+    <Flex className={classes} align="center" justify="center" position="relative" px={3} py={2} title={title} userSelect="none">
       {name}
+      {props.category?.comments && !finished && (
+        <Flex fontSize="sm" position="absolute" top={2} right={2}>
+          <Icon id={`category-comments-${props.category.categoryID}`} clickable={false} icon={faMessage} />
+        </Flex>
+      )}
     </Flex>
   );
 }

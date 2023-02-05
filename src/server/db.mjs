@@ -507,16 +507,21 @@ export async function getCategorySummaries() {
 export async function getCategorySummariesForSearchTerm(searchTerm) {
   let match = {revealedClueCount: {$gte: MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH}};
   if (searchTerm) {
+    searchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  // Escape regex characters
     match.name = {$regex: searchTerm, $options: '$i'};
   }
-  const cursor = await categoriesCollection.aggregate([
-    {$addFields: {clueCount: {$size: '$clueIDs'}, episodeCount: {$size: '$episodeIDs'}}},
-    {$addFields: {revealedClueCount: {$subtract: ['$clueCount', '$unrevealedClueCount']}}},
-    {$match: match},
-    {$sort: {name: 1}},
-    {$project: {_id: 0, categoryID: 1, name: 1, episodeCount: 1, revealedClueCount: 1}},
-  ]);
-  return await cursor.toArray();
+  try {
+    const cursor = await categoriesCollection.aggregate([
+      {$addFields: {clueCount: {$size: '$clueIDs'}, episodeCount: {$size: '$episodeIDs'}}},
+      {$addFields: {revealedClueCount: {$subtract: ['$clueCount', '$unrevealedClueCount']}}},
+      {$match: match},
+      {$sort: {name: 1}},
+      {$project: {_id: 0, categoryID: 1, name: 1, episodeCount: 1, revealedClueCount: 1}},
+    ]);
+    return await cursor.toArray();
+  } catch (e) {
+    return [];
+  }
 }
 
 export async function getRandomCategoryIDs(count, allowUnrevealedClues = DEFAULT_ALLOW_UNREVEALED_CLUES) {
