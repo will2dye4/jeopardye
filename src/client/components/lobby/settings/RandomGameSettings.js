@@ -7,9 +7,9 @@ import ToggleSwitch from '../../common/form/ToggleSwitch';
 import GameSetting from './GameSetting';
 
 const NUM_ROUNDS_OPTIONS = range(MAX_NUM_ROUNDS).map(i => i + 1);
-const DAILY_DOUBLE_OPTIONS = Object.entries(DailyDoubleSettings).
-  filter(([_, label]) => label !== DailyDoubleSettings.FROM_EPISODE).
-  map(([value, label]) => { return {label, value}; });
+const DAILY_DOUBLE_OPTIONS = Object.entries(DailyDoubleSettings).filter(
+  ([_, label]) => label !== DailyDoubleSettings.FROM_EPISODE).map(
+  ([value, label]) => { return {label, value}; });
 
 function RandomGameSettings(props) {
   return (

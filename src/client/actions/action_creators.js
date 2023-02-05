@@ -1,6 +1,6 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
 import { API_BASE, EventTypes, PLAYER_ID_KEY, StatusCodes, WS_BASE } from '../../constants.mjs';
-import {getISODateString, getUnplayedClues, WebsocketEvent} from '../../utils.mjs';
+import { getISODateString, getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
   FETCH_ROOM: 'JEOPARDYE::FETCH_ROOM',
@@ -24,6 +24,8 @@ export const ActionTypes = {
   CLEAR_HOST_OVERRIDE: 'JEOPARDYE::CLEAR_HOST_OVERRIDE',
   CLEAR_PLAYER_IN_CONTROL_REASSIGNED: 'JEOPARDYE::CLEAR_PLAYER_IN_CONTROL_REASSIGNED',
   CLEAR_ROOM_LINK_REQUEST_SUCCEEDED: 'JEOPARDYE::CLEAR_ROOM_LINK_REQUEST_SUCCEEDED',
+  FETCH_CATEGORY_STATS: 'JEOPARDYE::FETCH_CATEGORY_STATS',
+  SEARCH_CATEGORY_SUMMARIES: 'JEOPARDYE::SEARCH_CATEGORY_SUMMARIES',
   FETCH_SEASON_SUMMARIES: 'JEOPARDYE::FETCH_SEASON_SUMMARIES',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
@@ -32,6 +34,7 @@ export const ActionTypes = {
   REDUX_WEBSOCKET_MESSAGE: 'REDUX_WEBSOCKET::MESSAGE',
 };
 
+const CATEGORY_URL = `${API_BASE}/category`;
 const GAME_URL = `${API_BASE}/game`;
 const PLAYER_URL = `${API_BASE}/player`;
 const ROOM_URL = `${API_BASE}/room`;
@@ -242,6 +245,22 @@ function submitRoomLinkRequestResolution(requestID, resolution) {
   );
 }
 
+function getCategoryStats() {
+  return fetch(`${CATEGORY_URL}/stats`).then(response =>
+    getJSON(response, 'Error occurred while fetching category stats.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while fetching category stats.')
+  );
+}
+
+function getCategorySummariesBySearchTerm(term) {
+  return fetch(`${CATEGORY_URL}/search/${encodeURIComponent(term)}`).then(response =>
+    getJSON(response, 'Error occurred while fetching category summaries.')
+  ).catch(e =>
+    handleError(e, 'Unexpected error occurred while fetching category summaries.')
+  );
+}
+
 function getSeasonSummaries() {
   return fetch(SEASON_URL).then(response =>
     getJSON(response, 'Error occurred while fetching season summaries.')
@@ -365,6 +384,20 @@ export function resolveRoomLinkRequest(requestID, resolution) {
   return {
     type: ActionTypes.RESOLVE_ROOM_LINK_REQUEST,
     payload: submitRoomLinkRequestResolution(requestID, resolution),
+  };
+}
+
+export function fetchCategoryStats() {
+  return {
+    type: ActionTypes.FETCH_CATEGORY_STATS,
+    payload: getCategoryStats(),
+  };
+}
+
+export function searchCategorySummaries(term) {
+  return {
+    type: ActionTypes.SEARCH_CATEGORY_SUMMARIES,
+    payload: getCategorySummariesBySearchTerm(term),
   };
 }
 

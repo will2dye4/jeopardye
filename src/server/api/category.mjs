@@ -1,16 +1,47 @@
 import express from 'express';
-import { StatusCodes } from '../../constants.mjs';
+import { MIN_CATEGORY_SEARCH_TERM_LENGTH, StatusCodes } from '../../constants.mjs';
 import { Clue } from '../../models/game.mjs';
-import { getCategoryByID, getCategorySummaries, getEpisodeCluesByCategoryID } from '../db.mjs';
+import {
+  getCategoryByID,
+  getCategoryCount,
+  getCategorySummaries,
+  getCategorySummariesForSearchTerm,
+  getEpisodeCluesByCategoryID,
+  getEpisodeCount,
+} from '../db.mjs';
+
+const MAX_CATEGORY_SEARCH_RESULTS = 1000;
 
 async function handleGetCategories(req, res, next) {
   const categories = await getCategorySummaries();
-  categories.forEach(category => {
-    if (category.unrevealedClueCount === 0) {
-      delete category.unrevealedClueCount;
-    }
-  });
   res.json(categories);
+}
+
+async function handleSearchCategories(req, res, next) {
+  const searchTerm = req.params.term;
+  if (searchTerm.trim().length < MIN_CATEGORY_SEARCH_TERM_LENGTH) {
+    res.json({invalid: true});
+  } else {
+    const categories = await getCategorySummariesForSearchTerm(searchTerm);
+    if (categories.length > MAX_CATEGORY_SEARCH_RESULTS) {
+      res.json({invalid: true});
+    } else {
+      res.json({
+        searchTerm: searchTerm,
+        total: categories.length,
+        categories: categories,
+      });
+    }
+  }
+}
+
+async function handleGetCategoryStats(req, res, next) {
+  const categoryCount = await getCategoryCount();
+  const episodeCount = await getEpisodeCount();
+  res.json({
+    categoryCount: categoryCount,
+    episodeCount: episodeCount,
+  });
 }
 
 async function handleGetCategoryByID(req, res, next) {
@@ -41,6 +72,8 @@ async function handleGetCategoryClues(req, res, next) {
 
 const router = express.Router();
 router.get('/', handleGetCategories);
+router.get('/search/:term', handleSearchCategories);
+router.get('/stats', handleGetCategoryStats);
 router.get('/:categoryID', handleGetCategoryByID);
 router.get('/:categoryID/clues', handleGetCategoryClues);
 

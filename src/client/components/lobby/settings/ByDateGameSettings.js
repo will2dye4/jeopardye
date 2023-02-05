@@ -8,6 +8,8 @@ import GameSetting from './GameSetting';
 
 const DATE_FORMAT = 'M/d/yyyy';
 
+const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+
 function ByDateGameSettings(props) {
   const DatePickerInput = React.forwardRef((props, ref) => (
     <Button ref={ref} colorScheme="white" textColor="black" border="1px solid black" onClick={props.onClick}
@@ -22,12 +24,14 @@ function ByDateGameSettings(props) {
   let placeholder = 'Loading...';
   if (props.seasonSummaries) {
     options = props.seasonSummaries.map(season => {
-      const seasonStart = new Date(season.seasonStartDate).getUTCFullYear();
-      const seasonEnd = new Date(season.seasonEndDate).getUTCFullYear();
       const seasonNumber = season.seasonNumber;
+      const seasonStartYear = new Date(season.seasonStartDate).getUTCFullYear();
+      const seasonEnd = new Date(season.seasonEndDate);
+      const seasonEndDiffDays = Math.ceil(Math.abs(new Date() - seasonEnd) / MILLISECONDS_PER_DAY);
+      const seasonEndYear = (seasonEndDiffDays <= 7 ? 'present' : seasonEnd.getUTCFullYear());
       return (
         <option key={seasonNumber} value={seasonNumber}>
-          Season {seasonNumber} ({seasonStart}&ndash;{seasonEnd}, {season.episodeCount} episodes)
+          Season {seasonNumber} ({seasonStartYear}&ndash;{seasonEndYear}, {season.episodeCount} episodes)
         </option>
       );
     });

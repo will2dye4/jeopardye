@@ -52,6 +52,8 @@ function newStoreData() {
     rooms: {},
     allPlayers: {},
     leaderboards: null,
+    categorySearchResults: null,
+    categoryStats: null,
     seasonSummaries: null,
   };
 }
@@ -647,6 +649,26 @@ export function GameReducer(storeData, action) {
         }
       });
       return {...storeData, roomLinkRequests: newReqs};
+    case ActionTypes.FETCH_CATEGORY_STATS:
+      const stats = action.payload;
+      if (!stats) {
+        console.log('Failed to fetch category stats.');
+        return {...storeData, categoryStats: null};
+      }
+      if (stats.error) {
+        return {...storeData, error: stats.error};
+      }
+      return {...storeData, categoryStats: stats};
+    case ActionTypes.SEARCH_CATEGORY_SUMMARIES:
+      const searchResults = action.payload;
+      if (!searchResults) {
+        console.log('Failed to search category summaries.');
+        return {...storeData, categorySearchResults: null};
+      }
+      if (searchResults.error) {
+        return {...storeData, error: searchResults.error};
+      }
+      return {...storeData, categorySearchResults: searchResults};
     case ActionTypes.FETCH_SEASON_SUMMARIES:
       const seasons = action.payload;
       if (!seasons) {

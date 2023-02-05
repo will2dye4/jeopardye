@@ -12,13 +12,14 @@ function CategoryHeading(props) {
   let name = <br />;
   let title;
   if (props.category) {
-    if (props.category.hasOwnProperty('comments')) {
-      title = props.category.comments;
-    }
     let finished = true;
+    let allUnrevealed = true;
     props.category.clues.forEach(clue => {
       if (!clue.played) {
         finished = false;
+      }
+      if (!clue.unrevealed) {
+        allUnrevealed = false;
       }
     });
     if (!finished) {
@@ -26,6 +27,11 @@ function CategoryHeading(props) {
       if (shouldReduceSize(name)) {
         classes += ' small-heading';
       }
+    }
+    if (allUnrevealed) {
+      title = `None of the clues in this category were revealed during the show. The category was: ${props.category.name}.`;
+    } else if (props.category.hasOwnProperty('comments')) {
+      title = props.category.comments;
     }
   }
   return (

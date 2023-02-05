@@ -61,6 +61,8 @@ export const MAX_PLAYERS_PER_GAME = 6;
 
 export const MAX_INVALID_COUNT = 5;
 
+export const MIN_CATEGORY_SEARCH_TERM_LENGTH = 3;
+
 export const DEFAULT_FONT_STYLE = 'Dancing Script';
 export const ALL_FONT_STYLES = [
   DEFAULT_FONT_STYLE,
@@ -89,6 +91,7 @@ export const SPEAK_ANSWERS_ENABLED_KEY = 'speakAnswersEnabled';
 
 export const GameSettingModes = {
   BY_DATE: 'date',
+  CATEGORY: 'category',
   RANDOM: 'random',
 };
 

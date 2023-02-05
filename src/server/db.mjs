@@ -9,6 +9,8 @@ import { randomChoice, range } from '../utils.mjs';
 
 export const PAGE_SIZE = 10;
 
+const MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH = 3;
+
 const DEFAULT_INSERT_OPTIONS = {
   writeConcern: {
     w: 'majority',
@@ -344,6 +346,10 @@ export async function setRoomForRoomLinkRequest(requestID, roomID, roomCode) {
   await roomLinkRequestsCollection.updateOne({_id: requestID}, {$set: {roomID: roomID, roomCode: roomCode}});
 }
 
+export async function getEpisodeCount() {
+  return await episodesCollection.countDocuments();
+}
+
 export async function getEpisodeByEpisodeID(episodeID) {
   return await getEpisodeByFilter({episodeID: episodeID});
 }
@@ -361,7 +367,7 @@ export async function getLatestEpisodeAirDate() {
     {$group: {_id: null, maxAirDate: {$max: '$airDate'}}},
   ]);
   const results = await cursor.toArray();
-  if (!results) {
+  if (!results.length) {
     return DEFAULT_HIGHEST_SEASON_NUMBER;
   }
   return results[0].maxAirDate;
@@ -374,7 +380,7 @@ export async function getRandomEpisodeFromDateRange(startDate, endDate) {
     {$sample: {size: 1}},
   ]);
   const episodeIDs = await cursor.toArray();
-  if (!episodeIDs) {
+  if (!episodeIDs.length) {
     return null;
   }
   return await getEpisodeByEpisodeID(episodeIDs[0].episodeID);
@@ -387,7 +393,7 @@ export async function getRandomEpisodeFromSeason(seasonNumber) {
     {$sample: {size: 1}},
   ]);
   const episodeIDs = await cursor.toArray();
-  if (!episodeIDs) {
+  if (!episodeIDs.length) {
     return null;
   }
   return await getEpisodeByEpisodeID(episodeIDs[0].episodeID);
@@ -430,7 +436,7 @@ export async function getEpisodeByFilter(filter) {
     },
   ]);
   let episodes = await cursor.toArray();
-  if (!episodes) {
+  if (!episodes.length) {
     return null;
   }
   return episodes.pop();
@@ -450,25 +456,61 @@ export async function getCategoryCluesByEpisodeID(episodeID) {
   return categoryClues;
 }
 
-export async function getEpisodeCluesByCategoryID(categoryID) {
-  let categoriesCursor = await cluesCollection.aggregate([
+export async function getEpisodeCluesByCategoryID(categoryID, includeEpisodeInfo = false) {
+  let pipeline = [
     {$match: {categoryID: categoryID}},
     {$group: {_id: '$episodeID', clues: {$push: '$$ROOT'}}},
-    {$sort: {index: 1}},
-  ]);
-  let allCategories = await categoriesCursor.toArray();
+  ];
+  if (includeEpisodeInfo) {
+    pipeline.push(
+      {$lookup: {from: 'episodes', localField: '_id', foreignField: 'episodeID', as: 'episode'}},
+      {$project: {clues: 1, episode: {episodeID: 1, episodeNumber: 1, airDate: 1}}},
+    );
+  }
+  pipeline.push({$sort: {index: 1}});
+
+  let episodesCursor = await cluesCollection.aggregate(pipeline);
+  let episodes = await episodesCursor.toArray();
+  if (includeEpisodeInfo) {
+    return episodes;
+  }
+
   let episodeClues = {};
-  for (let category of allCategories) {
-    episodeClues[category._id] = category.clues;
+  for (let episode of episodes) {
+    episodeClues[episode._id] = episode.clues;
   }
   return episodeClues;
 }
 
+export async function getCategoryCount() {
+  const cursor = await categoriesCollection.aggregate([
+    {$addFields: {clueCount: {$size: '$clueIDs'}}},
+    {$addFields: {revealedClueCount: {$subtract: ['$clueCount', '$unrevealedClueCount']}}},
+    {$match: {revealedClueCount: {$gte: MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH}}},
+    {$count: 'count'},
+  ]);
+  const results = await cursor.toArray();
+  if (!results.length) {
+    return await categoriesCollection.countDocuments();
+  }
+  return results[0].count;
+}
+
 export async function getCategorySummaries() {
+  return await getCategorySummariesForSearchTerm(null);
+}
+
+export async function getCategorySummariesForSearchTerm(searchTerm) {
+  let match = {revealedClueCount: {$gte: MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH}};
+  if (searchTerm) {
+    match.name = {$regex: searchTerm, $options: '$i'};
+  }
   const cursor = await categoriesCollection.aggregate([
     {$addFields: {clueCount: {$size: '$clueIDs'}, episodeCount: {$size: '$episodeIDs'}}},
+    {$addFields: {revealedClueCount: {$subtract: ['$clueCount', '$unrevealedClueCount']}}},
+    {$match: match},
     {$sort: {name: 1}},
-    {$project: {_id: 0, categoryID: 1, name: 1, clueCount: 1, episodeCount: 1, unrevealedClueCount: 1}},
+    {$project: {_id: 0, categoryID: 1, name: 1, episodeCount: 1, revealedClueCount: 1}},
   ]);
   return await cursor.toArray();
 }
@@ -486,7 +528,7 @@ export async function getHighestSeasonNumber() {
     {$group: {_id: null, maxSeasonNumber: {$max: '$seasonNumber'}}},
   ]);
   const results = await cursor.toArray();
-  if (!results) {
+  if (!results.length) {
     return DEFAULT_HIGHEST_SEASON_NUMBER;
   }
   return results[0].maxSeasonNumber;

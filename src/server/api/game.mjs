@@ -2,6 +2,7 @@ import express from 'express';
 import log from 'log';
 import {
   CATEGORIES_PER_ROUND,
+  CLUES_PER_CATEGORY,
   DailyDoubleSettings,
   DEFAULT_DAILY_DOUBLE_SETTING,
   DEFAULT_FINAL_JEOPARDYE,
@@ -13,12 +14,15 @@ import {
   MAX_PLAYERS_PER_GAME,
   Rounds,
   StatusCodes,
+  VALUE_INCREMENTS,
 } from '../../constants.mjs';
 import { Category, Game, isValidCategory, Round } from '../../models/game.mjs';
 import { GAMES_PLAYED_STAT } from '../../models/player.mjs';
-import { isValidEpisodeDate, parseISODateString, range, WebsocketEvent } from '../../utils.mjs';
+import { isValidEpisodeDate, randomChoice, range, WebsocketEvent } from '../../utils.mjs';
 import {
   createGame,
+  getCategoryByID,
+  getEpisodeCluesByCategoryID,
   getGame,
   getHighestSeasonNumber,
   getLatestEpisodeAirDate,
@@ -73,6 +77,48 @@ async function createRound(round, dailyDoubles = DailyDoubleSettings.NORMAL) {
   return new Round(roundCategories, round, dailyDoubles);
 }
 
+async function createRoundFromCategoryIDs(categoryIDs, round, dailyDoubles) {
+  if (!categoryIDs) {
+    return null;
+  }
+
+  let categories = {};
+  for (const categoryID of categoryIDs) {
+    const category = await getCategoryByID(categoryID);
+    if (!category) {
+      return null;
+    }
+
+    const episodes = await getEpisodeCluesByCategoryID(categoryID, true);
+    let episode = null;
+    if (episodes.length === 1) {
+      episode = episodes[0];
+    } else {
+      const hasFullRound = (episodes.filter(episode => episode.clues.filter(clue => clue.unrevealed).length === 0).length > 0);
+      while (!episode) {
+        let randomEpisode = randomChoice(episodes);
+        if (!hasFullRound || randomEpisode.clues.length === CLUES_PER_CATEGORY) {
+          episode = randomEpisode;
+        }
+      }
+    }
+
+    // Normalize clue values.
+    const increment = VALUE_INCREMENTS[round];
+    episode.clues.forEach((clue, i) => {
+      if (!clue.unrevealed) {
+        clue.value = increment * (i + 1);
+      }
+    });
+
+    const episodeID = episode.episode[0].episodeID;
+    const airDate = episode.episode[0].airDate;
+    categories[categoryID] = Category.fromEpisode(category, episode.clues, episodeID, airDate, true);
+  }
+
+  return new Round(categories, round, dailyDoubles);
+}
+
 async function handleCreateGame(req, res, next) {
   logger.info('Creating a new game.');
 
@@ -98,7 +144,7 @@ async function handleCreateGame(req, res, next) {
     }
   }
 
-  let numRounds, dailyDoubles, finalJeopardye, seasonNumber, startDate, endDate;
+  let numRounds, dailyDoubles, finalJeopardye, categoryIDs, seasonNumber, startDate, endDate;
   if (mode === GameSettingModes.BY_DATE) {
     if (req.body.hasOwnProperty('seasonNumber')) {
       const maxSeasonNumber = await getHighestSeasonNumber();
@@ -114,17 +160,27 @@ async function handleCreateGame(req, res, next) {
       }
 
       const maxAirDate = await getLatestEpisodeAirDate();
-      startDate = parseISODateString(req.body.startDate);
+      startDate = new Date(req.body.startDate);
       if (startDate.toString() === 'Invalid Date' || !isValidEpisodeDate(startDate, maxAirDate)) {
         handleError(`Invalid start date "${req.body.startDate}"`, StatusCodes.BAD_REQUEST);
         return;
       }
 
-      endDate = parseISODateString(req.body.endDate);
+      endDate = new Date(req.body.endDate);
       if (endDate.toString() === 'Invalid Date' || !isValidEpisodeDate(endDate, maxAirDate) || endDate < startDate) {
         handleError(`Invalid end date "${req.body.endDate}"`, StatusCodes.BAD_REQUEST);
         return;
       }
+    }
+  } else if (mode === GameSettingModes.CATEGORY) {
+    if (!req.body.hasOwnProperty('categories')) {
+      handleError('Categories is required', StatusCodes.BAD_REQUEST);
+      return;
+    }
+    categoryIDs = req.body.categories;
+    if (!categoryIDs || categoryIDs.length !== CATEGORIES_PER_ROUND) {
+      handleError(`Invalid category IDs: ${categoryIDs}`, StatusCodes.BAD_REQUEST);
+      return
     }
   } else {  // random mode
     numRounds = DEFAULT_NUM_ROUNDS;
@@ -199,6 +255,13 @@ async function handleCreateGame(req, res, next) {
       episode = await getFullRandomEpisodeFromDateRange(startDate, endDate, true);
     }
     game = Game.fromEpisode(episode, roomID, playerIDs, playerInControl);
+  } else if (mode === GameSettingModes.CATEGORY) {
+    const round = await createRoundFromCategoryIDs(categoryIDs, Rounds.SINGLE, DailyDoubleSettings.NORMAL);
+    if (!round) {
+      handleError('Failed to create round from category IDs', StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
+    game = new Game(roomID, {[Rounds.SINGLE]: round}, playerIDs, playerInControl);
   } else {  // random mode
     // TODO - build the game from the DB
     let rounds = {};

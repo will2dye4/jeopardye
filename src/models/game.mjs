@@ -199,14 +199,18 @@ export class Game {
 
 export class GameSettings {
   static byDateMode(roomID, seasonNumber, startDate, endDate, playerIDs) {
-    return new GameSettings(roomID, GameSettingModes.BY_DATE, null, null, null, seasonNumber, startDate, endDate, playerIDs);
+    return new GameSettings(roomID, GameSettingModes.BY_DATE, null, null, null, seasonNumber, startDate, endDate, null, playerIDs);
+  }
+
+  static byCategories(roomID, categories, playerIDs) {
+    return new GameSettings(roomID, GameSettingModes.CATEGORY, null, null, null, null, null, null, categories, playerIDs);
   }
 
   static randomMode(roomID, numRounds, dailyDoubles, finalJeopardye, playerIDs) {
-    return new GameSettings(roomID, GameSettingModes.RANDOM, numRounds, dailyDoubles, finalJeopardye, null, null, null, playerIDs);
+    return new GameSettings(roomID, GameSettingModes.RANDOM, numRounds, dailyDoubles, finalJeopardye, null, null, null, null, playerIDs);
   }
 
-  constructor(roomID, mode, numRounds, dailyDoubles, finalJeopardye, seasonNumber, startDate, endDate, playerIDs, playerInControl) {
+  constructor(roomID, mode, numRounds, dailyDoubles, finalJeopardye, seasonNumber, startDate, endDate, categories, playerIDs, playerInControl) {
     this.roomID = roomID;
     this.mode = mode || DEFAULT_GAME_SETTINGS_MODE;
     if (this.mode === GameSettingModes.BY_DATE) {
@@ -219,6 +223,8 @@ export class GameSettings {
       if (endDate) {
         this.endDate = endDate;
       }
+    } else if (this.mode === GameSettingModes.CATEGORY) {
+      this.categories = categories || [];
     } else if (this.mode === GameSettingModes.RANDOM) {
       this.numRounds = numRounds || DEFAULT_NUM_ROUNDS;
       this.dailyDoubles = dailyDoubles || DEFAULT_DAILY_DOUBLE_SETTING;

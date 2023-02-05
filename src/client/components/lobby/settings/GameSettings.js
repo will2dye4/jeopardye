@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Badge,
   Box,
   Button,
   Flex,
@@ -11,13 +12,19 @@ import {
   TabPanels,
   Tabs,
 } from '@chakra-ui/react';
-import { EARLIEST_EPISODE_DATE, GameDateSelectionModes, GameSettingModes } from '../../../../constants.mjs';
+import {
+  CATEGORIES_PER_ROUND,
+  EARLIEST_EPISODE_DATE,
+  GameDateSelectionModes,
+  GameSettingModes
+} from '../../../../constants.mjs';
 import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { parseISODateString } from '../../../../utils.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
 import Card from '../../common/card/Card';
-import RandomGameSettings from './RandomGameSettings';
+import ByCategoryGameSettings from './ByCategoryGameSettings';
 import ByDateGameSettings from './ByDateGameSettings';
+import RandomGameSettings from './RandomGameSettings';
 
 class GameSettings extends React.Component {
   constructor(props) {
@@ -56,7 +63,7 @@ class GameSettings extends React.Component {
     }
 
     this.state = {
-      mode: GameSettingModes.BY_DATE,
+      mode: props.gameSettings.mode || GameSettingModes.BY_DATE,
 
       dateSelectionMode: GameDateSelectionModes.SEASON,
       maxDate: (season ? parseISODateString(season.seasonEndDate) : EARLIEST_EPISODE_DATE),
@@ -65,6 +72,8 @@ class GameSettings extends React.Component {
       startDate: startDate,
       startDateRef: React.createRef(),
       selectedSeason: seasonNumber,
+
+      selectedCategories: [],
 
       dailyDoubles: props.gameSettings.dailyDoubles,
       finalJeopardye: false, /* TODO - revert once Final Jeopardye is implemented: props.gameSettings.finalJeopardye, */
@@ -81,9 +90,12 @@ class GameSettings extends React.Component {
     this.onStartDateChanged = this.onStartDateChanged.bind(this);
     this.onSeasonChanged = this.onSeasonChanged.bind(this);
     this.onSeasonNumberChanged = this.onSeasonNumberChanged.bind(this);
+    this.onCategorySelected = this.onCategorySelected.bind(this);
+    this.onCategoryRemoved = this.onCategoryRemoved.bind(this);
   }
 
   componentDidMount() {
+    this.props.fetchCategoryStats();
     this.props.fetchSeasonSummaries();
   }
 
@@ -93,7 +105,6 @@ class GameSettings extends React.Component {
         let newState = {
           mode: this.props.gameSettings.mode,
           dateSelectionMode: (this.props.gameSettings.seasonNumber ? GameDateSelectionModes.SEASON : GameDateSelectionModes.DATE_RANGE),
-          endDate: this.props.gameSettings.endDate,
         };
         if (this.props.gameSettings.seasonNumber) {
           newState.selectedSeason = this.props.gameSettings.seasonNumber;
@@ -105,6 +116,11 @@ class GameSettings extends React.Component {
           newState.endDate = this.props.gameSettings.endDate;
         }
         this.setState(newState);
+      } else if (this.props.gameSettings.mode === GameSettingModes.CATEGORY) {
+        this.setState({
+          mode: this.props.gameSettings.mode,
+          selectedCategories: this.props.gameSettings.categories || [],
+        });
       } else {
         this.setState({
           mode: this.props.gameSettings.mode,
@@ -127,6 +143,17 @@ class GameSettings extends React.Component {
       });
       this.onSeasonNumberChanged(season.seasonNumber);
     }
+
+    if (prevProps.seasonSummaries !== this.props.seasonSummaries) {
+      const season = this.props.seasonSummaries[this.props.seasonSummaries.length - 1];
+      this.setState({
+        maxDate: parseISODateString(season.seasonEndDate),
+      });
+    }
+  }
+
+  playerIsHost() {
+    return (this.props.playerID === this.props.room?.hostPlayerID);
   }
 
   updateGameSettings(mode, newSettings) {
@@ -140,13 +167,18 @@ class GameSettings extends React.Component {
         seasonNumber = (newSettings.hasOwnProperty('seasonNumber') ? newSettings.seasonNumber : this.state.selectedSeason);
       }
       settings = Settings.byDateMode(this.props.roomID, seasonNumber, startDate, endDate);
+    } else if (mode === GameSettingModes.CATEGORY) {
+      const categories = (newSettings.hasOwnProperty('categories') ? newSettings.categories : this.state.selectedCategories);
+      settings = Settings.byCategories(this.props.roomID, categories);
     } else {
       const numRounds = (newSettings.hasOwnProperty('numRounds') ? newSettings.numRounds : this.state.numRounds);
       const dailyDoubles = (newSettings.hasOwnProperty('dailyDoubles') ? newSettings.dailyDoubles : this.state.dailyDoubles);
       const finalJeopardye = (newSettings.hasOwnProperty('finalJeopardye') ? newSettings.finalJeopardye : this.state.finalJeopardye);
       settings = Settings.randomMode(this.props.roomID, numRounds, dailyDoubles, finalJeopardye);
     }
-    this.props.updateGameSettings(settings);
+    if (this.playerIsHost()) {
+      this.props.updateGameSettings(settings);
+    }
   }
 
   onModeChanged(tabIndex) {
@@ -216,12 +248,40 @@ class GameSettings extends React.Component {
     this.updateGameSettings(this.state.mode, newState);
   }
 
+  onCategorySelected(params) {
+    if (!this.playerIsHost()) {
+      return;
+    }
+    const categoryID = params.item.value;
+    if (this.state.selectedCategories.length < CATEGORIES_PER_ROUND && !this.state.selectedCategories.map(category => category.categoryID).includes(categoryID)) {
+      let category = this.props.categorySearchResults.categories?.find(category => category.categoryID === categoryID);
+      if (!category) {
+        category = {categoryID: categoryID, name: params.item.label};
+      }
+      const newCategories = [...this.state.selectedCategories, category];
+      this.setState({selectedCategories: newCategories});
+      this.updateGameSettings(this.state.mode, {categories: newCategories});
+    }
+  }
+
+  onCategoryRemoved(categoryID) {
+    const index = this.state.selectedCategories.findIndex(category => category.categoryID === categoryID);
+    if (index !== -1) {
+      const newCategories = this.state.selectedCategories.filter((_, i) => i !== index);
+      this.setState({selectedCategories: newCategories});
+      this.updateGameSettings(this.state.mode, {categories: newCategories});
+    }
+  }
+
   createNewGame() {
     const playerIDs = Object.keys(this.props.players);
     let gameSettings;
     if (this.state.mode === GameSettingModes.BY_DATE) {
       const seasonNumber = (this.state.dateSelectionMode === GameDateSelectionModes.SEASON ? this.state.selectedSeason : null);
       gameSettings = Settings.byDateMode(this.props.roomID, seasonNumber, this.state.startDate, this.state.endDate, playerIDs);
+    } else if (this.state.mode === GameSettingModes.CATEGORY) {
+      const categoryIDs = this.state.selectedCategories.map(category => category.categoryID);
+      gameSettings = Settings.byCategories(this.props.roomID, categoryIDs, playerIDs);
     } else {
       gameSettings = Settings.randomMode(this.props.roomID, this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye, playerIDs);
     }
@@ -239,8 +299,10 @@ class GameSettings extends React.Component {
         </Card>
       );
     }
-    const disabled = (this.props.playerID !== this.props.room?.hostPlayerID);
-    const startGameDisabled = (disabled || Object.keys(this.props.players).length === 0);
+    const disabled = !this.playerIsHost();
+    const tabClassName = (disabled ? 'hover-not-allowed' : '');
+    const startGameDisabled = (disabled || Object.keys(this.props.players).length === 0 ||
+      (this.state.mode === GameSettingModes.CATEGORY && this.state.selectedCategories.length < CATEGORIES_PER_ROUND));
     const hostName = (this.props.room ? getPlayerName(this.props.room.hostPlayerID) : 'host');
     return (
       <Card className="game-settings" px={8} py={6}>
@@ -248,8 +310,15 @@ class GameSettings extends React.Component {
         <Tabs isFitted isLazy index={Object.values(GameSettingModes).findIndex(mode => mode === this.state.mode)}
               onChange={this.onModeChanged} variant="enclosed">
           <TabList>
-            <Tab fontSize="xl" isDisabled={disabled}>By Date</Tab>
-            <Tab fontSize="xl" isDisabled={disabled}>Random</Tab>
+            <Tab className={tabClassName} fontSize="xl" isDisabled={disabled}>
+              By Date
+              <Badge colorScheme="green" ml={4} userSelect="none">New!</Badge>
+            </Tab>
+            <Tab className={tabClassName} fontSize="xl" isDisabled={disabled}>
+              By Category
+              <Badge colorScheme="green" ml={4} userSelect="none">New!</Badge>
+            </Tab>
+            <Tab className={tabClassName} fontSize="xl" isDisabled={disabled}>Random</Tab>
           </TabList>
 
           <TabPanels>
@@ -260,6 +329,12 @@ class GameSettings extends React.Component {
                                   mode={this.state.dateSelectionMode} onModeChanged={this.onDateSelectionModeChanged}
                                   seasonSummaries={this.props.seasonSummaries} selectedSeason={this.state.selectedSeason}
                                   onSeasonChanged={this.onSeasonChanged} />
+            </TabPanel>
+            <TabPanel>
+              <ByCategoryGameSettings disabled={disabled} categoryStats={this.props.categoryStats}
+                                      searchCategorySummaries={this.props.searchCategorySummaries}
+                                      searchResults={this.props.categorySearchResults} selectedCategories={this.state.selectedCategories}
+                                      onCategorySelected={this.onCategorySelected} onCategoryRemoved={this.onCategoryRemoved} />
             </TabPanel>
             <TabPanel>
               <RandomGameSettings disabled={disabled}
