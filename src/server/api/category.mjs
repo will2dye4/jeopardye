@@ -20,11 +20,11 @@ async function handleGetCategories(req, res, next) {
 async function handleSearchCategories(req, res, next) {
   const searchTerm = req.params.term;
   if (searchTerm.trim().length < MIN_CATEGORY_SEARCH_TERM_LENGTH) {
-    res.json({invalid: true});
+    res.json({searchTerm: searchTerm, invalid: true});
   } else {
     const categories = await getCategorySummariesForSearchTerm(searchTerm);
     if (categories.length > MAX_CATEGORY_SEARCH_RESULTS) {
-      res.json({invalid: true});
+      res.json({searchTerm: searchTerm, invalid: true});
     } else {
       res.json({
         searchTerm: searchTerm,
