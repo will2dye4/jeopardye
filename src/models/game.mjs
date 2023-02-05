@@ -3,6 +3,7 @@ import {
   CLUES_PER_CATEGORY,
   DAILY_DOUBLE_MULTIPLIERS,
   DailyDoubleSettings,
+  DEFAULT_ALLOW_UNREVEALED_CLUES,
   DEFAULT_DAILY_DOUBLE_SETTING,
   DEFAULT_FINAL_JEOPARDYE,
   DEFAULT_GAME_SETTINGS_MODE,
@@ -199,18 +200,18 @@ export class Game {
 
 export class GameSettings {
   static byDateMode(roomID, seasonNumber, startDate, endDate, playerIDs) {
-    return new GameSettings(roomID, GameSettingModes.BY_DATE, null, null, null, seasonNumber, startDate, endDate, null, playerIDs);
+    return new GameSettings(roomID, GameSettingModes.BY_DATE, null, null, null, null, seasonNumber, startDate, endDate, null, playerIDs);
   }
 
   static byCategories(roomID, categories, playerIDs) {
-    return new GameSettings(roomID, GameSettingModes.CATEGORY, null, null, null, null, null, null, categories, playerIDs);
+    return new GameSettings(roomID, GameSettingModes.CATEGORY, null, null, null, null, null, null, null, categories, playerIDs);
   }
 
-  static randomMode(roomID, numRounds, dailyDoubles, finalJeopardye, playerIDs) {
-    return new GameSettings(roomID, GameSettingModes.RANDOM, numRounds, dailyDoubles, finalJeopardye, null, null, null, null, playerIDs);
+  static randomMode(roomID, numRounds, dailyDoubles, finalJeopardye, allowUnrevealedClues, playerIDs) {
+    return new GameSettings(roomID, GameSettingModes.RANDOM, numRounds, dailyDoubles, finalJeopardye, allowUnrevealedClues, null, null, null, null, playerIDs);
   }
 
-  constructor(roomID, mode, numRounds, dailyDoubles, finalJeopardye, seasonNumber, startDate, endDate, categories, playerIDs, playerInControl) {
+  constructor(roomID, mode, numRounds, dailyDoubles, finalJeopardye, allowUnrevealedClues, seasonNumber, startDate, endDate, categories, playerIDs, playerInControl) {
     this.roomID = roomID;
     this.mode = mode || DEFAULT_GAME_SETTINGS_MODE;
     if (this.mode === GameSettingModes.BY_DATE) {
@@ -229,6 +230,7 @@ export class GameSettings {
       this.numRounds = numRounds || DEFAULT_NUM_ROUNDS;
       this.dailyDoubles = dailyDoubles || DEFAULT_DAILY_DOUBLE_SETTING;
       this.finalJeopardye = finalJeopardye ?? DEFAULT_FINAL_JEOPARDYE;
+      this.allowUnrevealedClues = allowUnrevealedClues ?? DEFAULT_ALLOW_UNREVEALED_CLUES;
     }
     this.playerIDs = playerIDs || [];
     this.playerInControl = playerInControl || null;

@@ -14,9 +14,10 @@ import {
 } from '@chakra-ui/react';
 import {
   CATEGORIES_PER_ROUND,
+  DEFAULT_GAME_SETTINGS_MODE,
   EARLIEST_EPISODE_DATE,
   GameDateSelectionModes,
-  GameSettingModes
+  GameSettingModes,
 } from '../../../../constants.mjs';
 import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { parseISODateString } from '../../../../utils.mjs';
@@ -63,7 +64,7 @@ class GameSettings extends React.Component {
     }
 
     this.state = {
-      mode: props.gameSettings.mode || GameSettingModes.BY_DATE,
+      mode: props.gameSettings.mode || DEFAULT_GAME_SETTINGS_MODE,
 
       dateSelectionMode: GameDateSelectionModes.SEASON,
       maxDate: (season ? parseISODateString(season.seasonEndDate) : EARLIEST_EPISODE_DATE),
@@ -75,6 +76,7 @@ class GameSettings extends React.Component {
 
       selectedCategories: [],
 
+      allowUnrevealedClues: props.gameSettings.allowUnrevealedClues,
       dailyDoubles: props.gameSettings.dailyDoubles,
       finalJeopardye: false, /* TODO - revert once Final Jeopardye is implemented: props.gameSettings.finalJeopardye, */
       numRounds: props.gameSettings.numRounds,
@@ -82,6 +84,7 @@ class GameSettings extends React.Component {
 
     this.createNewGame = this.createNewGame.bind(this);
     this.onModeChanged = this.onModeChanged.bind(this);
+    this.onAllowUnrevealedCluesChanged = this.onAllowUnrevealedCluesChanged.bind(this);
     this.onDailyDoublesChanged = this.onDailyDoublesChanged.bind(this);
     this.onFinalJeopardyeChanged = this.onFinalJeopardyeChanged.bind(this);
     this.onNumRoundsChanged = this.onNumRoundsChanged.bind(this);
@@ -124,6 +127,7 @@ class GameSettings extends React.Component {
       } else {
         this.setState({
           mode: this.props.gameSettings.mode,
+          allowUnrevealedClues: this.props.gameSettings.allowUnrevealedClues,
           dailyDoubles: this.props.gameSettings.dailyDoubles,
           finalJeopardye: this.props.gameSettings.finalJeopardye,
           numRounds: this.props.gameSettings.numRounds,
@@ -157,6 +161,9 @@ class GameSettings extends React.Component {
   }
 
   updateGameSettings(mode, newSettings) {
+    if (!this.playerIsHost()) {
+      return;
+    }
     let settings;
     if (mode === GameSettingModes.BY_DATE) {
       const dateSelectionMode = (newSettings.hasOwnProperty('mode') ? newSettings.mode : this.state.dateSelectionMode);
@@ -174,11 +181,10 @@ class GameSettings extends React.Component {
       const numRounds = (newSettings.hasOwnProperty('numRounds') ? newSettings.numRounds : this.state.numRounds);
       const dailyDoubles = (newSettings.hasOwnProperty('dailyDoubles') ? newSettings.dailyDoubles : this.state.dailyDoubles);
       const finalJeopardye = (newSettings.hasOwnProperty('finalJeopardye') ? newSettings.finalJeopardye : this.state.finalJeopardye);
-      settings = Settings.randomMode(this.props.roomID, numRounds, dailyDoubles, finalJeopardye);
+      const allowUnrevealedClues = (newSettings.hasOwnProperty('allowUnrevealedClues') ? newSettings.allowUnrevealedClues : this.state.allowUnrevealedClues);
+      settings = Settings.randomMode(this.props.roomID, numRounds, dailyDoubles, finalJeopardye, allowUnrevealedClues);
     }
-    if (this.playerIsHost()) {
-      this.props.updateGameSettings(settings);
-    }
+    this.props.updateGameSettings(settings);
   }
 
   onModeChanged(tabIndex) {
@@ -201,6 +207,13 @@ class GameSettings extends React.Component {
     this.setState(newState);
     this.updateGameSettings(this.state.mode, newState);
     */
+  }
+
+  onAllowUnrevealedCluesChanged() {
+    const allowUnrevealedClues = !this.state.allowUnrevealedClues;
+    const newState = {allowUnrevealedClues: allowUnrevealedClues};
+    this.setState(newState);
+    this.updateGameSettings(this.state.mode, newState);
   }
 
   onNumRoundsChanged(event) {
@@ -283,7 +296,8 @@ class GameSettings extends React.Component {
       const categoryIDs = this.state.selectedCategories.map(category => category.categoryID);
       gameSettings = Settings.byCategories(this.props.roomID, categoryIDs, playerIDs);
     } else {
-      gameSettings = Settings.randomMode(this.props.roomID, this.state.numRounds, this.state.dailyDoubles, this.state.finalJeopardye, playerIDs);
+      gameSettings = Settings.randomMode(this.props.roomID, this.state.numRounds, this.state.dailyDoubles,
+                                         this.state.finalJeopardye, this.state.allowUnrevealedClues, playerIDs);
     }
     this.props.fetchNewGame(gameSettings);
   }
@@ -338,6 +352,7 @@ class GameSettings extends React.Component {
             </TabPanel>
             <TabPanel>
               <RandomGameSettings disabled={disabled}
+                                  allowUnrevealedClues={this.state.allowUnrevealedClues} onAllowUnrevealedCluesChanged={this.onAllowUnrevealedCluesChanged}
                                   dailyDoubles={this.state.dailyDoubles} onDailyDoublesChanged={this.onDailyDoublesChanged}
                                   finalJeopardye={this.state.finalJeopardye} onFinalJeopardyeChanged={this.onFinalJeopardyeChanged}
                                   numRounds={this.state.numRounds} onNumRoundsChanged={this.onNumRoundsChanged} />

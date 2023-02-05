@@ -4,6 +4,7 @@ import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
   DailyDoubleSettings,
+  DEFAULT_ALLOW_UNREVEALED_CLUES,
   DEFAULT_DAILY_DOUBLE_SETTING,
   DEFAULT_FINAL_JEOPARDYE,
   DEFAULT_NUM_ROUNDS,
@@ -11,6 +12,7 @@ import {
   GameSettingModes,
   MAX_NUM_ROUNDS,
   MIN_NUM_ROUNDS,
+  MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH,
   MAX_PLAYERS_PER_GAME,
   Rounds,
   StatusCodes,
@@ -27,6 +29,7 @@ import {
   getHighestSeasonNumber,
   getLatestEpisodeAirDate,
   getPlayers,
+  getRandomCategoryIDs,
   getRoom,
   incrementPlayerStat,
   setCurrentGameForRoom,
@@ -77,6 +80,16 @@ async function createRound(round, dailyDoubles = DailyDoubleSettings.NORMAL) {
   return new Round(roundCategories, round, dailyDoubles);
 }
 
+async function createRandomRound(roundName, dailyDoubles = DailyDoubleSettings.NORMAL, allowUnrevealedClues = DEFAULT_ALLOW_UNREVEALED_CLUES) {
+  const numCategories = (roundName === Rounds.FINAL ? 1 : CATEGORIES_PER_ROUND);
+  let round = null;
+  while (!round) {
+    const categoryIDs = await getRandomCategoryIDs(numCategories, allowUnrevealedClues);
+    round = await createRoundFromCategoryIDs(categoryIDs, roundName, dailyDoubles);
+  }
+  return round;
+}
+
 async function createRoundFromCategoryIDs(categoryIDs, round, dailyDoubles) {
   if (!categoryIDs) {
     return null;
@@ -90,6 +103,11 @@ async function createRoundFromCategoryIDs(categoryIDs, round, dailyDoubles) {
     }
 
     const episodes = await getEpisodeCluesByCategoryID(categoryID, true);
+    if (episodes.filter(e => e.clues.filter(c => !c.isFinalJeopardy && !c.unrevealed).length >= MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH).length === 0) {
+      // If category doesn't have any episodes with enough clues for a round, bail out.
+      return null;
+    }
+
     let episode = null;
     if (episodes.length === 1) {
       episode = episodes[0];
@@ -144,7 +162,7 @@ async function handleCreateGame(req, res, next) {
     }
   }
 
-  let numRounds, dailyDoubles, finalJeopardye, categoryIDs, seasonNumber, startDate, endDate;
+  let numRounds, dailyDoubles, finalJeopardye, allowUnrevealedClues, categoryIDs, seasonNumber, startDate, endDate;
   if (mode === GameSettingModes.BY_DATE) {
     if (req.body.hasOwnProperty('seasonNumber')) {
       const maxSeasonNumber = await getHighestSeasonNumber();
@@ -210,6 +228,14 @@ async function handleCreateGame(req, res, next) {
         return;
       }
     }
+    allowUnrevealedClues = DEFAULT_ALLOW_UNREVEALED_CLUES;
+    if (req.body.hasOwnProperty('allowUnrevealedClues')) {
+      allowUnrevealedClues = req.body.allowUnrevealedClues;
+      if (typeof finalJeopardye !== 'boolean') {
+        handleError(`Invalid unrevealed clues setting "${allowUnrevealedClues}"`, StatusCodes.BAD_REQUEST);
+        return;
+      }
+    }
   }
 
   let playerIDs = [];
@@ -263,21 +289,20 @@ async function handleCreateGame(req, res, next) {
     }
     game = new Game(roomID, {[Rounds.SINGLE]: round}, playerIDs, playerInControl);
   } else {  // random mode
-    // TODO - build the game from the DB
     let rounds = {};
     for (const i of range(numRounds)) {
-      const round = Object.values(Rounds)[i];
-      try {
-        rounds[round] = await createRound(round, dailyDoubles);
-      } catch (e) {
-        handleError(`Failed to fetch ${round} round categories from JService: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
+      const roundName = Object.values(Rounds)[i];
+      const round = await createRandomRound(roundName, dailyDoubles, allowUnrevealedClues);
+      if (!round) {
+        handleError(`Failed to create ${roundName} round`, StatusCodes.INTERNAL_SERVER_ERROR);
         return;
       }
+      rounds[roundName] = round;
     }
     if (finalJeopardye) {
       const round = Rounds.FINAL;
       try {
-        rounds[round] = await createRound(round);
+        rounds[round] = await createRandomRound(round);
       } catch (e) {
         handleError(`Failed to fetch ${round} round categories from JService: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
         return;

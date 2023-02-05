@@ -22,6 +22,10 @@ function RandomGameSettings(props) {
         <RadioToggleGroup name="daily-doubles" currentValue={props.dailyDoubles} onChange={props.onDailyDoublesChanged}
                           options={DAILY_DOUBLE_OPTIONS} disabled={props.disabled} />
       </GameSetting>
+      <GameSetting label="Allow Unrevealed Clues">
+        <ToggleSwitch name="allow-unrevealed-clues" checked={props.allowUnrevealedClues} disabled={props.disabled}
+                      onChange={props.onAllowUnrevealedCluesChanged} />
+      </GameSetting>
       <GameSetting label="Final Jeopardye">
         <ToggleSwitch name="final-jeopardye" checked={props.finalJeopardye} disabled={props.disabled}
                       onChange={props.onFinalJeopardyeChanged} />

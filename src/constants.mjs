@@ -95,7 +95,7 @@ export const GameSettingModes = {
   RANDOM: 'random',
 };
 
-export const DEFAULT_GAME_SETTINGS_MODE = GameSettingModes.RANDOM;
+export const DEFAULT_GAME_SETTINGS_MODE = GameSettingModes.BY_DATE;
 
 export const GameDateSelectionModes = {
   DATE_RANGE: 'date',
@@ -132,6 +132,10 @@ export const DAILY_DOUBLE_MULTIPLIERS = {
 };
 
 export const DEFAULT_FINAL_JEOPARDYE = true;
+
+export const DEFAULT_ALLOW_UNREVEALED_CLUES = true;
+
+export const MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH = 3;
 
 export const MIN_PLAYER_NAME_LENGTH = 1;
 export const MAX_PLAYER_NAME_LENGTH = 10;

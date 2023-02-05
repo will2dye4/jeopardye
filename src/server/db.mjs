@@ -3,13 +3,17 @@ const { MongoClient } = mongodb;
 
 import uuid from 'uuid';
 import config from '../config.json' assert { type: 'json' };
-import { DEFAULT_HIGHEST_SEASON_NUMBER, ROOM_CODE_CHARACTERS, ROOM_CODE_LENGTH } from '../constants.mjs';
+import {
+  DEFAULT_ALLOW_UNREVEALED_CLUES,
+  DEFAULT_HIGHEST_SEASON_NUMBER,
+  MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH,
+  ROOM_CODE_CHARACTERS,
+  ROOM_CODE_LENGTH,
+} from '../constants.mjs';
 import { RoomLinkRequestResolution } from '../models/roomLinkRequest.mjs';
 import { randomChoice, range } from '../utils.mjs';
 
 export const PAGE_SIZE = 10;
-
-const MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH = 3;
 
 const DEFAULT_INSERT_OPTIONS = {
   writeConcern: {
@@ -513,6 +517,28 @@ export async function getCategorySummariesForSearchTerm(searchTerm) {
     {$project: {_id: 0, categoryID: 1, name: 1, episodeCount: 1, revealedClueCount: 1}},
   ]);
   return await cursor.toArray();
+}
+
+export async function getRandomCategoryIDs(count, allowUnrevealedClues = DEFAULT_ALLOW_UNREVEALED_CLUES) {
+  let pipeline;
+  if (allowUnrevealedClues) {
+    pipeline = [
+      {$addFields: {clueCount: {$size: '$clueIDs'}, episodeCount: {$size: '$episodeIDs'}}},
+      {$addFields: {revealedClueCount: {$subtract: ['$clueCount', '$unrevealedClueCount']}}},
+      {$match: {revealedClueCount: {$gte: MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH}}},
+    ];
+  } else {
+    pipeline = [
+      {$match: {unrevealedClueCount: 0}},
+    ];
+  }
+  pipeline.push(
+    {$sample: {size: count}},
+    {$project: {_id: 0, categoryID: 1}},
+  );
+  const cursor = await categoriesCollection.aggregate(pipeline);
+  const results = await cursor.toArray();
+  return results.map(result => result.categoryID);
 }
 
 export async function getCategoryByID(categoryID) {
