@@ -18,6 +18,7 @@ import {
   EARLIEST_EPISODE_DATE,
   GameDateSelectionModes,
   GameSettingModes,
+  SELECTED_TAB_STYLES,
 } from '../../../../constants.mjs';
 import { GameSettings as Settings } from '../../../../models/game.mjs';
 import { parseISODateString } from '../../../../utils.mjs';
@@ -98,8 +99,12 @@ class GameSettings extends React.Component {
   }
 
   componentDidMount() {
-    this.props.fetchCategoryStats();
-    this.props.fetchSeasonSummaries();
+    if (!this.props.categoryStats) {
+      this.props.fetchCategoryStats();
+    }
+    if (!this.props.seasonSummaries) {
+      this.props.fetchSeasonSummaries();
+    }
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -313,22 +318,19 @@ class GameSettings extends React.Component {
         </Card>
       );
     }
+
     const disabled = !this.playerIsHost();
     const tabClassName = (disabled ? 'hover-not-allowed' : '');
-    const selectedTabStyles = {
-      borderBottom: 'none',
-      borderLeftColor: 'jeopardyeBlue.500',
-      borderRightColor: 'jeopardyeBlue.500',
-      borderTopColor: 'jeopardyeBlue.500',
-    };
     const SettingTab = (props) => (
-      <Tab className={tabClassName} fontSize="xl" isDisabled={disabled} borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={selectedTabStyles}>
+      <Tab className={tabClassName} fontSize="xl" isDisabled={disabled} borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={SELECTED_TAB_STYLES}>
         {props.children}
       </Tab>
     );
+
     const startGameDisabled = (disabled || Object.keys(this.props.players).length === 0 ||
       (this.state.mode === GameSettingModes.CATEGORY && this.state.selectedCategories.length < CATEGORIES_PER_ROUND));
     const hostName = (this.props.room ? getPlayerName(this.props.room.hostPlayerID) : 'host');
+
     return (
       <Card className="game-settings" px={8} py={6}>
         <Heading mb={8} textAlign="center">Game Settings</Heading>

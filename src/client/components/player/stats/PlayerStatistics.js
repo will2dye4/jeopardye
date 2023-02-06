@@ -12,7 +12,7 @@ import {
   TabPanels,
   Tabs,
 } from '@chakra-ui/react';
-import { LeaderboardKeys } from '../../../../constants.mjs';
+import { LeaderboardKeys, SELECTED_TAB_STYLES } from '../../../../constants.mjs';
 import Card from '../../common/card/Card';
 import Leaderboards from './Leaderboards';
 import StatisticsByPlayer from './StatisticsByPlayer';
@@ -62,12 +62,6 @@ class PlayerStatistics extends React.Component {
     }
 
     const selectRef = React.createRef();
-    const selectedTabStyles = {
-      borderBottom: 'none',
-      borderLeftColor: 'jeopardyeBlue.500',
-      borderRightColor: 'jeopardyeBlue.500',
-      borderTopColor: 'jeopardyeBlue.500',
-    };
 
     return (
       <Modal initialFocusRef={selectRef} isOpen={true} onClose={this.props.modals.playerStats.close} size="5xl">
@@ -79,8 +73,8 @@ class PlayerStatistics extends React.Component {
               <Heading mb={8}>Player Statistics</Heading>
               <Tabs isFitted isLazy variant="enclosed">
                 <TabList border="none">
-                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={selectedTabStyles}>Players</Tab>
-                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={selectedTabStyles}>Leaderboards</Tab>
+                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={SELECTED_TAB_STYLES}>Players</Tab>
+                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={SELECTED_TAB_STYLES}>Leaderboards</Tab>
                 </TabList>
 
                 <TabPanels>

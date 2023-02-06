@@ -12,6 +12,7 @@ import {
   TabPanel,
   TabPanels,
 } from '@chakra-ui/react';
+import { SELECTED_TAB_STYLES } from '../../../constants.mjs';
 import { RoomLinkRequestResolution } from '../../../models/roomLinkRequest.mjs';
 import Card from '../common/card/Card';
 import Players from './Players';
@@ -64,10 +65,10 @@ class AdminDashboard extends React.Component {
             <Card className="game-settings" px={10} py={6} textAlign="center">
               <Heading mb={8}>Admin Dashboard</Heading>
               <Tabs isFitted isLazy variant="enclosed">
-                <TabList>
-                  <Tab fontSize="xl">Room Link Requests</Tab>
-                  <Tab fontSize="xl">Rooms</Tab>
-                  <Tab fontSize="xl">Players</Tab>
+                <TabList border="none">
+                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={SELECTED_TAB_STYLES}>Room Link Requests</Tab>
+                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={SELECTED_TAB_STYLES}>Rooms</Tab>
+                  <Tab fontSize="xl" borderBottomColor="jeopardyeBlue.500" borderWidth={2} _selected={SELECTED_TAB_STYLES}>Players</Tab>
                 </TabList>
 
                 <TabPanels>

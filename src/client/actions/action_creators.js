@@ -27,6 +27,7 @@ export const ActionTypes = {
   FETCH_CATEGORY_STATS: 'JEOPARDYE::FETCH_CATEGORY_STATS',
   SEARCH_CATEGORY_SUMMARIES: 'JEOPARDYE::SEARCH_CATEGORY_SUMMARIES',
   FETCH_SEASON_SUMMARIES: 'JEOPARDYE::FETCH_SEASON_SUMMARIES',
+  FETCH_SEASON_EPISODES: 'JEOPARDYE::FETCH_SEASON_EPISODES',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -269,6 +270,14 @@ function getSeasonSummaries() {
   );
 }
 
+function getEpisodesForSeason(seasonNumber) {
+  return fetch(`${SEASON_URL}/${seasonNumber}`).then(response =>
+    getJSON(response, `Error occurred while fetching episodes for season ${seasonNumber}.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching episodes for season ${seasonNumber}.`)
+  );
+}
+
 export function fetchRooms(page = 1) {
   return {
     type: ActionTypes.FETCH_ROOMS,
@@ -405,6 +414,13 @@ export function fetchSeasonSummaries() {
   return {
     type: ActionTypes.FETCH_SEASON_SUMMARIES,
     payload: getSeasonSummaries(),
+  };
+}
+
+export function fetchEpisodesForSeason(seasonNumber) {
+  return {
+    type: ActionTypes.FETCH_SEASON_EPISODES,
+    payload: getEpisodesForSeason(seasonNumber),
   };
 }
 

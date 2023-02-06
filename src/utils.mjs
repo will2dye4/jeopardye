@@ -156,6 +156,10 @@ export function formatList(items) {
   return result;
 }
 
+export function getURLForContestant(contestantID) {
+  return `https://j-archive.com/showplayer.php?player_id=${contestantID}`;
+}
+
 export function getISODateString(date) {
   return date.toISOString().substring(0, 10);
 }

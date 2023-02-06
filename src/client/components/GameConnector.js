@@ -19,6 +19,7 @@ import {
   dismissActiveClue,
   fetchCategoryStats,
   fetchCurrentPlayer,
+  fetchEpisodesForSeason,
   fetchGame,
   fetchNewGame,
   fetchPlayer,
@@ -55,6 +56,7 @@ import JEOPARDYE_THEME from '../theme';
 import AdminDashboard from './admin/AdminDashboard';
 import KickPlayerDialog from './common/players/KickPlayerDialog';
 import Home from './home/Home';
+import EpisodeBrowser from './episode/EpisodeBrowser';
 import PlayerEditor from './player/PlayerEditor';
 import PlayerStatistics from './player/stats/PlayerStatistics';
 import Room from './Room';
@@ -97,6 +99,7 @@ const actionCreators = {
   dismissActiveClue,
   fetchCategoryStats,
   fetchCurrentPlayer,
+  fetchEpisodesForSeason,
   fetchGame,
   fetchNewGame,
   fetchPlayer,
@@ -137,15 +140,18 @@ class Connector extends React.Component {
       kickPlayerID: null,
       onPlayerEditorClose: null,
       showAdminDashboard: false,
+      showEpisodeBrowser: false,
       showKickPlayerDialog: false,
       showPlayerEditor: false,
       showPlayerStats: false,
     };
     this.closeAdminDashboard = this.closeAdminDashboard.bind(this);
+    this.closeEpisodeBrowser = this.closeEpisodeBrowser.bind(this);
     this.closeKickPlayerDialog = this.closeKickPlayerDialog.bind(this);
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
     this.closePlayerStats = this.closePlayerStats.bind(this);
     this.openAdminDashboard = this.openAdminDashboard.bind(this);
+    this.openEpisodeBrowser = this.openEpisodeBrowser.bind(this);
     this.openKickPlayerDialog = this.openKickPlayerDialog.bind(this);
     this.openPlayerEditor = this.openPlayerEditor.bind(this);
     this.openPlayerStats = this.openPlayerStats.bind(this);
@@ -291,6 +297,10 @@ class Connector extends React.Component {
     this.setState({showAdminDashboard: true});
   }
 
+  openEpisodeBrowser() {
+    this.setState({showEpisodeBrowser: true});
+  }
+
   openKickPlayerDialog(playerID) {
     this.setState({kickPlayerID: playerID, showKickPlayerDialog: true});
   }
@@ -308,6 +318,10 @@ class Connector extends React.Component {
 
   closeAdminDashboard() {
     this.setState({showAdminDashboard: false});
+  }
+
+  closeEpisodeBrowser() {
+    this.setState({showEpisodeBrowser: false});
   }
 
   closeKickPlayerDialog() {
@@ -339,6 +353,10 @@ class Connector extends React.Component {
         open: this.openAdminDashboard,
         close: this.closeAdminDashboard,
       },
+      episodeBrowser: {
+        open: this.openEpisodeBrowser,
+        close: this.closeEpisodeBrowser,
+      },
       kickPlayerDialog: {
         open: this.openKickPlayerDialog,
         close: this.closeKickPlayerDialog,
@@ -367,6 +385,7 @@ class Connector extends React.Component {
           </Switch>
         </Router>
         {this.state.showAdminDashboard && <AdminDashboard modals={modals} {...this.props} />}
+        {this.state.showEpisodeBrowser && <EpisodeBrowser modals={modals} {...this.props} />}
         {this.state.showKickPlayerDialog && <KickPlayerDialog player={this.getPlayer(this.state.kickPlayerID)}
                                                               roomID={this.props.roomID}
                                                               modals={modals}

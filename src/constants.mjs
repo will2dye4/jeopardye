@@ -180,6 +180,15 @@ export const DEFAULT_HIGHEST_SEASON_NUMBER = 39;
 export const DAY_OF_WEEK_SATURDAY = 6;
 export const DAY_OF_WEEK_SUNDAY = 0;
 
+export const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+
+export const SELECTED_TAB_STYLES = {
+  borderBottom: 'none',
+  borderLeftColor: 'jeopardyeBlue.500',
+  borderRightColor: 'jeopardyeBlue.500',
+  borderTopColor: 'jeopardyeBlue.500',
+};
+
 export const EventTypes = {
   ERROR: 'error',
   /* game events */

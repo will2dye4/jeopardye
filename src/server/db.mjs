@@ -446,6 +446,16 @@ export async function getEpisodeByFilter(filter) {
   return episodes.pop();
 }
 
+export async function getEpisodeSummariesBySeasonNumber(seasonNumber) {
+  const cursor = await episodesCollection.aggregate([
+    {$match: {seasonNumber: seasonNumber}},
+    {$lookup: {from: 'contestants', localField: 'metadata.contestantIDs', foreignField: 'contestantID', as: 'metadata.contestants'}},
+    {$sort: {episodeNumber: 1}},
+    {$project: {_id: 0, rounds: 0, metadata: {contestantIDs: 0, contestants: {_id: 0, episodeIDs: 0}}}},
+  ]);
+  return await cursor.toArray();
+}
+
 export async function getCategoryCluesByEpisodeID(episodeID) {
   let categoriesCursor = await cluesCollection.aggregate([
     {$match: {episodeID: episodeID}},

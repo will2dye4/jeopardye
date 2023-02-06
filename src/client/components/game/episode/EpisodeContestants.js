@@ -8,7 +8,7 @@ import {
   Spacer,
   Text,
 } from '@chakra-ui/react';
-import { formatScore } from '../../../../utils.mjs';
+import { formatScore, getURLForContestant } from '../../../../utils.mjs';
 import Bold from '../../common/Bold';
 
 function EpisodeContestants(props) {
@@ -20,7 +20,7 @@ function EpisodeContestants(props) {
           {props.contestants.map((contestant, i) => {
             let text;
             if (contestant.name) {
-              const href = `https://j-archive.com/showplayer.php?player_id=${contestant.contestantID}`;
+              const href = getURLForContestant(contestant.contestantID);
               text = (
                 <React.Fragment>
                   <Bold><Link color="jeopardyeBlue.500" href={href} isExternal>{contestant.name}</Link></Bold>,
