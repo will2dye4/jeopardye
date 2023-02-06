@@ -7,9 +7,8 @@ import {
   AccordionPanel,
   Box,
   Center,
-  Flex,
   Heading,
-  Spacer,
+  SimpleGrid,
   Text,
 } from '@chakra-ui/react';
 import { formatScore } from '../../../../utils.mjs';
@@ -21,12 +20,12 @@ function EpisodeScores(props) {
       <AccordionItem>
         <AccordionButton display="block" px={2} py={0}>
           <Heading size="xl">Final Scores</Heading>
-          <AccordionIcon position="relative" top="-33px" left="14%" />
+          <AccordionIcon position="relative" top="-33px" left="14%"/>
         </AccordionButton>
         <AccordionPanel p={0}>
           <Center>
-            <Flex direction="row" my={6} w="100%">
-              {props.contestants.map((contestant, i) => {
+            <SimpleGrid columns={3} spacing={10} my={6} w="100%">
+              {props.contestants.map(contestant => {
                 const score = props.scores[contestant.contestantID.toString()];
                 let text;
                 if (score) {
@@ -40,15 +39,13 @@ function EpisodeScores(props) {
                   text = (<Text>Missing Final Scores</Text>);
                 }
                 return (
-                  <React.Fragment>
-                    <Box borderColor="jeopardyeBlue.500" borderRadius={10} borderWidth={3} key={contestant.contestantID} w="30%" p={3}>
-                      {text}
-                    </Box>
-                    {i !== props.contestants.length - 1 && <Spacer />}
-                  </React.Fragment>
+                  <Box borderColor="jeopardyeBlue.500" borderRadius={10} borderWidth={3} key={contestant.contestantID}
+                       p={3}>
+                    {text}
+                  </Box>
                 );
               })}
-            </Flex>
+            </SimpleGrid>
           </Center>
         </AccordionPanel>
       </AccordionItem>

@@ -1,7 +1,9 @@
 import React from 'react';
 import {
   Badge,
+  Box,
   Center,
+  Flex,
   Heading,
   Link,
   Modal,
@@ -10,6 +12,7 @@ import {
   ModalContent,
   ModalOverlay,
   Select,
+  Spacer,
   Table,
   Tbody,
   Td,
@@ -18,7 +21,7 @@ import {
   Thead,
   Tr,
 } from '@chakra-ui/react';
-import { faCrown } from '@fortawesome/free-solid-svg-icons';
+import { faClipboardQuestion, faCrown, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { MILLISECONDS_PER_DAY, SORT_ARROW_ASCENDING, SORT_ARROW_DESCENDING } from '../../../constants.mjs';
 import { formatDate, formatWeekday, getURLForContestant, range } from '../../../utils.mjs';
 import Bold from '../common/Bold';
@@ -26,6 +29,8 @@ import Card from '../common/card/Card';
 import Icon from '../common/Icon';
 
 const BADGE_COLORS = ['blackAlpha', 'blue', 'cyan', 'green', 'pink', 'purple', 'orange', 'red', 'teal', 'yellow'];
+
+const PLAYING_ROUND_PATTERN = /Playing the ((Double|Final) )?Jeopardy! Round:/gi;
 
 function getColorForName(name, colors = BADGE_COLORS) {
   let hash = 0;
@@ -111,16 +116,37 @@ class EpisodeBrowser extends React.Component {
         });
         return (
           <Tr key={episode.episodeNumber} fontSize="lg">
-            <Td whiteSpace="nowrap" title={`Episode #${episode.episodeNumber}`}>
-              <Text fontSize="md">{formatWeekday(episode.airDate)},</Text>
-              <Text>{formatDate(episode.airDate)}</Text>
+            <Td whiteSpace="nowrap">
+              <Flex direction="row" title={`Episode #${episode.episodeNumber}`}>
+                <Box>
+                  <Text fontSize="md">{formatWeekday(episode.airDate)},</Text>
+                  <Text>{formatDate(episode.airDate)}</Text>
+                </Box>
+                {(episode.hasInvalidRounds || episode.hasUnrevealedClues) && (
+                  <React.Fragment>
+                    <Spacer minW="20px" />
+                    <Center>
+                      <Icon id={`episode-icon-${episode.episodeNumber}`} clickable={false}
+                            color={episode.hasInvalidRounds ? 'orange' : 'inherit'}
+                            icon={episode.hasInvalidRounds ? faTriangleExclamation : faClipboardQuestion}
+                            title={episode.hasInvalidRounds ? 'This episode is missing one or more entire rounds.' : 'This episode has unrevealed clues.'} />
+                    </Center>
+                  </React.Fragment>
+                )}
+              </Flex>
             </Td>
             <Td wordBreak="break-word">{episode.metadata?.comments}</Td>
             <Td userSelect="none">
               {episode.metadata?.contestants?.map(contestant => {
                 const contestantID = contestant.contestantID;
-                const name = contestant.name || contestant.rawText;
-                const shortName = name.split(/\s+/)[0];
+                let name = contestant.name || contestant.rawText;
+                let shortName;
+                if (name.startsWith('Playing')) {
+                  shortName = name.replaceAll(PLAYING_ROUND_PATTERN, '').trim();
+                } else {
+                  shortName = name;
+                }
+                shortName = shortName.split(/\s+/)[0];
                 let color;
                 if (contestantColors.hasOwnProperty(contestantID)) {
                   color = contestantColors[contestantID];

@@ -2,10 +2,9 @@ import React from 'react';
 import {
   Box,
   Center,
-  Flex,
   Heading,
   Link,
-  Spacer,
+  SimpleGrid,
   Text,
 } from '@chakra-ui/react';
 import { formatScore, getURLForContestant } from '../../../../utils.mjs';
@@ -16,8 +15,8 @@ function EpisodeContestants(props) {
     <Box w="100%">
       <Heading mb={8} size="xl">Contestants</Heading>
       <Center>
-        <Flex direction="row" w="100%">
-          {props.contestants.map((contestant, i) => {
+        <SimpleGrid columns={3} spacing={10} mb={5} w="100%">
+          {props.contestants.map(contestant => {
             let text;
             if (contestant.name) {
               const href = getURLForContestant(contestant.contestantID);
@@ -28,10 +27,10 @@ function EpisodeContestants(props) {
                 </React.Fragment>
               );
             } else {
-              text = (<Text>contestant.rawText</Text>);
+              text = (<Text>{contestant.rawText}</Text>);
             }
             let previousStreak;
-            const score = props.scores[contestant.contestantID.toString()];
+            const score = (props.scores && props.scores[contestant.contestantID.toString()]);
             if (score && score.hasOwnProperty('previousStreak')) {
               previousStreak = (
                 <Box fontSize="md" mt={4}>
@@ -41,16 +40,14 @@ function EpisodeContestants(props) {
               );
             }
             return (
-              <React.Fragment>
-                <Box borderColor="jeopardyeBlue.500" borderRadius={10} borderWidth={3} key={contestant.contestantID} w="30%" p={3}>
-                  {text}
-                  {previousStreak}
-                </Box>
-                {i !== props.contestants.length - 1 && <Spacer />}
-              </React.Fragment>
+              <Box borderColor="jeopardyeBlue.500" borderRadius={10} borderWidth={3} p={3}
+                   key={contestant.contestantID || contestant.rawText}>
+                {text}
+                {previousStreak}
+              </Box>
             );
           })}
-        </Flex>
+        </SimpleGrid>
       </Center>
     </Box>
   );
