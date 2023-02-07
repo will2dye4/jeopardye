@@ -56,6 +56,7 @@ function newStoreData() {
     categoryStats: null,
     seasonSummaries: null,
     selectedSeasonEpisodes: null,
+    selectedEpisodeCategories: null,
   };
 }
 
@@ -683,13 +684,23 @@ export function GameReducer(storeData, action) {
     case ActionTypes.FETCH_SEASON_EPISODES:
       const episodes = action.payload;
       if (!episodes) {
-        console.log('Failed to fetch  season episodes.');
+        console.log('Failed to fetch season episodes.');
         return {...storeData, selectedSeasonEpisodes: null};
       }
       if (episodes.error) {
         return {...storeData, error: episodes.error};
       }
       return {...storeData, selectedSeasonEpisodes: episodes};
+    case ActionTypes.FETCH_EPISODE_CATEGORIES:
+      const categories = action.payload;
+      if (!categories) {
+        console.log('Failed to fetch episode categories.');
+        return {...storeData, selectedEpisodeCategories: null};
+      }
+      if (categories.error) {
+        return {...storeData, error: categories.error};
+      }
+      return {...storeData, selectedEpisodeCategories: categories};
     case ActionTypes.DISMISS_CLUE:
       return {
         ...storeData,

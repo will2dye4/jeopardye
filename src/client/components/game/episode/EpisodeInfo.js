@@ -9,19 +9,14 @@ import {
   ModalOverlay,
   Text,
 } from '@chakra-ui/react';
-import { formatDate, formatWeekday } from '../../../../utils.mjs';
+import { formatEpisodeTitle } from '../../../utils';
 import Card from '../../common/card/Card';
 import EpisodeContestants from './EpisodeContestants';
 import EpisodeScores from './EpisodeScores';
 
 function EpisodeInfo(props) {
   const metadata = props.gameState.episodeMetadata;
-  let title;
-  if (metadata.hasOwnProperty('title')) {
-    title = metadata.title;
-  } else {
-    title = `Show #${metadata.episodeNumber} - ${formatWeekday(metadata.airDate)}, ${formatDate(metadata.airDate, true)}`
-  }
+  const title = formatEpisodeTitle(metadata);
   return (
     <Modal isOpen={true} closeOnEsc={true} closeOnOverlayClick={true}
            onClose={props.modals.episodeInfo.close} size="5xl">

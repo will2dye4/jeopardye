@@ -27,6 +27,7 @@ import { formatDate, formatWeekday, getURLForContestant, range } from '../../../
 import Bold from '../common/Bold';
 import Card from '../common/card/Card';
 import Icon from '../common/Icon';
+import EpisodePopover from './EpisodePopover';
 
 const BADGE_COLORS = ['blackAlpha', 'blue', 'cyan', 'green', 'pink', 'purple', 'orange', 'red', 'teal', 'yellow'];
 
@@ -117,11 +118,14 @@ class EpisodeBrowser extends React.Component {
         return (
           <Tr key={episode.episodeNumber} fontSize="lg">
             <Td whiteSpace="nowrap">
-              <Flex direction="row" title={`Episode #${episode.episodeNumber}`}>
-                <Box>
-                  <Text fontSize="md">{formatWeekday(episode.airDate)},</Text>
-                  <Text>{formatDate(episode.airDate)}</Text>
-                </Box>
+              <Flex direction="row">
+                <EpisodePopover episode={episode} fetchEpisodeCategories={this.props.fetchEpisodeCategories}
+                                selectedEpisodeCategories={this.props.selectedEpisodeCategories}>
+                  <Box className="hover-pointer">
+                    <Text fontSize="md">{formatWeekday(episode.airDate)},</Text>
+                    <Text>{formatDate(episode.airDate)}</Text>
+                  </Box>
+                </EpisodePopover>
                 {(episode.hasInvalidRounds || episode.hasUnrevealedClues) && (
                   <React.Fragment>
                     <Spacer minW="20px" />

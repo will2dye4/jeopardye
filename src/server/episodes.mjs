@@ -5,6 +5,7 @@ import {
   getEpisodeByEpisodeID,
   getEpisodeByEpisodeNumber,
   getEpisodeByAirDate,
+  getEpisodeCategoriesByEpisodeID,
   getRandomEpisodeFromDateRange,
   getRandomEpisodeFromSeason,
 } from './db.mjs';
@@ -61,4 +62,26 @@ export async function getFullEpisode(episode, isGame = false) {
   const metadata = EpisodeMetadata.fromEpisode(episode);
   return new Episode(episode.episodeID, episode.episodeNumber, episode.seasonNumber, episode.airDate, metadata, rounds,
                      episode.hasUnrevealedClues, episode.hasInvalidRounds);
+}
+
+export async function getEpisodeCategories(episodeID) {
+  const episodeCategories = await getEpisodeCategoriesByEpisodeID(episodeID);
+  if (!episodeCategories) {
+    return null;
+  }
+  let categories = {episodeID: episodeID, rounds: {}};
+  Object.entries(episodeCategories.rounds).forEach(([roundName, round]) => {
+    let roundCategories = {};
+    if (round.categoryIDs?.length && round.categoryIDs.length === round.categories?.length) {
+      round.categoryIDs.forEach(categoryID => {
+        const category = round.categories.find(category => category.categoryID === categoryID);
+        roundCategories[categoryID] = {name: category?.name || '<<Unknown Category>>'};
+        if (category.hasOwnProperty('comments') && category.comments.hasOwnProperty(episodeID.toString())) {
+          roundCategories[categoryID].comments = category.comments[episodeID.toString()];
+        }
+      });
+    }
+    categories.rounds[roundName] = {categories: roundCategories};
+  });
+  return categories;
 }

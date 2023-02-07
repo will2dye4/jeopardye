@@ -28,6 +28,7 @@ export const ActionTypes = {
   SEARCH_CATEGORY_SUMMARIES: 'JEOPARDYE::SEARCH_CATEGORY_SUMMARIES',
   FETCH_SEASON_SUMMARIES: 'JEOPARDYE::FETCH_SEASON_SUMMARIES',
   FETCH_SEASON_EPISODES: 'JEOPARDYE::FETCH_SEASON_EPISODES',
+  FETCH_EPISODE_CATEGORIES: 'JEOPARDYE::FETCH_EPISODE_CATEGORIES',
   /* actions provided by the redux-websocket middleware */
   REDUX_WEBSOCKET_OPEN: 'REDUX_WEBSOCKET::OPEN',
   REDUX_WEBSOCKET_CLOSED: 'REDUX_WEBSOCKET::CLOSED',
@@ -36,6 +37,7 @@ export const ActionTypes = {
 };
 
 const CATEGORY_URL = `${API_BASE}/category`;
+const EPISODE_URL = `${API_BASE}/episode`;
 const GAME_URL = `${API_BASE}/game`;
 const PLAYER_URL = `${API_BASE}/player`;
 const ROOM_URL = `${API_BASE}/room`;
@@ -278,6 +280,14 @@ function getEpisodesForSeason(seasonNumber) {
   );
 }
 
+function getEpisodeCategories(episodeID) {
+  return fetch(`${EPISODE_URL}/${episodeID}/categories`).then(response =>
+    getJSON(response, `Error occurred while fetching categories for episode ${episodeID}.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching categories for episode ${episodeID}.`)
+  );
+}
+
 export function fetchRooms(page = 1) {
   return {
     type: ActionTypes.FETCH_ROOMS,
@@ -421,6 +431,13 @@ export function fetchEpisodesForSeason(seasonNumber) {
   return {
     type: ActionTypes.FETCH_SEASON_EPISODES,
     payload: getEpisodesForSeason(seasonNumber),
+  };
+}
+
+export function fetchEpisodeCategories(episodeID) {
+  return {
+    type: ActionTypes.FETCH_EPISODE_CATEGORIES,
+    payload: getEpisodeCategories(episodeID),
   };
 }
 

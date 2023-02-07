@@ -1,6 +1,7 @@
 import express from 'express';
 import { StatusCodes } from '../../constants.mjs';
 import {
+  getEpisodeCategories,
   getFullEpisodeByAirDate,
   getFullEpisodeByEpisodeID,
   getFullEpisodeByEpisodeNumber,
@@ -60,8 +61,27 @@ async function handleGetEpisodeByAirDate(req, res, next) {
   }
 }
 
+async function handleGetEpisodeCategories(req, res, next) {
+  const episodeID = parseInt(req.params.episodeID);
+  if (isNaN(episodeID)) {
+    let err = new Error(`Invalid episode ID "${req.params.episodeID}"`);
+    err.status = StatusCodes.NOT_FOUND;
+    next(err);
+  } else {
+    const categories = await getEpisodeCategories(episodeID);
+    if (categories) {
+      res.json(categories);
+    } else {
+      let err = new Error(`Episode "${episodeID}" not found`);
+      err.status = StatusCodes.NOT_FOUND;
+      next(err);
+    }
+  }
+}
+
 const router = express.Router();
 router.get('/:episodeID', handleGetEpisodeByID);
+router.get('/:episodeID/categories', handleGetEpisodeCategories);
 router.get('/d/:airDate', handleGetEpisodeByAirDate);
 router.get('/date/:airDate', handleGetEpisodeByAirDate);
 router.get('/n/:episodeNumber', handleGetEpisodeByNumber);

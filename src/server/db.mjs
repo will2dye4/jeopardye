@@ -456,6 +456,53 @@ export async function getEpisodeSummariesBySeasonNumber(seasonNumber) {
   return await cursor.toArray();
 }
 
+export async function getEpisodeCategoriesByEpisodeID(episodeID) {
+  const cursor = episodesCollection.aggregate([
+    {$match: {episodeID: episodeID}},
+    {$lookup: {
+      from: 'categories',
+      localField: 'rounds.single.categoryIDs',
+      foreignField: 'categoryID',
+      as: 'rounds.single.categories',
+    }},
+    {$lookup: {
+      from: 'categories',
+      localField: 'rounds.double.categoryIDs',
+      foreignField: 'categoryID',
+      as: 'rounds.double.categories',
+    }},
+    {$lookup: {
+      from: 'categories',
+      localField: 'rounds.final.categoryIDs',
+      foreignField: 'categoryID',
+      as: 'rounds.final.categories',
+    }},
+    {$project: {
+      _id: 0,
+      episodeID: 1,
+      rounds: {
+        single: {
+          categoryIDs: 1,
+          categories: {categoryID: 1, name: 1, comments: 1},
+        },
+        double: {
+          categoryIDs: 1,
+          categories: {categoryID: 1, name: 1, comments: 1},
+        },
+        final: {
+          categoryIDs: 1,
+          categories: {categoryID: 1, name: 1, comments: 1},
+        },
+      },
+    }},
+  ]);
+  let categories = await cursor.toArray();
+  if (!categories.length) {
+    return null;
+  }
+  return categories.pop();
+}
+
 export async function getCategoryCluesByEpisodeID(episodeID) {
   let categoriesCursor = await cluesCollection.aggregate([
     {$match: {episodeID: episodeID}},

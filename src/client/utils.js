@@ -4,6 +4,7 @@ import {
   SPEAK_CLUES_ENABLED_KEY,
   SPEAK_ANSWERS_ENABLED_KEY,
 } from '../constants.mjs';
+import { formatDate, formatWeekday } from '../utils.mjs';
 
 const DEFAULT_SOUND_EFFECT_VOLUME = 0.5;
 const DEFAULT_SPEECH_VOLUME = 0.4;
@@ -16,6 +17,12 @@ export function formatElementList(items) {
       {items.map((item, i) => <React.Fragment key={i}>{item}{(i < items.length - 2) && ', '}{(i === items.length - 2) && ' and '}</React.Fragment>)}
     </React.Fragment>
   );
+}
+
+export function formatEpisodeTitle(episodeMetadata) {
+  return (episodeMetadata.hasOwnProperty('title') ?
+    episodeMetadata.title :
+    `Show #${episodeMetadata.episodeNumber} - ${formatWeekday(episodeMetadata.airDate)}, ${formatDate(episodeMetadata.airDate, true)}`);
 }
 
 export function isChrome() {
