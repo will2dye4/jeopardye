@@ -41,9 +41,9 @@ class EpisodePopoverBody extends React.Component {
   render() {
     const roundCategories = (roundName, round) => {
       return (
-        <Box px={4} py={2} h="100%" textAlign="center" backgroundColor="gray.50" borderColor="jeopardyeBlue.500" borderWidth="2px" borderRadius={10}>
+        <Box px={4} py={2} h="100%" cursor="default" textAlign="center" backgroundColor="gray.50" borderColor="jeopardyeBlue.500" borderWidth="2px" borderRadius={10}>
           <Text color="jeopardyeBlue.500" fontWeight="bold" pb={1} style={{fontVariant: 'small-caps'}}>{roundName} round categories</Text>
-          <List>
+          <List spacing={1}>
             {Object.entries(round?.categories || {}).map(([categoryID, category]) => (
               <ListItem key={categoryID} fontSize="md">
                 {category.name}
@@ -70,7 +70,7 @@ class EpisodePopoverBody extends React.Component {
             {roundCategories('double', this.state.categories?.rounds?.double)}
           </HStack>
           <Spacer minH="10px" />
-          <Box px={4} py={2} textAlign="center" backgroundColor="gray.50" borderColor="jeopardyeBlue.500" borderWidth="2px" borderRadius={10}>
+          <Box px={4} py={2} cursor="default" textAlign="center" backgroundColor="gray.50" borderColor="jeopardyeBlue.500" borderWidth="2px" borderRadius={10}>
             <Text color="jeopardyeBlue.500" fontWeight="bold" pb={1} style={{fontVariant: 'small-caps'}}>final round category</Text>
             {Object.entries(this.state.categories?.rounds?.final?.categories || {}).map(([categoryID, category]) => (
               <Text key={categoryID} fontSize="md">{category.name}</Text>
@@ -86,7 +86,9 @@ class EpisodePopoverBody extends React.Component {
       <PopoverBody borderRadius={10} backgroundColor="gray.100" px={3} py={3}>
         <Center>
           <VStack>
-            <Heading px={4} py={2} size="md">{formatEpisodeTitle(this.props.episode.metadata)}</Heading>
+            <Heading px={4} py={2} cursor="default" size="md">
+              {formatEpisodeTitle({...this.props.episode.metadata, episodeNumber: this.props.episode.episodeNumber})}
+            </Heading>
             {categories}
           </VStack>
         </Center>

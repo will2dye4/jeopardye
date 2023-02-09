@@ -198,7 +198,7 @@ async function handleCreateGame(req, res, next) {
     categoryIDs = req.body.categories;
     if (!categoryIDs || categoryIDs.length !== CATEGORIES_PER_ROUND) {
       handleError(`Invalid category IDs: ${categoryIDs}`, StatusCodes.BAD_REQUEST);
-      return
+      return;
     }
   } else {  // random mode
     numRounds = DEFAULT_NUM_ROUNDS;

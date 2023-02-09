@@ -151,6 +151,10 @@ class EpisodeBrowser extends React.Component {
                   shortName = name;
                 }
                 shortName = shortName.split(/\s+/)[0];
+                let title = name;
+                if (contestant.description) {
+                  title += `, ${contestant.description}`;
+                }
                 let color;
                 if (contestantColors.hasOwnProperty(contestantID)) {
                   color = contestantColors[contestantID];
@@ -161,7 +165,7 @@ class EpisodeBrowser extends React.Component {
                 usedColors.add(color);
                 return (
                   <Link key={contestantID} href={getURLForContestant(contestantID)} isExternal>
-                    <Badge borderRadius={10} colorScheme={color} mx={1} px={2} title={name}>
+                    <Badge borderRadius={10} colorScheme={color} mx={1} px={2} title={title}>
                       {shortName}
                       {contestantID === winnerContestantID && (
                         <Text as="span" ml={1}>

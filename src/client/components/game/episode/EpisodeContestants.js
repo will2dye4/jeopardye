@@ -40,7 +40,7 @@ function EpisodeContestants(props) {
               );
             }
             return (
-              <Box borderColor="jeopardyeBlue.500" borderRadius={10} borderWidth={3} p={3}
+              <Box bg="gray.100" borderColor="jeopardyeBlue.500" borderRadius={10} borderWidth={3} p={3}
                    key={contestant.contestantID || contestant.rawText}>
                 {text}
                 {previousStreak}

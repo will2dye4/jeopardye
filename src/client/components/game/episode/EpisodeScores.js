@@ -39,7 +39,7 @@ function EpisodeScores(props) {
                   text = (<Text>Missing Final Scores</Text>);
                 }
                 return (
-                  <Box borderColor="jeopardyeBlue.500" borderRadius={10} borderWidth={3} key={contestant.contestantID}
+                  <Box bg="gray.100" borderColor="jeopardyeBlue.500" borderRadius={10} borderWidth={3} key={contestant.contestantID}
                        p={3}>
                     {text}
                   </Box>

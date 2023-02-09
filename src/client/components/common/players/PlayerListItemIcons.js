@@ -1,6 +1,6 @@
 import React from 'react';
 import { HStack } from '@chakra-ui/react';
-import { faEye, faPen, faUserPlus, faSignOutAlt, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faPen, faPersonArrowUpFromLine, faSignOutAlt, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import ActionIcon from '../ActionIcon';
 
 function getClaimHostIcon(props) {
@@ -24,7 +24,7 @@ function getSpectatingStateIcon(props) {
   if (props.isSpectator) {
     iconProps = {
       id: 'stop-spectating',
-      icon: faUserPlus,
+      icon: faPersonArrowUpFromLine,
       title: 'Join game',
     };
   } else {
