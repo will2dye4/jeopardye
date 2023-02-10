@@ -26,6 +26,7 @@ import {
   fetchPlayer,
   fetchPlayers,
   fetchRoom,
+  fetchRoomHistory,
   fetchRoomLeaderboards,
   fetchRooms,
   fetchRoomLinkRequests,
@@ -58,6 +59,7 @@ import AdminDashboard from './admin/AdminDashboard';
 import KickPlayerDialog from './common/players/KickPlayerDialog';
 import Home from './home/Home';
 import EpisodeBrowser from './episode/EpisodeBrowser';
+import RoomHistory from './lobby/history/RoomHistory';
 import PlayerEditor from './player/PlayerEditor';
 import PlayerStatistics from './player/stats/PlayerStatistics';
 import Room from './Room';
@@ -107,6 +109,7 @@ const actionCreators = {
   fetchPlayer,
   fetchPlayers,
   fetchRoom,
+  fetchRoomHistory,
   fetchRoomLeaderboards,
   fetchRooms,
   fetchRoomLinkRequests,
@@ -146,17 +149,20 @@ class Connector extends React.Component {
       showKickPlayerDialog: false,
       showPlayerEditor: false,
       showPlayerStats: false,
+      showRoomHistory: false,
     };
     this.closeAdminDashboard = this.closeAdminDashboard.bind(this);
     this.closeEpisodeBrowser = this.closeEpisodeBrowser.bind(this);
     this.closeKickPlayerDialog = this.closeKickPlayerDialog.bind(this);
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
     this.closePlayerStats = this.closePlayerStats.bind(this);
+    this.closeRoomHistory = this.closeRoomHistory.bind(this);
     this.openAdminDashboard = this.openAdminDashboard.bind(this);
     this.openEpisodeBrowser = this.openEpisodeBrowser.bind(this);
     this.openKickPlayerDialog = this.openKickPlayerDialog.bind(this);
     this.openPlayerEditor = this.openPlayerEditor.bind(this);
     this.openPlayerStats = this.openPlayerStats.bind(this);
+    this.openRoomHistory = this.openRoomHistory.bind(this);
   }
 
   componentDidMount() {
@@ -318,6 +324,10 @@ class Connector extends React.Component {
     this.setState({showPlayerStats: true});
   }
 
+  openRoomHistory() {
+    this.setState({showRoomHistory: true});
+  }
+
   closeAdminDashboard() {
     this.setState({showAdminDashboard: false});
   }
@@ -340,6 +350,10 @@ class Connector extends React.Component {
 
   closePlayerStats() {
     this.setState({showPlayerStats: false});
+  }
+
+  closeRoomHistory() {
+    this.setState({showRoomHistory: false});
   }
 
   render() {
@@ -371,6 +385,10 @@ class Connector extends React.Component {
         open: this.openPlayerStats,
         close: this.closePlayerStats,
       },
+      roomHistory: {
+        open: this.openRoomHistory,
+        close: this.closeRoomHistory,
+      },
     };
     return (
       <React.Fragment>
@@ -394,6 +412,7 @@ class Connector extends React.Component {
                                                               kickPlayer={this.props.kickPlayer} />}
         {this.state.showPlayerEditor && <PlayerEditor modals={modals} {...this.props} />}
         {this.state.showPlayerStats && <PlayerStatistics modals={modals} {...this.props} />}
+        {this.state.showRoomHistory && <RoomHistory modals={modals} {...this.props} />}
       </React.Fragment>
     );
   }

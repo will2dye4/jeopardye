@@ -19,6 +19,8 @@ import {
   getPlayers,
   getRoom,
   getRoomByCode,
+  getRoomHistory,
+  getRoomHistoryByCode,
   getRoomLinkRequest,
   getRooms,
   PAGE_SIZE,
@@ -190,6 +192,18 @@ async function handleGetRoom(req, res, next) {
   }
 }
 
+export async function handleGetRoomHistory(req, res, next) {
+  const roomID = req.params.roomID;
+  const roomHistory = await (roomID.length === ROOM_CODE_LENGTH ? getRoomHistoryByCode(roomID) : getRoomHistory(roomID));
+  if (roomHistory) {
+    res.json(roomHistory);
+  } else {
+    let err = new Error(`Room "${roomID}" not found`);
+    err.status = StatusCodes.NOT_FOUND;
+    next(err);
+  }
+}
+
 async function handleGetRoomLeaderboard(req, res, next) {
   const handleError = (message, status) => {
     const error = new Error(message);
@@ -253,6 +267,7 @@ const router = express.Router();
 router.get('/', handleGetRooms);
 router.post('/', handleCreateRoom);
 router.get('/:roomID', handleGetRoom);
+router.get('/:roomID/history', handleGetRoomHistory);
 router.get('/:roomID/leaderboard', handleGetRoomLeaderboard);
 
 export default router;

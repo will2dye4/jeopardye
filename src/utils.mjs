@@ -35,10 +35,10 @@ const INTERCHANGEABLE_TERMS = [
   new Set(['ellen', 'ellen degeneres']),
   new Set(['eu', 'european union']),
   new Set(['fdr', 'franklin d roosevelt', 'franklin delano roosevelt', 'franklin roosevelt']),
-  new Set(['george h w bush', 'george herbert walker bush', 'george hw bush', 'george bush sr']),
+  new Set(['george bush', 'george h w bush', 'george herbert walker bush', 'george hw bush', 'george bush sr']),
   new Set(['george w bush', 'george walker bush', 'george bush jr']),
   new Set(['god', 'lord', 'yahweh', 'yhwh']),
-  new Set(['jesus', 'jesus christ', 'christ']),
+  new Set(['jesus', 'jesus christ', 'jesus h christ', 'christ']),
   new Set(['jfk', 'john f kennedy', 'john fitzgerald kennedy', 'john kennedy']),
   new Set(['lbj', 'lyndon b johnson', 'lyndon baines johnson', 'lyndon johnson']),
   new Set(['martin luther king', 'martin luther king jr', 'mlk', 'mlk jr']),
@@ -254,6 +254,17 @@ export function getAugmentedPlayerStats(playerStats) {
     dailyDoublePercentage: Math.round((dailyDoublesAnswered === 0 ? 0 : (dailyDoublesAnsweredCorrectly / dailyDoublesAnswered)) * 100),
     winningPercentage: Math.round((gamesPlayed === 0 ? 0 : (gamesWon / gamesPlayed)) * 100),
   };
+}
+
+export function getCurrentPlaces(game, players) {
+  let scores = [];
+  Object.entries(game.scores).forEach(([playerID, score]) => {
+    const player = players.find(player => player.playerID === playerID);
+    if (player && (!player.spectating || score !== 0)) {
+      scores.push({...player, score: score});
+    }
+  });
+  return getPlaces(scores);
 }
 
 export function getPlaces(scores) {

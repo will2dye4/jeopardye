@@ -4,6 +4,7 @@ import { getISODateString, getUnplayedClues, WebsocketEvent } from '../../utils.
 
 export const ActionTypes = {
   FETCH_ROOM: 'JEOPARDYE::FETCH_ROOM',
+  FETCH_ROOM_HISTORY: 'JEOPARDYE::FETCH_ROOM_HISTORY',
   FETCH_ROOM_LEADERBOARDS: 'JEOPARDYE::FETCH_ROOM_LEADERBOARDS',
   FETCH_ROOMS: 'JEOPARDYE::FETCH_ROOMS',
   CREATE_NEW_ROOM: 'JEOPARDYE::CREATE_NEW_ROOM',
@@ -76,6 +77,14 @@ function getRoomByID(roomID) {
     getJSON(response, `Error occurred while fetching room ${roomID}.`)
   ).catch(e =>
     handleError(e, `Unexpected error occurred while fetching room ${roomID}.`)
+  );
+}
+
+function getRoomHistory(roomID) {
+  return fetch(`${ROOM_URL}/${roomID}/history`).then(response =>
+    getJSON(response, `Error occurred while fetching history for room ${roomID}.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching history for room ${roomID}.`)
   );
 }
 
@@ -299,6 +308,13 @@ export function fetchRoom(roomID) {
   return {
     type: ActionTypes.FETCH_ROOM,
     payload: getRoomByID(roomID),
+  };
+}
+
+export function fetchRoomHistory(roomID) {
+  return {
+    type: ActionTypes.FETCH_ROOM_HISTORY,
+    payload: getRoomHistory(roomID),
   };
 }
 

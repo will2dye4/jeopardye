@@ -150,6 +150,66 @@ export async function removePlayerFromKickedPlayersInRoom(roomID, playerID) {
   await updateRoomFields(roomID, {$unset: {[`kickedPlayerIDs.${playerID}`]: ''}});
 }
 
+export async function getRoomHistory(roomID) {
+  return await getRoomHistoryByCriteria({roomID: roomID});
+}
+
+export async function getRoomHistoryByCode(roomCode) {
+  return await getRoomHistoryByCriteria({roomCode: roomCode});
+}
+
+async function getRoomHistoryByCriteria(criteria) {
+  const cursor = await roomsCollection.aggregate([
+    {$match: criteria},
+    {$lookup: {
+      from: 'games',
+      localField: 'previousGameIDs',
+      foreignField: 'gameID',
+      as: 'previousGames',
+    }},
+    {$lookup: {
+      from: 'players',
+      localField: 'previousGames.playerIDs',
+      foreignField: 'playerID',
+      as: 'players',
+    }},
+    {$project: {
+      _id: 0,
+      kickedPlayerIDs: 0,
+      passwordHash: 0,
+      playerIDs: 0,
+      players: {
+        _id: 0,
+        active: 0,
+        currentRoomID: 0,
+        preferredFontStyle: 0,
+        spectating: 0,
+        stats: 0,
+      },
+      previousGameIDs: 0,
+      previousGames: {
+        _id: 0,
+        activeClue: 0,
+        currentWager: 0,
+        episodeMetadata: {
+          contestants: 0,
+          scores: 0,
+        },
+        playerAnswering: 0,
+        playerInControl: 0,
+        playersReadyForNextRound: 0,
+        roomID: 0,
+        rounds: 0,
+      },
+    }},
+  ]);
+  const results = await cursor.toArray();
+  if (!results.length) {
+    return null;
+  }
+  return results.pop();
+}
+
 export async function createGame(game) {
   if (!game.gameID) {
     game.gameID = uuid.v4();

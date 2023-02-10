@@ -52,6 +52,7 @@ function newStoreData() {
     rooms: {},
     allPlayers: {},
     leaderboards: null,
+    roomHistory: null,
     categorySearchResults: null,
     categoryStats: null,
     seasonSummaries: null,
@@ -554,6 +555,16 @@ export function GameReducer(storeData, action) {
         return {...storeData, redirectToHome: false, roomID: room.roomID, room: room, leaderboards: null};
       }
       return {...storeData, roomID: room.roomID};
+    case ActionTypes.FETCH_ROOM_HISTORY:
+      const roomHistory = action.payload;
+      if (!roomHistory) {
+        console.log('Failed to fetch room history.');
+        return {...storeData, roomHistory: null};
+      }
+      if (roomHistory.error) {
+        return {...storeData, error: roomHistory.error};
+      }
+      return {...storeData, roomHistory: roomHistory};
     case ActionTypes.FETCH_ROOM_LEADERBOARDS:
       const leaderboards = action.payload;
       if (!leaderboards) {

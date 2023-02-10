@@ -28,7 +28,7 @@ import {
   getCountdownTimeInMillis,
   getCurrentChampion,
   getNextRound,
-  getPlaces,
+  getCurrentPlaces,
   getUnplayedClues,
   getWagerRange,
   hasMoreRounds,
@@ -218,17 +218,6 @@ function reassignRoomHostIfNecessary(roomID, playerID) {
       }
     }
   }, REASSIGNMENT_CHECK_DELAY_MILLIS);
-}
-
-function getCurrentPlaces(game, players) {
-  let scores = [];
-  Object.entries(game.scores).forEach(([playerID, score]) => {
-    const player = players.find(player => player.playerID === playerID);
-    if (player && (!player.spectating || score !== 0)) {
-      scores.push({...player, score: score});
-    }
-  });
-  return getPlaces(scores);
 }
 
 export function getPlayerName(playerID) {
