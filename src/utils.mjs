@@ -2,6 +2,7 @@ import langEn from '@nlpjs/lang-en';
 import similarity from '@nlpjs/similarity';
 import '@gouch/to-title-case';
 import moment from 'moment';
+import numberConverter from 'number-to-words';
 import {
   DAILY_DOUBLE_COUNTDOWN_SECONDS,
   DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS,
@@ -14,6 +15,7 @@ import {
   MIN_CLUE_READING_DELAY_SECONDS,
   READING_SPEED_SECONDS_PER_WORD,
 } from './constants.mjs';
+import { FIRST_NAMES } from './config/names.mjs';
 import missingEpisodeDates from './config/missingEpisodeDates.json' assert { type: 'json' };
 import yearSeasonDates from './config/yearSeasonDates.json' assert { type: 'json' };
 
@@ -27,29 +29,33 @@ const EMAIL_REGEX = /\S+@\S+\.\S+/;
 
 const MIN_ANSWER_SIMILARITY_RATIO = 0.8;
 
-const NUMERALS_TO_WORDS = {
-  0: 'zero',
-  1: 'one',
-  2: 'two',
-  3: 'three',
-  4: 'four',
-  5: 'five',
-  6: 'six',
-  7: 'seven',
-  8: 'eight',
-  9: 'nine',
-  10: 'ten',
-  11: 'eleven',
-  12: 'twelve',
-  13: 'thirteen',
-  14: 'fourteen',
-  15: 'fifteen',
-  16: 'sixteen',
-  17: 'seventeen',
-  18: 'eighteen',
-  19: 'nineteen',
-  20: 'twenty',
-};
+const INTERCHANGEABLE_TERMS = [
+  new Set(['america', 'united states', 'united states of america', 'us', 'usa']),
+  new Set(['chairman mao', 'chairman mao zedong', 'chairman mao tse-tung', 'mao zedong', 'mao tse-tung']),
+  new Set(['ellen', 'ellen degeneres']),
+  new Set(['eu', 'european union']),
+  new Set(['fdr', 'franklin d roosevelt', 'franklin delano roosevelt', 'franklin roosevelt']),
+  new Set(['george h w bush', 'george herbert walker bush', 'george hw bush', 'george bush sr']),
+  new Set(['george w bush', 'george walker bush', 'george bush jr']),
+  new Set(['god', 'lord', 'yahweh', 'yhwh']),
+  new Set(['jesus', 'jesus christ', 'christ']),
+  new Set(['jfk', 'john f kennedy', 'john fitzgerald kennedy', 'john kennedy']),
+  new Set(['lbj', 'lyndon b johnson', 'lyndon baines johnson', 'lyndon johnson']),
+  new Set(['martin luther king', 'martin luther king jr', 'mlk', 'mlk jr']),
+  new Set(['martin luther king day', 'martin luther king jr day', 'mlk day']),
+  new Set(['napoleon', 'napoleon bonaparte']),
+  new Set(['oprah', 'oprah winfrey', 'winfrey']),
+  new Set(['pi', '3.14', '3.14159', 'π']),
+  new Set(['rfk', 'robert f kennedy', 'robert francis kennedy', 'robert kennedy', 'bobby kennedy']),
+  new Set(['rms', 'richard m stallman', 'richard matthew stallman', 'richard stallman']),
+  new Set(['t rex', 'tyrannosaurus rex']),
+  new Set(['television', 'tv']),
+  new Set(['theodore roosevelt', 'teddy roosevelt']),
+  new Set(['uk', 'united kingdom']),
+  new Set(['un', 'united nations']),
+];
+
+const AMBIGUOUS_LAST_NAMES = new Set(['bronte', 'kennedy', 'roosevelt']);
 
 const PLACE_NAMES = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', 'Honorable Mention'];
 const MAX_PLACE_INDEX = PLACE_NAMES.length - 1;
@@ -346,6 +352,23 @@ function removeWhitespace(text) {
   return text.replaceAll(/\s+/g, '');
 }
 
+export function numeralsToWords(text) {
+  try {
+    return numberConverter.toWords(text.replaceAll(',', '').replaceAll('$', ''));
+  } catch (e) {
+    return text;
+  }
+}
+
+function isNumericMatch(correctAnswer, submittedAnswer) {
+  const correctAnswerWords = removeWhitespace(numeralsToWords(correctAnswer).replaceAll(',', '').replaceAll('-', ''));
+  if (correctAnswerWords === removeWhitespace(submittedAnswer.replaceAll(',', '').replaceAll('-', ''))) {
+    return true;
+  }
+  const submittedAnswerWords = removeWhitespace(numeralsToWords(submittedAnswer).replaceAll(',', '').replaceAll('-', ''));
+  return (submittedAnswerWords === removeWhitespace(correctAnswer.replaceAll(',', '').replaceAll('-', '')));
+}
+
 function isCloseEnough(correctAnswer, submittedAnswer) {
   correctAnswer = removeWhitespace(correctAnswer);
   submittedAnswer = removeWhitespace(submittedAnswer);
@@ -355,6 +378,17 @@ function isCloseEnough(correctAnswer, submittedAnswer) {
   const distance = leven(correctAnswer, submittedAnswer);
   const ratio = (correctAnswer.length - distance) / correctAnswer.length;
   return (ratio >= MIN_ANSWER_SIMILARITY_RATIO);
+}
+
+function isInterchangeable(correctAnswer, submittedAnswer) {
+  correctAnswer = correctAnswer.toLowerCase().replaceAll(/(the|,|\.)/g, '').replaceAll(/\s+/g, ' ').trim();
+  submittedAnswer = submittedAnswer.toLowerCase().replaceAll(/(the|,|\.)/g, '').replaceAll(/\s+/g, ' ').trim();
+  for (const terms of INTERCHANGEABLE_TERMS) {
+    if (terms.has(correctAnswer) && terms.has(submittedAnswer)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
@@ -401,10 +435,29 @@ export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
     }
   }
   /* Try replacing a numeral with the corresponding word or vice versa, e.g., '6' vs. 'six' */
-  if (NUMERALS_TO_WORDS[normalizedCorrectAnswer] === normalizedSubmittedAnswer ||
-      NUMERALS_TO_WORDS[normalizedSubmittedAnswer] === normalizedCorrectAnswer) {
+  if (isNumericMatch(correctAnswer, submittedAnswer)) {
     return true;
   }
-  /* Try checking if the correct answer is a substring of the submitted answer, e.g., 'salinger' vs. 'j.d. salinger' */
-  return removeWhitespace(normalizedSubmittedAnswer).includes(removeWhitespace(normalizedCorrectAnswer));
+  /* Try checking if the correct answer is a substring of the submitted answer, e.g., 'benedict' vs. 'pope benedict' */
+  if (removeWhitespace(normalizedSubmittedAnswer).includes(removeWhitespace(normalizedCorrectAnswer))) {
+    return true;
+  }
+  /* Try checking if the correct answer is a person's name and the submitted answer is the last name only.
+   * For example, 'Ronald Reagan' vs. 'Reagan', or 'John F. Kennedy' vs. 'Kennedy'.
+   * Note that this check operates on the non-normalized answers, since the stemmer can modify names in weird ways.
+   */
+  const correctAnswerWords = correctAnswer.normalize('NFD').split(/\s+/).filter(word => word.length > 0).map(word => word.toLowerCase());
+  if (!submittedAnswer.trim().includes(' ') && correctAnswerWords.length > 1) {
+    const lastName = correctAnswerWords[correctAnswerWords.length - 1];
+    if (!(correctAnswerWords.length > 2 && correctAnswerWords[0] === 'george' && lastName === 'bush') && !AMBIGUOUS_LAST_NAMES.has(lastName)) {
+      const allInitialWordsAreNames = correctAnswerWords.slice(0, correctAnswerWords.length - 1).every(word => FIRST_NAMES.has(word) || word.match(/^[a-z]\.$/));
+      if (allInitialWordsAreNames && isCloseEnough(lastName, submittedAnswer.normalize('NFD').toLowerCase())) {
+        return true;
+      }
+    }
+  }
+  /* Last resort: Try edge cases where multiple answers are interchangeable (e.g., 'John F. Kennedy' vs. 'JFK').
+   * Note that this check operates on the non-normalized answers, since the stemmer can modify names in weird ways.
+   */
+  return isInterchangeable(correctAnswer, submittedAnswer);
 }
