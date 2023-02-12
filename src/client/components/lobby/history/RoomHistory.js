@@ -2,8 +2,10 @@ import moment from 'moment';
 import React from 'react';
 import {
   Box,
-  Center, Divider,
-  Flex, GridItem,
+  Center,
+  Divider,
+  Flex,
+  GridItem,
   Heading,
   Link,
   Modal,
@@ -148,7 +150,7 @@ class RoomHistory extends React.Component {
       const hostPlayerID = this.props.room?.hostPlayerID || this.props.roomHistory.hostPlayerID;
       const owner = players?.find(player => player.playerID === ownerPlayerID)?.name || ownerPlayerID;
       const host = players?.find(player => player.playerID === hostPlayerID)?.name || hostPlayerID;
-      const champion = players?.find(player => player.playerID === currentChampion)?.name || currentChampion;
+      const champion = (currentChampion ? players?.find(player => player.playerID === currentChampion)?.name || currentChampion : <Text as="span" fontStyle="italic">None</Text>);
       overview = (
         <SimpleGrid columns={3} fontSize="xl">
           <Box>
@@ -168,7 +170,7 @@ class RoomHistory extends React.Component {
               <Text as="span" color="jeopardyeYellow.500" ml={2}><Icon id="champion-icon" icon={faCrown} title="Champion" clickable={false} /></Text>
             </Text>
             <Text>{champion}</Text>
-            <Text fontSize="sm" fontStyle="italic">Winning Streak: {currentWinningStreak}</Text>
+            {currentChampion && (<Text fontSize="sm" fontStyle="italic">Winning Streak: {currentWinningStreak}</Text>)}
           </Box>
         </SimpleGrid>
       );
@@ -187,7 +189,7 @@ class RoomHistory extends React.Component {
         <ModalOverlay />
         <ModalContent>
           <ModalCloseButton id="room-history-close-button" />
-          <ModalBody p={0}>
+          <ModalBody p={0} cursor="default" userSelect="none">
             <Card className="game-settings" px={10} py={6} textAlign="center">
               <Heading mb={10}>Game History for Room {this.props.room?.roomCode}</Heading>
               {overview}

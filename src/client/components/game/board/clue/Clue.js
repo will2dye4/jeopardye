@@ -1,7 +1,9 @@
 import React from 'react';
-import { Box } from '@chakra-ui/react';
+import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons';
+import { Box, Flex } from '@chakra-ui/react';
 import { formatDate } from '../../../../../utils.mjs';
 import { isSafari } from '../../../../utils';
+import Icon from '../../../common/Icon';
 
 class Clue extends React.Component {
   constructor(props) {
@@ -18,6 +20,7 @@ class Clue extends React.Component {
   render() {
     const isActiveClue = (this.props.clue.clueID === this.props.activeClue?.clueID);
     const fontWeight = (isSafari() ? 'bold' : 'normal');
+    const isContextual = this.props.clue.question?.match(/(heard|seen|shown) here/i);
     let classes = 'clue-border';
     let text = <br />;
     let title;
@@ -33,8 +36,14 @@ class Clue extends React.Component {
       title = 'This clue was not revealed during the show.';
     }
     return (
-      <Box className="clue" fontWeight={fontWeight} userSelect="none" onClick={this.handleClick}>
+      <Box className="clue" fontWeight={fontWeight} position="relative" userSelect="none" onClick={this.handleClick}>
         <Box className={classes} py={1} title={title}>{text}</Box>
+        {isContextual && !this.props.clue.played && (
+          <Flex fontSize="sm" position="absolute" textColor="white" top={2} right={2}>
+            <Icon id={`clue-contextual-icon-${this.props.clue.clueID}`} clickable={false} icon={faEyeLowVision}
+                  title="This clue has missing context (audio, images, etc.)." />
+          </Flex>
+        )}
       </Box>
     );
   }

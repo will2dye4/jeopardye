@@ -60,6 +60,7 @@ import KickPlayerDialog from './common/players/KickPlayerDialog';
 import Home from './home/Home';
 import EpisodeBrowser from './episode/EpisodeBrowser';
 import RoomHistory from './lobby/history/RoomHistory';
+import WhatsNewModal from './lobby/WhatsNewModal';
 import PlayerEditor from './player/PlayerEditor';
 import PlayerStatistics from './player/stats/PlayerStatistics';
 import Room from './Room';
@@ -150,6 +151,7 @@ class Connector extends React.Component {
       showPlayerEditor: false,
       showPlayerStats: false,
       showRoomHistory: false,
+      showWhatsNewModal: false,
     };
     this.closeAdminDashboard = this.closeAdminDashboard.bind(this);
     this.closeEpisodeBrowser = this.closeEpisodeBrowser.bind(this);
@@ -157,12 +159,14 @@ class Connector extends React.Component {
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
     this.closePlayerStats = this.closePlayerStats.bind(this);
     this.closeRoomHistory = this.closeRoomHistory.bind(this);
+    this.closeWhatsNewModal = this.closeWhatsNewModal.bind(this);
     this.openAdminDashboard = this.openAdminDashboard.bind(this);
     this.openEpisodeBrowser = this.openEpisodeBrowser.bind(this);
     this.openKickPlayerDialog = this.openKickPlayerDialog.bind(this);
     this.openPlayerEditor = this.openPlayerEditor.bind(this);
     this.openPlayerStats = this.openPlayerStats.bind(this);
     this.openRoomHistory = this.openRoomHistory.bind(this);
+    this.openWhatsNewModal = this.openWhatsNewModal.bind(this);
   }
 
   componentDidMount() {
@@ -328,6 +332,10 @@ class Connector extends React.Component {
     this.setState({showRoomHistory: true});
   }
 
+  openWhatsNewModal() {
+    this.setState({showWhatsNewModal: true});
+  }
+
   closeAdminDashboard() {
     this.setState({showAdminDashboard: false});
   }
@@ -354,6 +362,10 @@ class Connector extends React.Component {
 
   closeRoomHistory() {
     this.setState({showRoomHistory: false});
+  }
+
+  closeWhatsNewModal() {
+    this.setState({showWhatsNewModal: false});
   }
 
   render() {
@@ -389,6 +401,10 @@ class Connector extends React.Component {
         open: this.openRoomHistory,
         close: this.closeRoomHistory,
       },
+      whatsNew: {
+        open: this.openWhatsNewModal,
+        close: this.closeWhatsNewModal,
+      },
     };
     return (
       <React.Fragment>
@@ -413,6 +429,7 @@ class Connector extends React.Component {
         {this.state.showPlayerEditor && <PlayerEditor modals={modals} {...this.props} />}
         {this.state.showPlayerStats && <PlayerStatistics modals={modals} {...this.props} />}
         {this.state.showRoomHistory && <RoomHistory modals={modals} {...this.props} />}
+        {this.state.showWhatsNewModal && <WhatsNewModal modals={modals} {...this.props} />}
       </React.Fragment>
     );
   }

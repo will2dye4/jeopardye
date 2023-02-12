@@ -29,7 +29,7 @@ function RandomGameSettings(props) {
       <GameSetting label="Final Jeopardye">
         <ToggleSwitch name="final-jeopardye" checked={props.finalJeopardye} disabled={props.disabled}
                       onChange={props.onFinalJeopardyeChanged} />
-        <Badge colorScheme="purple" ml={4} userSelect="none">Coming Soon</Badge>
+        <Badge colorScheme="purple" ml={4} userSelect="none">Coming Eventually</Badge>
       </GameSetting>
     </React.Fragment>
   );

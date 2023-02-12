@@ -1,30 +1,32 @@
+import yargs from 'yargs';
 import { LeaderboardKeys } from '../constants.mjs';
 import db, { getPlayer, removePlayerFromRoom, updatePlayer } from '../server/db.mjs';
-
-const SOURCE_PLAYER_ID = '';
-const TARGET_PLAYER_ID = '';
 
 function die(error) {
   console.error(error);
   process.exit(1);
 }
 
-if (!SOURCE_PLAYER_ID) {
+const argv = await yargs(process.argv.slice(2)).argv;
+
+const sourcePlayerID = argv.sourcePlayerID;
+if (!sourcePlayerID) {
   die('Source player ID is not set!');
 }
 
-if (!TARGET_PLAYER_ID) {
+const targetPlayerID = argv.targetPlayerID;
+if (!targetPlayerID) {
   die('Target player ID is not set!');
 }
 
-const sourcePlayer = await getPlayer(SOURCE_PLAYER_ID);
+const sourcePlayer = await getPlayer(sourcePlayerID);
 if (!sourcePlayer) {
-  die(`Failed to find source player (${SOURCE_PLAYER_ID})!`);
+  die(`Failed to find source player (${sourcePlayerID})!`);
 }
 
-const targetPlayer = await getPlayer(TARGET_PLAYER_ID);
+const targetPlayer = await getPlayer(targetPlayerID);
 if (!targetPlayer) {
-  die(`Failed to find target player (${TARGET_PLAYER_ID})!`);
+  die(`Failed to find target player (${targetPlayerID})!`);
 }
 
 /* NOTE: This will attempt to load all rooms in memory at once! Refactor when number of rooms becomes large. */
@@ -32,17 +34,17 @@ const cursor = await db.collection('rooms').find();
 const rooms = await cursor.toArray();
 
 rooms.forEach(room => {
-  if (room.hostPlayerID === SOURCE_PLAYER_ID || room.ownerPlayerID === SOURCE_PLAYER_ID) {
-    die(`Refusing to delete source player (${SOURCE_PLAYER_ID}) because they are the host/owner of room ${room.roomCode}!`);
+  if (room.hostPlayerID === sourcePlayerID || room.ownerPlayerID === sourcePlayerID) {
+    die(`Refusing to delete source player (${sourcePlayerID}) because they are the host/owner of room ${room.roomCode}!`);
   }
 })
 
 rooms.forEach(async room => {
-  if (room.playerIDs.includes(SOURCE_PLAYER_ID)) {
+  if (room.playerIDs.includes(sourcePlayerID)) {
     try {
-      await removePlayerFromRoom(room.roomID, SOURCE_PLAYER_ID);
+      await removePlayerFromRoom(room.roomID, sourcePlayerID);
     } catch (e) {
-      die(`Failed to remove source player (${SOURCE_PLAYER_ID}) from room ${room.roomCode}: ${e}`);
+      die(`Failed to remove source player (${sourcePlayerID}) from room ${room.roomCode}: ${e}`);
     }
   }
 })
@@ -56,16 +58,16 @@ Object.entries(sourcePlayer.stats).forEach(([key, value]) => {
 });
 
 try {
-  await updatePlayer(TARGET_PLAYER_ID, {stats: targetPlayer.stats});
+  await updatePlayer(targetPlayerID, {stats: targetPlayer.stats});
 } catch (e) {
-  die(`Failed to update stats for target player (${TARGET_PLAYER_ID}): ${e}`);
+  die(`Failed to update stats for target player (${targetPlayerID}): ${e}`);
 }
 
 try {
-  await db.collection('players').deleteOne({_id: SOURCE_PLAYER_ID});
+  await db.collection('players').deleteOne({_id: sourcePlayerID});
 } catch (e) {
-  die(`Failed to delete source player (${SOURCE_PLAYER_ID}): ${e}`);
+  die(`Failed to delete source player (${sourcePlayerID}): ${e}`);
 }
 
-console.log(`Players merged successfully (${SOURCE_PLAYER_ID} --> ${TARGET_PLAYER_ID}).`);
+console.log(`Players merged successfully (${sourcePlayerID} --> ${targetPlayerID}).`);
 process.exit(0);

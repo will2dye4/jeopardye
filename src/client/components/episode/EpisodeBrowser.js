@@ -5,6 +5,7 @@ import {
   Center,
   Flex,
   Heading,
+  HStack,
   Link,
   Modal,
   ModalBody,
@@ -21,7 +22,7 @@ import {
   Thead,
   Tr,
 } from '@chakra-ui/react';
-import { faClipboardQuestion, faCrown, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faClipboardQuestion, faCrown, faEyeLowVision, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { MILLISECONDS_PER_DAY, SORT_ARROW_ASCENDING, SORT_ARROW_DESCENDING } from '../../../constants.mjs';
 import { formatDate, formatWeekday, getURLForContestant, range } from '../../../utils.mjs';
 import Bold from '../common/Bold';
@@ -126,14 +127,25 @@ class EpisodeBrowser extends React.Component {
                     <Text>{formatDate(episode.airDate)}</Text>
                   </Box>
                 </EpisodePopover>
-                {(episode.hasInvalidRounds || episode.hasUnrevealedClues) && (
+                {(episode.hasInvalidRounds || episode.hasContextualClues || episode.hasUnrevealedClues) && (
                   <React.Fragment>
                     <Spacer minW="20px" />
-                    <Center>
-                      <Icon id={`episode-icon-${episode.episodeNumber}`} clickable={false}
-                            color={episode.hasInvalidRounds ? 'orange' : 'inherit'}
-                            icon={episode.hasInvalidRounds ? faTriangleExclamation : faClipboardQuestion}
-                            title={episode.hasInvalidRounds ? 'This episode is missing one or more entire rounds.' : 'This episode has unrevealed clues.'} />
+                    <Center minW="45px">
+                      <HStack spacing={2}>
+                        {episode.hasInvalidRounds && (
+                          <Icon id={`invalid-rounds-icon-${episode.episodeNumber}`} clickable={false}
+                                color="orange" icon={faTriangleExclamation}
+                                title="This episode is missing one or more entire rounds." />
+                        )}
+                        {episode.hasUnrevealedClues && (
+                          <Icon id={`unrevealed-clues-icon-${episode.episodeNumber}`} clickable={false}
+                                icon={faClipboardQuestion} title="This episode has unrevealed clues." />
+                        )}
+                        {episode.hasContextualClues && (
+                          <Icon id={`contextual-clues-icon-${episode.episodeNumber}`} clickable={false}
+                                icon={faEyeLowVision} title="This episode has clues with missing context (audio, images, etc.)." />
+                        )}
+                      </HStack>
                     </Center>
                   </React.Fragment>
                 )}

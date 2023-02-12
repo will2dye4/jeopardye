@@ -61,7 +61,7 @@ class AdminDashboard extends React.Component {
         <ModalOverlay />
         <ModalContent>
           <ModalCloseButton />
-          <ModalBody p={0}>
+          <ModalBody p={0} cursor="default" userSelect="none">
             <Card className="game-settings" px={10} py={6} textAlign="center">
               <Heading mb={8}>Admin Dashboard</Heading>
               <Tabs isFitted isLazy variant="enclosed">
