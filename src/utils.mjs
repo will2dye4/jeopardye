@@ -11,9 +11,11 @@ import {
   DAY_OF_WEEK_SUNDAY,
   DEFAULT_COUNTDOWN_SECONDS,
   EARLIEST_EPISODE_DATE,
+  FINAL_ROUND_MINIMUM_WAGER,
   MAX_CLUE_READING_DELAY_SECONDS,
   MIN_CLUE_READING_DELAY_SECONDS,
   READING_SPEED_SECONDS_PER_WORD,
+  Rounds,
 } from './constants.mjs';
 import { FIRST_NAMES } from './config/names.mjs';
 import missingEpisodeDates from './config/missingEpisodeDates.json' assert { type: 'json' };
@@ -31,15 +33,20 @@ const MIN_ANSWER_SIMILARITY_RATIO = 0.8;
 
 const INTERCHANGEABLE_TERMS = [
   new Set(['america', 'united states', 'united states of america', 'us', 'usa']),
+  new Set(['brother love', 'diddy', 'p diddy', 'puff daddy', 'puffy', 'sean combs', 'sean john combs', 'sean love combs']),
   new Set(['chairman mao', 'chairman mao zedong', 'chairman mao tse-tung', 'mao zedong', 'mao tse-tung']),
   new Set(['ellen', 'ellen degeneres']),
+  new Set(['eminem', 'marshall mathers', 'slim shady']),
   new Set(['eu', 'european union']),
   new Set(['fdr', 'franklin d roosevelt', 'franklin delano roosevelt', 'franklin roosevelt']),
+  new Set(['gabriel iglesias', 'fluffy']),
   new Set(['george bush', 'george h w bush', 'george herbert walker bush', 'george hw bush', 'george bush sr']),
   new Set(['george w bush', 'george walker bush', 'george bush jr']),
   new Set(['god', 'lord', 'yahweh', 'yhwh']),
+  new Set(['jennifer lopez', 'jennifer lynn lopez', 'jennifer affleck', 'jennifer lynn affleck', 'jlo', 'j lo']),
   new Set(['jesus', 'jesus christ', 'jesus h christ', 'christ']),
   new Set(['jfk', 'john f kennedy', 'john fitzgerald kennedy', 'john kennedy']),
+  new Set(['kanye', 'kanye omari west', 'kanye west', 'ye', 'yeezus', 'yeezy']),
   new Set(['lbj', 'lyndon b johnson', 'lyndon baines johnson', 'lyndon johnson']),
   new Set(['martin luther king', 'martin luther king jr', 'mlk', 'mlk jr']),
   new Set(['martin luther king day', 'martin luther king jr day', 'mlk day']),
@@ -295,6 +302,9 @@ export function getCurrentChampion(places) {
 }
 
 export function getWagerRange(currentRound, playerScore) {
+  if (currentRound === Rounds.FINAL) {
+    return [FINAL_ROUND_MINIMUM_WAGER, playerScore];
+  }
   const defaultMax = DAILY_DOUBLE_DEFAULT_MAXIMUM_WAGERS[currentRound];
   const maxWager = Math.max(playerScore, defaultMax);
   return [DAILY_DOUBLE_MINIMUM_WAGER, maxWager];

@@ -52,7 +52,7 @@ import {
   voteToSkipClue,
   websocketConnect,
 } from '../actions/action_creators';
-import { ADMIN_PLAYER_IDS, MAX_PLAYERS_PER_GAME } from '../../constants.mjs';
+import {ADMIN_PLAYER_IDS, MAX_PLAYERS_PER_GAME, Rounds} from '../../constants.mjs';
 import { getPlayerName } from '../reducers/game_reducer';
 import JEOPARDYE_THEME from '../theme';
 import AdminDashboard from './admin/AdminDashboard';
@@ -369,7 +369,8 @@ class Connector extends React.Component {
   }
 
   render() {
-    const allowJoin = (Object.values(this.props.players).filter(player => player.active).length < MAX_PLAYERS_PER_GAME);
+    const allowJoin = ((Object.values(this.props.players).filter(player => player.active).length < MAX_PLAYERS_PER_GAME) &&
+                       !(this.props.game?.currentRound === Rounds.FINAL && (this.props.activeClue?.played || this.props.game?.scores[this.props.playerID] <= 0)));
     const isAdmin = ADMIN_PLAYER_IDS.has(this.props.playerID);
     const urlSearchParams = new URLSearchParams(window.location.search);
     let roomCode;

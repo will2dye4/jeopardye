@@ -8,9 +8,9 @@ function ClueGrid(props) {
   return range(CLUES_PER_CATEGORY).map(i => {
     let cells;
     if (props.gameState.categories) {
-      cells = Object.values(props.gameState.categories).map(category => {
+      cells = Object.values(props.gameState.categories).map((category, j) => {
         const clue = {...category.clues[i], category: category.name};
-        return <Clue key={clue.clueID} clue={clue} activeClue={props.activeClue} gameState={props.gameState}
+        return <Clue key={clue.clueID || j} clue={clue} activeClue={props.activeClue} gameState={props.gameState}
                      onClick={() => props.handleClueClick(clue)} />;
       });
     } else {

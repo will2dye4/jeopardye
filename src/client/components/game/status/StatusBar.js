@@ -1,5 +1,6 @@
 import React from 'react';
 import { Flex } from '@chakra-ui/react';
+import { FINAL_ROUND_MINIMUM_WAGER } from '../../../../constants.mjs';
 import { EventContext, getWagerRange } from '../../../../utils.mjs';
 import Bold from '../../common/Bold';
 import Card from '../../common/card/Card';
@@ -72,12 +73,22 @@ class StatusBar extends React.Component {
   }
 
   shouldShowAnswerInput() {
-    return (this.props.activeClue && this.props.playerAnswering === this.props.gameState.playerID);
+    return (
+      this.props.gameState.isFinalRound ?
+        (!this.props.roundSummary && this.props.allowAnswers && !this.props.gameState.playerIsSpectating &&
+          this.props.activeClue?.played && this.props.currentWager?.hasOwnProperty(this.props.gameState.playerID) &&
+          !this.props.activeClue?.playersAttempted.includes(this.props.gameState.playerID)) :
+        (this.props.activeClue && this.props.playerAnswering === this.props.gameState.playerID)
+    );
   }
 
   shouldShowWagerInput() {
-    return (this.props.activeClue && this.props.playerInControl === this.props.gameState.playerID &&
-            this.props.gameState.isDailyDouble && this.props.showDailyDoubleWager);
+    return (
+      (this.props.activeClue && this.props.playerInControl === this.props.gameState.playerID &&
+        this.props.gameState.isDailyDouble && this.props.showDailyDoubleWager) ||
+      (this.props.gameState.isFinalRound && !this.props.activeClue?.played && !this.props.gameState.playerIsSpectating &&
+        this.props.gameState.playerScore > 0 && !this.props.currentWager?.hasOwnProperty(this.props.gameState.playerID))
+    );
   }
 
   render() {
@@ -87,8 +98,11 @@ class StatusBar extends React.Component {
         let labelSize = 'sm';
         let label;
         if (this.props.currentWager) {
+          const wager = (this.props.gameState.isFinalRound ?
+                          this.props.currentWager[this.props.gameState.playerID] || FINAL_ROUND_MINIMUM_WAGER :
+                          this.props.currentWager);
           label = (
-            <React.Fragment>For <Bold>${this.props.currentWager.toLocaleString()}</Bold>: What is ...</React.Fragment>
+            <React.Fragment>For <Bold>${wager.toLocaleString()}</Bold>: What is ...</React.Fragment>
           );
           labelSize = 'md';
         } else {

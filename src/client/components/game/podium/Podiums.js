@@ -19,12 +19,31 @@ function getSize(numPlayers) {
 function Podiums(props) {
   const numPlayers = Object.keys(props.players).length;
   const size = getSize(numPlayers);
-  const allowSpectate = (!props.gameState.playerIsSpectating && !props.gameState.playerHasControl && numPlayers > 1);
+  let allowSpectate = (!props.gameState.playerIsSpectating && numPlayers > 1);
+  if (props.gameState.isFinalRound) {
+    const finalRoundPlayers = Object.values(props.players).filter(player => player.score > 0).map(player => player.playerID);
+    allowSpectate &= !(props.currentWager?.hasOwnProperty(props.playerID) || (finalRoundPlayers.length === 1 && finalRoundPlayers.pop() === props.playerID));
+  } else {
+    allowSpectate &= !props.gameState.playerHasControl;
+  }
   const podiums = Object.values(props.players).sort(comparePlayerNames).map(player => {
     const isCurrentPlayer = (player.playerID === props.playerID);
     const isHost = (player.playerID === props.room?.hostPlayerID);
     const isChampion = (player.playerID === props.room?.currentChampion);
-    const active = (player.playerID === props.playerAnswering);
+    let active;
+    if (props.gameState.isFinalRound) {
+      if (props.roundSummary || player.score <= 0) {
+        active = false;
+      } else if (props.playerAnswering) {
+        active = (player.playerID === props.playerAnswering);
+      } else if (props.activeClue?.played && !props.responseTimerElapsed) {
+        active = !props.activeClue?.playersAttempted?.includes(player.playerID);
+      } else {
+        active = !props.currentWager?.hasOwnProperty(player.playerID);
+      }
+    } else {
+      active = (player.playerID === props.playerAnswering);
+    }
     return <Podium key={`${player.playerID}-${numPlayers}`}
                    player={player}
                    gameState={props.gameState}

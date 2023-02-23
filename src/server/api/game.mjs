@@ -30,6 +30,7 @@ import {
   getLatestEpisodeAirDate,
   getPlayers,
   getRandomCategoryIDs,
+  getRandomFinalRoundClue,
   getRoom,
   incrementPlayerStat,
   setCurrentGameForRoom,
@@ -81,13 +82,30 @@ async function createRound(round, dailyDoubles = DailyDoubleSettings.NORMAL) {
 }
 
 async function createRandomRound(roundName, dailyDoubles = DailyDoubleSettings.NORMAL, allowUnrevealedClues = DEFAULT_ALLOW_UNREVEALED_CLUES) {
-  const numCategories = (roundName === Rounds.FINAL ? 1 : CATEGORIES_PER_ROUND);
+  if (roundName === Rounds.FINAL) {
+    return await createRandomFinalRound();
+  }
   let round = null;
   while (!round) {
-    const categoryIDs = await getRandomCategoryIDs(numCategories, allowUnrevealedClues);
+    const categoryIDs = await getRandomCategoryIDs(CATEGORIES_PER_ROUND, allowUnrevealedClues);
     round = await createRoundFromCategoryIDs(categoryIDs, roundName, dailyDoubles);
   }
   return round;
+}
+
+async function createRandomFinalRound() {
+  const clue = await getRandomFinalRoundClue();
+  if (!clue || !clue.categories || !clue.categories.length) {
+    return null;
+  }
+  const category = clue.categories[0];
+  delete clue.categories;
+  const airDate = (clue.episodes?.length ? clue.episodes[0].airDate : null);
+  delete clue.episodes;
+  const categories = {
+    [category.categoryID]: Category.fromEpisode(category, [clue], clue.episodeID, airDate, true),
+  };
+  return new Round(categories, Rounds.FINAL);
 }
 
 async function createRoundFromCategoryIDs(categoryIDs, round, dailyDoubles) {
@@ -300,13 +318,13 @@ async function handleCreateGame(req, res, next) {
       rounds[roundName] = round;
     }
     if (finalJeopardye) {
-      const round = Rounds.FINAL;
-      try {
-        rounds[round] = await createRandomRound(round);
-      } catch (e) {
-        handleError(`Failed to fetch ${round} round categories from JService: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
+      const roundName = Rounds.FINAL;
+      const round = await createRandomFinalRound();
+      if (!round) {
+        handleError(`Failed to create ${roundName} round`, StatusCodes.INTERNAL_SERVER_ERROR);
         return;
       }
+      rounds[roundName] = round;
     }
     game = new Game(roomID, rounds, playerIDs, playerInControl);
   }

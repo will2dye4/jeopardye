@@ -25,11 +25,12 @@ function RandomGameSettings(props) {
       <GameSetting label="Allow Unrevealed Clues">
         <ToggleSwitch name="allow-unrevealed-clues" checked={props.allowUnrevealedClues} disabled={props.disabled}
                       onChange={props.onAllowUnrevealedCluesChanged} />
+        <Badge colorScheme="green" ml={4} userSelect="none">New!</Badge>
       </GameSetting>
       <GameSetting label="Final Jeopardye">
         <ToggleSwitch name="final-jeopardye" checked={props.finalJeopardye} disabled={props.disabled}
                       onChange={props.onFinalJeopardyeChanged} />
-        <Badge colorScheme="purple" ml={4} userSelect="none">Coming Eventually</Badge>
+        <Badge colorScheme="green" ml={4} userSelect="none">New!</Badge>
       </GameSetting>
     </React.Fragment>
   );

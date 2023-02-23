@@ -14,6 +14,7 @@ export const CATEGORIES_PER_ROUND = 6;
 export const CLUES_PER_CATEGORY = 5;
 
 export const DAILY_DOUBLE_MINIMUM_WAGER = 5;
+export const FINAL_ROUND_MINIMUM_WAGER = 0;
 
 export const SINGLE_ROUND_NUM_DAILY_DOUBLES = 1;
 export const SINGLE_ROUND_VALUE_INCREMENT = 200;
@@ -153,6 +154,8 @@ export const DEFAULT_COUNTDOWN_SECONDS = 10;
 export const DAILY_DOUBLE_COUNTDOWN_SECONDS = 25;
 export const WAGER_COUNTDOWN_SECONDS = 15;
 
+export const FINAL_ROUND_COUNTDOWN_SECONDS = 30;
+
 export const MAX_PASSWORD_LENGTH = 128;
 export const PASSWORD_SALT_ROUNDS = 10;
 
@@ -236,6 +239,7 @@ export const EventTypes = {
   VOTE_TO_SKIP_CLUE: 'vote_to_skip_clue',
   PLAYER_VOTED_TO_SKIP_CLUE: 'player_voted_to_skip_clue',
   PLAYER_IN_CONTROL_REASSIGNED: 'player_in_control_reassigned',
+  FINAL_ROUND_ANSWER_REVEALED: 'final_round_answer_revealed',
   /* host-only gameplay events */
   ABANDON_GAME: 'abandon_game',
   HOST_ABANDONED_GAME: 'host_abandoned_game',

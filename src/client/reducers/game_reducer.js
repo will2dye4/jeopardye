@@ -3,6 +3,7 @@ import {
   EventTypes,
   GAME_HISTORY_EVENT_TYPES,
   PLAYER_ID_KEY,
+  Rounds,
   StatusCodes,
 } from '../../constants.mjs';
 import { GameSettings } from '../../models/game.mjs';
@@ -92,6 +93,12 @@ function handleNewGame(storeData, newGame) {
     return storeData;
   }
   const newBoard = newGame.rounds[newGame.currentRound];
+  let activeClue = newGame.activeClue;
+  if (activeClue) {
+    const category = newBoard.categories[activeClue.categoryID];
+    const playersAttempted = (newGame.currentRound === Rounds.FINAL && newGame.hasOwnProperty('finalRoundAnswers') ? Object.keys(newGame.finalRoundAnswers) : []);
+    activeClue = {...activeClue, category: category.name, playersAttempted: playersAttempted};
+  }
   let newPlayers = {...storeData.players};
   Object.entries(newGame.scores).forEach(([playerID, score]) => {
     if (newPlayers.hasOwnProperty(playerID)) {
@@ -113,12 +120,15 @@ function handleNewGame(storeData, newGame) {
     gameStarting: false,
     board: newBoard,
     players: newPlayers,
-    activeClue: newGame.activeClue,
-    playersMarkingClueInvalid: newGame.activeClue?.playersMarkingInvalid || [],
+    activeClue: activeClue,
+    playersMarkingClueInvalid: activeClue?.playersMarkingInvalid || [],
     playersReadyForNextRound: newGame.playersReadyForNextRound || [],
-    playersVotingToSkipClue: newGame.activeClue?.playersVotingToSkip || [],
+    playersVotingToSkipClue: activeClue?.playersVotingToSkip || [],
     playerAnswering: newGame.playerAnswering,
     playerInControl: newGame.playerInControl,
+    currentWager: newGame.currentWager,
+    allowAnswers: (newGame.currentRound === Rounds.FINAL),
+    revealAnswer: false,
     prevAnswer: null,
     redirectToHome: false,
     roundSummary: newGame.roundSummary || null,
@@ -154,11 +164,21 @@ function handleGameSettingsChanged(storeData, event) {
 }
 
 function handleRoundStarted(storeData, event) {
-  const { round, playerInControl } = event.payload;
+  const { round, playerInControl, activeClue } = event.payload;
   const newGame = {...storeData.game, currentRound: round};
+  let newBoard = storeData.game.rounds[round];
+  let clue = null;
+  if (activeClue) {
+    const category = newBoard.categories[activeClue.categoryID];
+    const clueIndex = category.clues.map(clue => clue.clueID).indexOf(activeClue.clueID);
+    clue = {...activeClue, category: category.name, playersAttempted: []};
+    newBoard.categories[activeClue.categoryID].clues[clueIndex] = clue;
+  }
   return {
     ...storeData,
-    board: storeData.game.rounds[round],
+    allowAnswers: (round === Rounds.FINAL),
+    activeClue: clue,
+    board: newBoard,
     game: newGame,
     playerInControl: playerInControl,
     playersReadyForNextRound: [],
@@ -169,7 +189,7 @@ function handleRoundStarted(storeData, event) {
 function handleRoundEnded(storeData, event) {
   const { gameOver, places, round } = event.payload;
   console.log(`Reached the end of the ${round} round.`);
-  const newStore = {...storeData, roundSummary: event.payload};
+  const newStore = {...storeData, revealAnswer: false, roundSummary: event.payload};
   if (gameOver) {
     let newRoom = {...storeData.room};
     const currentChampion = getCurrentChampion(places);
@@ -306,26 +326,43 @@ function handlePlayerBuzzed(storeData, event) {
 function handlePlayerAnswered(storeData, event) {
   const { answer, answerDelayMillis, correct, score } = event.payload;
   const { clueID, playerID } = event.payload.context;
+  const playerName = getPlayerName(playerID);
+  const isFinalRound = storeData.game?.currentRound === Rounds.FINAL;
   const dailyDouble = isDailyDouble(storeData.board, clueID);
-  const allowAnswers = (!correct && !dailyDouble && playerID !== storeData.playerID);
-  console.log(`${getPlayerName(playerID)} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
-  const newPlayer = {...storeData.players[playerID], score: score};
-  const newPlayers = {...storeData.players, [playerID]: newPlayer};
+  const allowAnswers = (isFinalRound ?
+                         (playerID !== storeData.playerID && !storeData.activeClue?.playersAttempted?.includes(storeData.playerID) && !storeData.responseTimerElapsed) :
+                         (!correct && !dailyDouble && playerID !== storeData.playerID));
   let newStoreData = {
     ...storeData,
-    players: newPlayers,
-    playerAnswering: null,
     prevAnswer: event.payload,
-    currentWager: null,
     allowAnswers: allowAnswers,
-    answerDelayMillis: answerDelayMillis,
   };
-  if (correct) {
-    newStoreData.activeClue = null;
-    newStoreData.playerInControl = playerID;
-    newStoreData.revealAnswer = false;
-  } else if (dailyDouble) {
-    newStoreData.revealAnswer = true;
+  if (isFinalRound) {
+    if (typeof answer === 'string' && typeof score === 'number') {
+      // Revealing the player's answer after everyone has submitted an answer (or time has run out).
+      console.log(`${playerName} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
+      const newPlayer = {...storeData.players[playerID], score: score};
+      newStoreData.players = {...storeData.players, [playerID]: newPlayer};
+      newStoreData.playerAnswering = playerID;
+    } else {
+      // Notification that the player has submitted an answer, without revealing the answer or whether it was correct.
+      console.log(`${playerName} submitted an answer.`);
+      newStoreData.activeClue = {...storeData.activeClue, playersAttempted: storeData.activeClue.playersAttempted.concat(playerID)};
+    }
+  } else {
+    console.log(`${playerName} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
+    const newPlayer = {...storeData.players[playerID], score: score};
+    newStoreData.players = {...storeData.players, [playerID]: newPlayer};
+    newStoreData.playerAnswering = null;
+    newStoreData.currentWager = null;
+    newStoreData.answerDelayMillis = answerDelayMillis;
+    if (correct) {
+      newStoreData.activeClue = null;
+      newStoreData.playerInControl = playerID;
+      newStoreData.revealAnswer = false;
+    } else if (dailyDouble) {
+      newStoreData.revealAnswer = true;
+    }
   }
   return newStoreData;
 }
@@ -333,7 +370,26 @@ function handlePlayerAnswered(storeData, event) {
 function handlePlayerWagered(storeData, event) {
   const { playerID, wager } = event.payload;
   console.log(`${getPlayerName(playerID)} wagered $${wager.toLocaleString()}.`);
-  return {...storeData, currentWager: wager, playerAnswering: playerID, responseTimerElapsed: false};
+  let currentWager;
+  let playerAnswering = null;
+  if (storeData.game?.currentRound === Rounds.FINAL) {
+    currentWager = (storeData.currentWager ? {...storeData.currentWager} : {});
+    currentWager[playerID] = wager;
+  } else {
+    currentWager = wager;
+    playerAnswering = playerID;
+  }
+  let newStore = {...storeData, currentWager: currentWager, playerAnswering: playerAnswering, responseTimerElapsed: false};
+  if (event.payload.isLastPlayerToWager) {
+    const category = storeData.board.categories[storeData.activeClue.categoryID];
+    const clueIndex = category.clues.map(clue => clue.clueID).indexOf(storeData.activeClue.clueID);
+    const clue = {...storeData.activeClue, played: true};
+    newStore.activeClue = {...storeData.activeClue, played: true};
+    let newBoard = {...storeData.board};
+    newBoard.categories[storeData.activeClue.categoryID].clues[clueIndex] = clue;
+    newStore.board = newBoard;
+  }
+  return newStore;
 }
 
 function handlePlayerMarkedClueAsInvalid(storeData, event) {
@@ -456,24 +512,35 @@ function handleBuzzingPeriodEnded(storeData, event) {
 function handleResponsePeriodEnded(storeData, event) {
   const { answerDelayMillis, score } = event.payload;
   const { clueID, playerID } = event.payload.context;
-  console.log(`Response time expired for ${getPlayerName(playerID)}.`);
+  const isFinalRound = storeData.game?.currentRound === Rounds.FINAL;
   const dailyDouble = isDailyDouble(storeData.board, clueID);
-  const newPlayer = {...storeData.players[playerID], score: score};
-  return {
+  console.log(`Response time expired for ${isFinalRound ? 'the final round' : getPlayerName(playerID)}.`);
+  let newStore = {
     ...storeData,
-    currentWager: null,
     responseTimerElapsed: true,
     revealAnswer: dailyDouble,
     answerDelayMillis: answerDelayMillis,
-    players: {...storeData.players, [playerID]: newPlayer},
     playerAnswering: null,
   };
+  if (isFinalRound) {
+    newStore.allowAnswers = false;
+  } else {
+    const newPlayer = {...storeData.players[playerID], score: score};
+    newStore.players = {...storeData.players, [playerID]: newPlayer};
+    newStore.currentWager = null;
+  }
+  return newStore;
 }
 
 function handleWaitingPeriodEnded(storeData, event) {
   const { categoryID, clueID } = event.payload.context;
   console.log(`Now accepting answers for clue ${clueID} (category ${categoryID}).`);
   return {...storeData, allowAnswers: true};
+}
+
+function handleFinalRoundAnswerRevealed(storeData, _) {
+  console.log(`Revealing answer for the final round.`);
+  return {...storeData, playerAnswering: null, revealAnswer: true};
 }
 
 const eventHandlers = {
@@ -507,6 +574,7 @@ const eventHandlers = {
   [EventTypes.BUZZING_PERIOD_ENDED]: handleBuzzingPeriodEnded,
   [EventTypes.RESPONSE_PERIOD_ENDED]: handleResponsePeriodEnded,
   [EventTypes.WAITING_PERIOD_ENDED]: handleWaitingPeriodEnded,
+  [EventTypes.FINAL_ROUND_ANSWER_REVEALED]: handleFinalRoundAnswerRevealed,
 }
 
 function handleWebsocketEvent(storeData, event) {

@@ -6,8 +6,11 @@ import {
   DAILY_DOUBLE_MINIMUM_WAGER,
   DEFAULT_COUNTDOWN_SECONDS,
   EventTypes,
+  FINAL_ROUND_COUNTDOWN_SECONDS,
+  FINAL_ROUND_MINIMUM_WAGER,
   MAX_KICK_DURATION_SECONDS,
   MAX_PLAYERS_PER_GAME,
+  Rounds,
   StatusCodes,
   WAGER_COUNTDOWN_SECONDS,
 } from '../constants.mjs';
@@ -70,6 +73,8 @@ const NO_ROOM_KEY = 'NO_ROOM';
 const PING_INTERVAL_MILLIS = 30_000;
 
 const REASSIGNMENT_CHECK_DELAY_MILLIS = 5_000;
+
+const REVEAL_FINAL_ANSWERS_DELAY_MILLIS = 5_000;
 
 const logger = log.get('ws');
 
@@ -224,14 +229,33 @@ export function getPlayerName(playerID) {
   return playerNames[playerID] || playerID;
 }
 
+function shouldSkipFinalRound(game, players) {
+  if (getNextRound(game) === Rounds.FINAL) {
+    // Skip the final round if no players have any money to wager.
+    let shouldSkip = true;
+    Object.entries(game.scores).forEach(([playerID, score]) => {
+      const player = players.find(player => player.playerID === playerID);
+      if (player && player.active && !player.spectating && score > 0) {
+        shouldSkip = false;
+      }
+    });
+    return shouldSkip;
+  }
+  return false;
+}
+
 function checkForLastClue(game) {
   const { currentRound, gameID } = game;
   const unplayedClues = getUnplayedClues(game.rounds[currentRound], 1);
   if (unplayedClues.length === 0) {
     getPlayers(game.playerIDs).then(players => {
-      const gameOver = !hasMoreRounds(game);
+      const skippedFinalRound = shouldSkipFinalRound(game, players);
+      const gameOver = !hasMoreRounds(game) || skippedFinalRound;
       const places = getCurrentPlaces(game, players);
-      const roundSummary = {round: currentRound, places: places, gameOver: gameOver};
+      let roundSummary = {round: currentRound, places: places, gameOver: gameOver};
+      if (skippedFinalRound) {
+        roundSummary.skippedFinalRound = true;
+      }
       if (gameOver) {
         const winners = places[Object.keys(places)[0]];
         const winnerNames = winners.map(player => player.name);
@@ -264,6 +288,65 @@ function checkForLastClue(game) {
       broadcast(new WebsocketEvent(EventTypes.ROUND_ENDED, {...roundSummary, gameID: gameID, roomID: game.roomID}));
     }).catch(e => roomLogger.error(game.roomID, `Failed to get players while checking for last clue: ${e}`));
   }
+}
+
+function revealFinalRoundAnswers(game) {
+  roomLogger.info(game.roomID, `Revealing final round answers for game ${game.gameID}.`);
+  getGame(game.gameID).then(game => {
+    const activeClue = game.activeClue;
+    const finalRoundAnswers = game.finalRoundAnswers;
+    let allIncorrect = true;
+    Object.entries(finalRoundAnswers).sort(
+      ([playerID1, a1], [playerID2, a2]) => game.scores[playerID1] - game.scores[playerID2]
+    ).forEach(([playerID, answer], i) => {
+      // Broadcast a PLAYER_ANSWERED event every few seconds.
+      if (answer.correct) {
+        allIncorrect = false;
+      }
+      setTimeout(function() {
+        updateGame(game.gameID, {playerAnswering: playerID, [`scores.${playerID}`]: answer.score}).then(() => {
+          let promises = [
+            incrementPlayerStat(playerID, CLUES_ANSWERED_STAT),
+            incrementPlayerStat(playerID, OVERALL_SCORE_STAT, (answer.correct ? answer.wager : -answer.wager)),
+          ];
+          if (answer.correct) {
+            promises.push(incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT));
+          }
+          return Promise.all(promises);
+        }).then(() => {
+          roomLogger.info(game.roomID, `${getPlayerName(playerID)} answered "${answer.answer}" (${answer.correct ? 'correct' : 'incorrect'}).`);
+          const payload = {
+            context: EventContext.fromGameAndClue(game, activeClue, playerID),
+            clue: activeClue,
+            answer: answer.answer,
+            correct: answer.correct,
+            score: answer.score,
+            value: answer.wager,
+            answerDelayMillis: 0,
+          };
+          broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
+        }).catch(e => roomLogger.error(game.roomID, `Error occurred while revealing final round answer for player ${playerID}: ${e}`));
+      }, REVEAL_FINAL_ANSWERS_DELAY_MILLIS * (i + 1));
+    });
+
+    // If none of the players got the right answer, reveal it at the end.
+    if (allIncorrect) {
+      setTimeout(function() {
+        roomLogger.info(game.roomID, 'None of the players got the right answer in the final round; revealing answer.');
+        const payload = {context: EventContext.fromGameAndClue(game, activeClue), clue: activeClue, answer: activeClue.answer};
+        broadcast(new WebsocketEvent(EventTypes.FINAL_ROUND_ANSWER_REVEALED, payload));
+      }, REVEAL_FINAL_ANSWERS_DELAY_MILLIS * (Object.keys(finalRoundAnswers).length + 1));
+    }
+
+    // Broadcast a final event when all answers have been revealed.
+    const increment = (allIncorrect ? 2 : 1);
+    setTimeout(function() {
+      updateGame(game.gameID, {activeClue: null, playerAnswering: null, currentWager: null, finalRoundAnswers: null}).then(() => {
+        Object.entries(finalRoundAnswers).forEach(([playerID, answer]) => game.scores[playerID] = answer.score);
+        checkForLastClue(game);
+      });
+    }, REVEAL_FINAL_ANSWERS_DELAY_MILLIS * (Object.keys(finalRoundAnswers).length + increment));
+  }).catch(e => roomLogger.error(game.roomID, `Error occurred while getting game: ${e}`));
 }
 
 async function handleClientConnect(ws, event) {
@@ -635,43 +718,81 @@ function setExpirationTimerForClue(gameID, clue, delayMillis = 0) {
 }
 
 function setResponseTimerForClue(game, clue, playerID, wagering = false) {
+  const isFinalRound = game.currentRound === Rounds.FINAL;
   const dailyDouble = isDailyDouble(game.rounds[game.currentRound], clue.clueID);
-  const delayMillis = (wagering ? WAGER_COUNTDOWN_SECONDS : (dailyDouble ? DAILY_DOUBLE_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS)) * 1000;
+  let delaySeconds;
+  if (isFinalRound) {
+    delaySeconds = FINAL_ROUND_COUNTDOWN_SECONDS;
+  } else if (wagering) {
+    delaySeconds = WAGER_COUNTDOWN_SECONDS;
+  } else if (dailyDouble) {
+    delaySeconds = DAILY_DOUBLE_COUNTDOWN_SECONDS;
+  } else {
+    delaySeconds = DEFAULT_COUNTDOWN_SECONDS;
+  }
+  const delayMillis = delaySeconds * 1000;
+
   const timerID = setTimeout(function() {
     getGame(game.gameID).then(game => {
       const expectedPlayerID = (wagering ? game.playerInControl : game.playerAnswering);
-      if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID && expectedPlayerID === playerID) {
-        roomLogger.info(game.roomID, `${wagering ? 'Wagering' : 'Response'} time expired for ${getPlayerName(playerID)}.`);
+      if (game.activeClue?.categoryID === clue.categoryID && game.activeClue?.clueID === clue.clueID && (isFinalRound || expectedPlayerID === playerID)) {
+        roomLogger.info(game.roomID, `${wagering ? 'Wagering' : 'Response'} time expired${isFinalRound ? '' : ' for ' + getPlayerName(playerID)}.`);
         if (wagering) {
           submitWager(game, clue.categoryID, clue.clueID, playerID, DAILY_DOUBLE_MINIMUM_WAGER);
           return;
         }
-        const value = game.currentWager || clue.value;
-        const newScore = game.scores[playerID] - value;
-        let newFields = {currentWager: null, playerAnswering: null, [`scores.${playerID}`]: newScore};
-        if (dailyDouble) {
-          newFields.activeClue = null;
-        }
-        updateGame(game.gameID, newFields).then(() => {
-          const answerDelayMillis = (dailyDouble ? 0 : buzzTimers[game.gameID]?.delayMillis);
-          const payload = {
-            context: EventContext.fromGameAndClue(game, clue, playerID),
-            score: newScore,
-            answerDelayMillis: answerDelayMillis,
-          };
-          broadcast(new WebsocketEvent(EventTypes.RESPONSE_PERIOD_ENDED, payload));
-          delete responseTimers[game.gameID];
-          if (answerDelayMillis) {
-            setExpirationTimerForClue(game.gameID, clue, answerDelayMillis);
+        let newFields = {};
+        let newScore = null;
+        if (isFinalRound) {
+          let finalRoundAnswers = {};
+          Object.entries(game.currentWager).forEach(([playerID, wager]) => {
+            if (!game.finalRoundAnswers?.hasOwnProperty(playerID)) {
+              finalRoundAnswers[playerID] = {answer: '', correct: false, wager: wager, score: game.scores[playerID] - wager};
+            }
+          });
+          if (Object.keys(finalRoundAnswers).length > 0) {
+            if (game.hasOwnProperty('finalRoundAnswers')) {
+              Object.entries(finalRoundAnswers).forEach(([playerID, answer]) => newFields[`finalRoundAnswers.${playerID}`] = answer);
+            } else {
+              newFields.finalRoundAnswers = finalRoundAnswers;
+            }
           }
+        } else {
+          const value = game.currentWager || clue.value;
+          newScore = game.scores[playerID] - value;
+          newFields = {currentWager: null, playerAnswering: null, [`scores.${playerID}`]: newScore};
           if (dailyDouble) {
-            game.scores[playerID] = newScore;
-            checkForLastClue(game);
+            newFields.activeClue = null;
           }
-        }).catch(e => roomLogger.error(game.roomID, `Failed to reset player answering for game ${game.gameID}: ${e}`));
+        }
+        if (isFinalRound && !Object.keys(newFields).length) {
+          // If all players already answered in the final round, just clean up the timer.
+          delete responseTimers[game.gameID];
+        } else {
+          updateGame(game.gameID, newFields).then(() => {
+            const answerDelayMillis = (isFinalRound || dailyDouble ? 0 : buzzTimers[game.gameID]?.delayMillis);
+            const payload = {
+              context: EventContext.fromGameAndClue(game, clue, playerID),
+              score: newScore,
+              answerDelayMillis: answerDelayMillis,
+            };
+            broadcast(new WebsocketEvent(EventTypes.RESPONSE_PERIOD_ENDED, payload));
+            delete responseTimers[game.gameID];
+            if (answerDelayMillis) {
+              setExpirationTimerForClue(game.gameID, clue, answerDelayMillis);
+            }
+            if (isFinalRound) {
+              revealFinalRoundAnswers(game);
+            } else if (dailyDouble) {
+              game.scores[playerID] = newScore;
+              checkForLastClue(game);
+            }
+          }).catch(e => roomLogger.error(game.roomID, `Failed to reset player answering for game ${game.gameID}: ${e}`));
+        }
       }
     }).catch(e => roomLogger.error(game.roomID, `Failed to get game ${game.gameID} in response timeout handler: ${e}`));
   }, delayMillis);
+
   responseTimers[game.gameID] = {
     playerID: playerID,
     categoryID: clue.categoryID,
@@ -777,63 +898,142 @@ async function handleSubmitAnswer(ws, event) {
   }
   const { roomID, gameID, playerID, categoryID, clueID } = event.payload.context;
   const answer = event.payload.answer;
+  const isFinalRound = game.currentRound === Rounds.FINAL;
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
     handleError(ws, event, `invalid answer attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
-  if (game.playerAnswering.toString() !== playerID.toString()) {
-    handleError(ws, event, `invalid answer attempt - player ${playerID} is not currently answering`, StatusCodes.BAD_REQUEST);
-    return;
+  if (isFinalRound) {
+    if (!game.currentWager.hasOwnProperty(playerID) || !game.scores.hasOwnProperty(playerID) || game.scores[playerID] <= 0) {
+      handleError(ws, event, `invalid answer attempt - player ${playerID} may not participate in the final round`, StatusCodes.BAD_REQUEST);
+      return;
+    }
+    if (game.finalRoundAnswers?.hasOwnProperty(playerID)) {
+      handleError(ws, event, `invalid answer attempt - player ${playerID} has already answered`, StatusCodes.BAD_REQUEST);
+      return;
+    }
+  } else {
+    if (game.playerAnswering.toString() !== playerID.toString()) {
+      handleError(ws, event, `invalid answer attempt - player ${playerID} is not currently answering`, StatusCodes.BAD_REQUEST);
+      return;
+    }
   }
   const clues = game.rounds[game.currentRound].categories[categoryID].clues;
   const clue = clues.find(clue => clue.clueID === clueID);
   const correct = checkSubmittedAnswer(clue.answer, answer);
-  const value = game.currentWager || clue.value;
+  const value = (isFinalRound ? (game.currentWager[playerID] || FINAL_ROUND_MINIMUM_WAGER) : (game.currentWager || clue.value));
   const score = game.scores[playerID];
   const newScore = (correct ? score + value : score - value);
-  let newFields = {playerAnswering: null, currentWager: null, [`scores.${playerID}`]: newScore};
   const dailyDouble = isDailyDouble(game.rounds[game.currentRound], clue.clueID);
-  if (correct || dailyDouble) {
-    newFields.activeClue = null;
-    if (correct) {
-      newFields.playerInControl = playerID;
+  let newFields = {};
+  let isLastPlayerToAnswer = false;
+  if (isFinalRound) {
+    const finalRoundAnswer = {answer: answer, correct: correct, wager: value, score: newScore};
+    if (game.hasOwnProperty('finalRoundAnswers')) {
+      newFields[`finalRoundAnswers.${playerID}`] = finalRoundAnswer;
+    } else {
+      newFields.finalRoundAnswers = {[playerID]: finalRoundAnswer};
+    }
+    let players;
+    try {
+      players = await getPlayers(game.playerIDs);
+    } catch (e) {
+      handleError(ws, event, 'failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
+    const numPlayers = players.filter(player => player.active && !player.spectating && game.scores[player.playerID] > 0).length;
+    if (Object.keys(game.finalRoundAnswers || {}).length >= numPlayers - 1) {
+      isLastPlayerToAnswer = true;
+    }
+  } else {
+    newFields = {playerAnswering: null, currentWager: null, [`scores.${playerID}`]: newScore};
+    if (correct || dailyDouble) {
+      newFields.activeClue = null;
+      if (correct) {
+        newFields.playerInControl = playerID;
+      }
     }
   }
-  updateGame(gameID, newFields).then(() => incrementPlayerStat(playerID, OVERALL_SCORE_STAT, (correct ? value : -value))).then(() => {
+  updateGame(gameID, newFields).then(() =>
+    isFinalRound ? Promise.resolve() : incrementPlayerStat(playerID, OVERALL_SCORE_STAT, (correct ? value : -value))
+  ).then(() => {
     const name = getPlayerName(playerID);
     roomLogger.info(roomID, `${name} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
-    const delayMillis = (dailyDouble || correct ? 0 : buzzTimers[gameID]?.delayMillis);
-    const payload = {...event.payload, clue: clue, correct: correct, score: newScore, value: value, answerDelayMillis: delayMillis};
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
-    if (delayMillis) {
-      setExpirationTimerForClue(game.gameID, clue, delayMillis);
-    }
-    if (correct || dailyDouble) {
-      game.scores[playerID] = newScore;
-      checkForLastClue(game);
-    }
-    if (correct) {
-      incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct answer count for ${name}: ${e}`));
-      if (dailyDouble) {
-        incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct daily double count for ${name}: ${e}`));
+    if (isFinalRound) {
+      if (isLastPlayerToAnswer) {
+        const payload = {
+          context: EventContext.fromGameAndClue(game, clue),
+          score: null,
+          answerDelayMillis: 0,
+        };
+        broadcast(new WebsocketEvent(EventTypes.RESPONSE_PERIOD_ENDED, payload));
+        revealFinalRoundAnswers(game);
+      } else {
+        // Broadcast a basic event to indicate that the player submitted an answer without revealing the answer or whether it was correct.
+        broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, event.payload));
+      }
+    } else {
+      const delayMillis = (dailyDouble || correct ? 0 : buzzTimers[gameID]?.delayMillis);
+      const payload = {...event.payload, clue: clue, correct: correct, score: newScore, value: value, answerDelayMillis: delayMillis};
+      broadcast(new WebsocketEvent(EventTypes.PLAYER_ANSWERED, payload));
+      if (delayMillis) {
+        setExpirationTimerForClue(game.gameID, clue, delayMillis);
+      }
+      if (correct || dailyDouble) {
+        game.scores[playerID] = newScore;
+        checkForLastClue(game);
+      }
+      if (correct) {
+        incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct answer count for ${name}: ${e}`));
+        if (dailyDouble) {
+          incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct daily double count for ${name}: ${e}`));
+        }
       }
     }
   }).catch(e => roomLogger.error(roomID, `Error occurred while submitting answer: ${e}`));
 }
 
-function submitWager(game, categoryID, clueID, playerID, wager) {
-  updateGame(game.gameID, {playerAnswering: playerID, currentWager: wager}).then(() =>
+function submitWager(game, categoryID, clueID, playerID, wager, isFinalRound = false, isLastPlayerToWager = false) {
+  let arrayFilters = null;
+  let newFields;
+  if (isFinalRound) {
+    // In the final round, currentWager is an object mapping player IDs to wagers.
+    let currentWager = (game.currentWager ? {...game.currentWager} : {});
+    currentWager[playerID] = wager;
+    newFields = {currentWager: currentWager};
+    if (isLastPlayerToWager) {
+      // When the last player wagers, mark the clue as played.
+      const cluePlayedKey = `rounds.${game.currentRound}.categories.${categoryID}.clues.$[clue].played`;
+      newFields[cluePlayedKey] = true;
+      newFields['activeClue.played'] = true;
+      arrayFilters = [
+        {
+          'clue.clueID': {$eq: clueID},
+        },
+      ];
+    }
+  } else {
+    newFields = {playerAnswering: playerID, currentWager: wager};
+  }
+  updateGame(game.gameID, newFields, arrayFilters).then(() =>
     incrementPlayerStat(playerID, CLUES_ANSWERED_STAT)
   ).then(() =>
-    incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_STAT)
+    isFinalRound ? Promise.resolve() : incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_STAT)
   ).then(() => {
     roomLogger.info(game.roomID, `${getPlayerName(playerID)} wagered $${wager.toLocaleString()}.`);
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, {roomID: game.roomID, playerID: playerID, wager: wager}));
+    let payload = {roomID: game.roomID, playerID: playerID, wager: wager};
+    if (isLastPlayerToWager) {
+      payload.isLastPlayerToWager = true;
+    }
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_WAGERED, payload));
     const timer = responseTimers[game.gameID];
     if (timer && timer.categoryID === categoryID && timer.clueID === clueID && timer.playerID === playerID && timer.wagering) {
       clearTimeout(timer.timerID);
     }
-    setResponseTimerForClue(game, game.activeClue, playerID);
+    if (!isFinalRound || isLastPlayerToWager) {
+      const timerPlayerID = (isFinalRound ? null : playerID);
+      setResponseTimerForClue(game, game.activeClue, timerPlayerID);
+    }
   }).catch(e => roomLogger.error(game.roomID, `Error occurred while submitting wager: ${e}`));
 }
 
@@ -848,11 +1048,12 @@ async function handleSubmitWager(ws, event) {
   }
   const { playerID, categoryID, clueID } = event.payload.context;
   const wager = event.payload.wager;
+  const isFinalRound = (game.currentRound === Rounds.FINAL);
   if (game.activeClue.clueID.toString() !== clueID.toString() || game.activeClue.categoryID.toString() !== categoryID.toString()) {
     handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not currently active`, StatusCodes.BAD_REQUEST);
     return;
   }
-  if (!isDailyDouble(game.rounds[game.currentRound], clueID)) {
+  if (!isFinalRound && !isDailyDouble(game.rounds[game.currentRound], clueID)) {
     handleError(ws, event, `invalid wager attempt - clue ${clueID} (category ${categoryID}) is not a daily double`, StatusCodes.BAD_REQUEST);
     return;
   }
@@ -862,7 +1063,21 @@ async function handleSubmitWager(ws, event) {
     handleError(ws, event, `invalid wager attempt - wager ${wager} is invalid (range is ${minWager} - ${maxWager})`, StatusCodes.BAD_REQUEST);
     return;
   }
-  submitWager(game, categoryID, clueID, playerID, playerWager);
+  let isLastPlayerToWager = false;
+  if (isFinalRound) {
+    let players;
+    try {
+      players = await getPlayers(game.playerIDs);
+    } catch (e) {
+      handleError(ws, event, 'failed to get players', StatusCodes.INTERNAL_SERVER_ERROR);
+      return;
+    }
+    const numPlayers = players.filter(player => player.active && !player.spectating && game.scores[player.playerID] > 0).length;
+    if (Object.keys(game.currentWager || {}).length >= numPlayers - 1) {
+      isLastPlayerToWager = true;
+    }
+  }
+  submitWager(game, categoryID, clueID, playerID, playerWager, isFinalRound, isLastPlayerToWager);
 }
 
 async function handleStartSpectating(ws, event) {
@@ -1119,9 +1334,15 @@ function advanceRound(roomID, game, players) {
   const placeKeys = Object.keys(places);
   const lastPlacePlayers = places[placeKeys[placeKeys.length - 1]];
   const playerInControl = (lastPlacePlayers.length === 1 ? lastPlacePlayers[0] : randomChoice(lastPlacePlayers)).playerID;
+  const activeClue = (round === Rounds.FINAL ? Object.values(game.rounds[round].categories)[0].clues[0] : null);
   advanceToNextRound(game.gameID, round, playerInControl).then(() => {
+    if (activeClue) {
+      return setActiveClue(game, activeClue, false);
+    }
+    return Promise.resolve();
+  }).then(() => {
     roomLogger.info(roomID, `Advanced to the ${round} round in game ${game.gameID}.`);
-    const payload = {roomID: roomID, gameID: game.gameID, round: round, playerInControl: playerInControl};
+    const payload = {roomID: roomID, gameID: game.gameID, round: round, playerInControl: playerInControl, activeClue: activeClue};
     broadcast(new WebsocketEvent(EventTypes.ROUND_STARTED, payload));
   }).catch(e => roomLogger.error(roomID, `Failed to advance to next round: ${e}`));
 }

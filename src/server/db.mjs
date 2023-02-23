@@ -233,8 +233,8 @@ async function updateGameFields(gameID, updates, arrayFilters) {
   await gamesCollection.updateOne({_id: gameID}, updates, opts);
 }
 
-export async function updateGame(gameID, newFields) {
-  await updateGameFields(gameID, {$set: newFields});
+export async function updateGame(gameID, newFields, arrayFilters = null) {
+  await updateGameFields(gameID, {$set: newFields}, arrayFilters);
 }
 
 export async function addPlayerToGame(gameID, playerID) {
@@ -244,21 +244,22 @@ export async function addPlayerToGame(gameID, playerID) {
   });
 }
 
-export async function setActiveClue(game, clue) {
-  const cluePlayedKey = `rounds.${game.currentRound}.categories.${clue.categoryID}.clues.$[clue].played`;
-  const updates = {
-    $set: {
-      activeClue: {...clue, played: true, playersAttempted: [], playersMarkingInvalid: [], playersVotingToSkip: []},
-      currentWager: null,
-      [cluePlayedKey]: true
-    }
+export async function setActiveClue(game, clue, played = true) {
+  let arrayFilters = null;
+  let newFields = {
+    activeClue: {...clue, played: played, playersAttempted: [], playersMarkingInvalid: [], playersVotingToSkip: []},
+    currentWager: null,
   };
-  const arrayFilters = [
-    {
-      'clue.clueID': {$eq: clue.clueID},
-    },
-  ];
-  await updateGameFields(game.gameID, updates, arrayFilters);
+  if (played) {
+    const cluePlayedKey = `rounds.${game.currentRound}.categories.${clue.categoryID}.clues.$[clue].played`;
+    newFields[cluePlayedKey] = true;
+    arrayFilters = [
+      {
+        'clue.clueID': {$eq: clue.clueID},
+      },
+    ];
+  }
+  await updateGameFields(game.gameID, {$set: newFields}, arrayFilters);
 }
 
 export async function setPlayerAnswering(gameID, playerID) {
@@ -695,6 +696,32 @@ export async function getSeasonSummaries() {
     {$project: {_id: 0}},
   ]);
   return await cursor.toArray();
+}
+
+export async function getRandomFinalRoundClue() {
+  const cursor = await cluesCollection.aggregate([
+    {$match: {isFinalJeopardy: true}},
+    {$lookup: {from: 'categories', localField: 'categoryID', foreignField: 'categoryID', as: 'categories'}},
+    {$lookup: {from: 'episodes', localField: 'episodeID', foreignField: 'episodeID', as: 'episodes'}},
+    {$project: {
+      _id: 0,
+      clueID: 1,
+      categoryID: 1,
+      episodeID: 1,
+      answer: 1,
+      clue: 1,
+      rawAnswer: 1,
+      rawClue: 1,
+      categories: {categoryID: 1, name: 1, comments: 1},
+      episodes: {airDate: 1},
+    }},
+    {$sample: {size: 1}},
+  ]);
+  const clues = await cursor.toArray();
+  if (!clues.length) {
+    return null;
+  }
+  return clues.pop();
 }
 
 export default db;

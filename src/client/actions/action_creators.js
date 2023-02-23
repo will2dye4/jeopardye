@@ -1,6 +1,6 @@
 import { connect, disconnect, send } from '@giantmachines/redux-websocket';
 import { API_BASE, EventTypes, PLAYER_ID_KEY, StatusCodes, WS_BASE } from '../../constants.mjs';
-import { getISODateString, getUnplayedClues, WebsocketEvent } from '../../utils.mjs';
+import { getISODateString, WebsocketEvent } from '../../utils.mjs';
 
 export const ActionTypes = {
   FETCH_ROOM: 'JEOPARDYE::FETCH_ROOM',
@@ -346,7 +346,7 @@ export function fetchGame(gameID) {
       if (game.error) {
         return game;
       }
-      if (game.finishedTime !== null || !getUnplayedClues(game.rounds[game.currentRound]).length) {
+      if (game.finishedTime !== null) {
         console.log(`Previous game ${gameID} finished. Not reusing game.`);
         return null;
       }

@@ -202,7 +202,7 @@ class RoomHistory extends React.Component {
                     </Th>
                     <Th cursor="default" userSelect="none" textAlign="center">Episode Info</Th>
                     <Th cursor="default" userSelect="none">Duration</Th>
-                    <Th cursor="default" userSelect="none" textAlign="center" whiteSpace="nowrap"># Rounds</Th>
+                    <Th cursor="default" userSelect="none" textAlign="center" title="The number of rounds does not include the final round." whiteSpace="nowrap"># Rounds</Th>
                     <Th cursor="default" userSelect="none" width="35%">Scores</Th>
                   </Tr>
                 </Thead>

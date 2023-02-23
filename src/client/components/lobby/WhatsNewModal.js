@@ -21,6 +21,7 @@ import {
   faListUl,
   faLowVision,
   faMessage,
+  faRankingStar,
 } from '@fortawesome/free-solid-svg-icons';
 import Bold from '../common/Bold';
 import Card from '../common/card/Card';
@@ -35,6 +36,19 @@ const NEW_FEATURES = [
     description: (
       'You can now play a random game from a selected season or date range, or even a specific game from a selected date. ' +
       'You can also build a customized round by searching the database of available categories and choosing the ones you want to play.'
+    ),
+  },
+  {
+    id: 'final-round',
+    icon: faRankingStar,
+    heading: 'Final Round',
+    description: (
+      <React.Fragment>
+        <Text as="span" fontStyle="italic">Finally</Text> (get it?), you can now play games with a final round! The scores
+        can change in the blink of an eye as all players make their wagers and then attempt to answer the same clue. Be sure
+        to wager wisely! (<Bold>NOTE:</Bold> Players who finish the penultimate round with a score of zero or below are not
+        allowed to participate in the final round.)
+      </React.Fragment>
     ),
   },
   {
@@ -86,7 +100,7 @@ const NEW_FEATURES = [
     icon: faBullhorn,
     heading: 'What\'s New Modal',
     description: (
-      'Explore and learn about the most exciting new features in the latest version. Large, colorful icons are coupled with ' +
+      'Explore and learn about the most exciting new features in the latest version. Large, blue-colored icons are coupled with ' +
       'descriptive text explaining what\'s new and how to use it. (You\'re looking at it now!)'
     ),
   },
@@ -110,8 +124,8 @@ function WhatsNewModal(props) {
               </Text>
             </Box>
             {NEW_FEATURES.map(feature => (
-              <Center>
-                <GridRow key={feature.id} cols={5} gap={8} m={4} w="80%">
+              <Center key={feature.id}>
+                <GridRow cols={5} gap={8} m={4} w="80%">
                   <GridItem>
                     <Center h="100%">
                       <Text color="jeopardyeBlue.500" fontSize="4xl">

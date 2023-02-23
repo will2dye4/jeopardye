@@ -52,7 +52,7 @@ export class Clue {
       this.rawAnswer = answer;
       this.question = sanitizeQuestionText(question);
       this.rawQuestion = question;
-      this.value = value;
+      this.value = value || 0;  // Final round clues don't have a value; default to 0.
     }
     if (airDate !== null) {
       this.airDate = airDate;

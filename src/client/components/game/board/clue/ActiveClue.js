@@ -1,7 +1,9 @@
 import React from 'react';
-import { Box, Flex, Image } from '@chakra-ui/react';
+import { Box, Flex, Image, Text } from '@chakra-ui/react';
 import { formatDate } from '../../../../../utils.mjs';
+import { getPlayerName } from '../../../../reducers/game_reducer';
 import ActiveClueButtons from './ActiveClueButtons';
+import ActiveClueLabel from './ActiveClueLabel';
 
 const LONG_CLUE_LENGTH_THRESHOLD = 150;
 const EXTRA_LONG_CLUE_LENGTH_THRESHOLD = LONG_CLUE_LENGTH_THRESHOLD + 60;
@@ -10,7 +12,7 @@ class ActiveClue extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      text: props.revealAnswer ? props.activeClue.answer : props.activeClue.question,
+      text: this.getText(props),
     };
     this.handleClick = this.handleClick.bind(this);
   }
@@ -19,11 +21,62 @@ class ActiveClue extends React.Component {
     if (!prevProps.revealAnswer && this.props.revealAnswer) {
       this.setState({text: this.props.activeClue.answer});
     }
+
+    if (this.props.gameState.isFinalRound && ((!prevProps.activeClue?.played && this.props.activeClue?.played) ||
+        (prevProps.playerAnswering !== this.props.playerAnswering) || (prevProps.prevAnswer !== this.props.prevAnswer))) {
+      this.setState({text: this.getText()});
+    }
+  }
+
+  getText(props) {
+    if (!props) {
+      props = this.props;
+    }
+    if (props.gameState.isFinalRound) {
+      if (props.playerAnswering) {
+        const { answer, correct, value } = props.prevAnswer || {};
+        const playerName = getPlayerName(props.playerAnswering);
+        const label = (answer?.length > 0 ? `${playerName} answered:` : `${playerName} did not submit an answer.`);
+        const prefix = (correct ? '+' : '-');
+        const amount = `${prefix}$${value.toLocaleString()}`;
+        const color = (correct ? 'green.200' : 'red.300');
+        return (
+          <React.Fragment>
+            <ActiveClueLabel minW="400px">{label}</ActiveClueLabel>
+            <Text>{answer}</Text>
+            <Text mt={3} whiteSpace="nowrap">
+              <Text as="span" bg={color} borderRadius={10} fontFamily="Helvetica, sans-serif" fontSize="3xl" textColor="black" textShadow="none" px={6} py={3}>
+                {amount}
+              </Text>
+            </Text>
+          </React.Fragment>
+        );
+      }
+      if (props.activeClue?.played) {
+        if (props.revealAnswer) {
+          return (
+            <React.Fragment>
+              <ActiveClueLabel minW="350px">Correct Response</ActiveClueLabel>
+              {props.activeClue.answer}
+            </React.Fragment>
+          );
+        }
+        return (props.responseTimerElapsed ? '' : props.activeClue.question);
+      }
+      return (
+        <React.Fragment>
+          <ActiveClueLabel>Final Category</ActiveClueLabel>
+          {props.gameState.categories[props.activeClue.categoryID].name}
+        </React.Fragment>
+      );
+    } else {
+      return props.revealAnswer ? props.activeClue.answer : props.activeClue.question;
+    }
   }
 
   allowBuzz() {
     return (this.props.allowAnswers && !this.props.playerAnswering && !this.props.gameState.playerIsSpectating &&
-            !this.props.activeClue.playersAttempted.includes(this.props.gameState.playerID));
+            !this.props.gameState.isFinalRound && !this.props.activeClue.playersAttempted.includes(this.props.gameState.playerID));
   }
 
   handleClick(event) {
@@ -37,16 +90,17 @@ class ActiveClue extends React.Component {
       if (!this.props.playersVotingToSkipClue.includes(this.props.gameState.playerID)) {
         this.props.voteToSkipActiveClue(event);
       }
-    } else if (!this.props.gameState.playerIsSpectating) {
+    } else if (!this.props.gameState.playerIsSpectating && !this.props.gameState.isFinalRound) {
       this.props.handleBuzz();
     }
   }
 
   getTitle() {
     const category = this.props.activeClue.category;
-    const value = this.props.currentWager || this.props.activeClue.value;
+    const clueValue = this.props.currentWager || this.props.activeClue.value;
+    const value = (this.props.gameState.isFinalRound ? '' : ` for $${clueValue.toLocaleString()}`);
     const airDate = (this.props.activeClue.airDate ? `aired ${formatDate(this.props.activeClue.airDate)}` : 'unknown air date');
-    return `${category} for $${value.toLocaleString()} (${airDate})`;
+    return `${category}${value} (${airDate})`;
   }
 
   render() {
@@ -75,7 +129,7 @@ class ActiveClue extends React.Component {
       content = (
         <React.Fragment>
           <Box className={classes} p={5} whiteSpace="pre-wrap">{this.state.text}</Box>
-          {!this.props.gameState.playerIsSpectating && <ActiveClueButtons {...this.props} />}
+          {!this.props.gameState.playerIsSpectating && !this.props.gameState.isFinalRound && <ActiveClueButtons {...this.props} />}
         </React.Fragment>
       );
       title = this.getTitle();

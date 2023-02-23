@@ -79,7 +79,7 @@ class GameSettings extends React.Component {
 
       allowUnrevealedClues: props.gameSettings.allowUnrevealedClues,
       dailyDoubles: props.gameSettings.dailyDoubles,
-      finalJeopardye: false, /* TODO - revert once Final Jeopardye is implemented: props.gameSettings.finalJeopardye, */
+      finalJeopardye: props.gameSettings.finalJeopardye,
       numRounds: props.gameSettings.numRounds,
     };
 
@@ -206,12 +206,10 @@ class GameSettings extends React.Component {
   }
 
   onFinalJeopardyeChanged() {
-    /* TODO - uncomment this once Final Jeopardye is implemented on the frontend
     const finalJeopardye = !this.state.finalJeopardye;
     const newState = {finalJeopardye: finalJeopardye};
     this.setState(newState);
     this.updateGameSettings(this.state.mode, newState);
-    */
   }
 
   onAllowUnrevealedCluesChanged() {

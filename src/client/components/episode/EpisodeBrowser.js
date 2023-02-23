@@ -227,7 +227,7 @@ class EpisodeBrowser extends React.Component {
                       Air Date
                       <Text as="span" className="hover-pointer" fontSize="xl" pl={2} onClick={this.toggleSortOrder}>{sortArrow}</Text>
                     </Th>
-                    <Th cursor="default" userSelect="none" width="50%">Comments</Th>
+                    <Th cursor="default" userSelect="none" width="40%">Comments</Th>
                     <Th cursor="default" userSelect="none">Contestants</Th>
                   </Tr>
                 </Thead>
