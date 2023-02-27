@@ -4,7 +4,9 @@ import moment from 'moment';
 import { comparePlayerEntries, formatScore, getAugmentedPlayerStats } from '../../../../utils.mjs';
 import {
   ALL_TIME_SCORE,
+  AVERAGE_SCORE,
   DAILY_DOUBLE_ACCURACY,
+  FINAL_ROUND_ACCURACY,
   HIGHEST_SINGLE_GAME_SCORE,
   RESPONSE_ACCURACY,
   WINNING_PERCENTAGE,
@@ -18,6 +20,7 @@ function StatisticsByPlayer(props) {
   const {
     overallScore,
     highestGameScore,
+    averageScore,
     gamesPlayed,
     gamesWon,
     winningPercentage,
@@ -27,6 +30,9 @@ function StatisticsByPlayer(props) {
     dailyDoublesAnswered,
     dailyDoublesAnsweredCorrectly,
     dailyDoublePercentage,
+    finalCluesAnswered,
+    finalCluesAnsweredCorrectly,
+    finalRoundPercentage,
   } = getAugmentedPlayerStats(player.stats);
   return (
     <React.Fragment>
@@ -45,12 +51,17 @@ function StatisticsByPlayer(props) {
         <PlayerStatistic label={HIGHEST_SINGLE_GAME_SCORE} value={formatScore(highestGameScore)} />
       </StatGroup>
       <StatGroup py={GROUP_PADDING}>
+        <PlayerStatistic label={AVERAGE_SCORE} value={formatScore(averageScore)} helpText="per game" />
+        <PlayerStatistic label={WINNING_PERCENTAGE} value={`${winningPercentage}%`}
+                         helpText={`${gamesWon.toLocaleString()} / ${gamesPlayed.toLocaleString()}`} />
+      </StatGroup>
+      <StatGroup py={GROUP_PADDING}>
         <PlayerStatistic label={RESPONSE_ACCURACY} value={`${correctPercentage}%`}
                          helpText={`${cluesAnsweredCorrectly.toLocaleString()} / ${cluesAnswered.toLocaleString()}`} />
         <PlayerStatistic label={DAILY_DOUBLE_ACCURACY} value={`${dailyDoublePercentage}%`}
                          helpText={`${dailyDoublesAnsweredCorrectly.toLocaleString()} / ${dailyDoublesAnswered.toLocaleString()}`} />
-        <PlayerStatistic label={WINNING_PERCENTAGE} value={`${winningPercentage}%`}
-                         helpText={`${gamesWon.toLocaleString()} / ${gamesPlayed.toLocaleString()}`} />
+        <PlayerStatistic label={FINAL_ROUND_ACCURACY} value={`${finalRoundPercentage}%`}
+                         helpText={`${finalCluesAnsweredCorrectly.toLocaleString()} / ${finalCluesAnswered.toLocaleString()}`} />
       </StatGroup>
     </React.Fragment>
   );

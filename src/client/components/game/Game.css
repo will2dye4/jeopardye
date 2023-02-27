@@ -15,7 +15,6 @@ body {
 
 .category-heading {
     background-color: #1D08A3;
-    border: 2px solid white;
     color: white;
     cursor: default;
     font-family: Helvetica, sans-serif;
@@ -33,7 +32,6 @@ body {
 
 .clue {
     background-color: #1D08A3;
-    border: 2px solid white;
     color: #FFCC00;
     cursor: default;
     font-family: "Swiss 911", Helvetica, sans-serif;

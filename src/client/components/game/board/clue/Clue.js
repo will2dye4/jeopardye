@@ -21,6 +21,7 @@ class Clue extends React.Component {
     const isActiveClue = (this.props.clue.clueID === this.props.activeClue?.clueID);
     const fontWeight = (isSafari() ? 'bold' : 'normal');
     const isContextual = this.props.clue.question?.match(/(heard|seen|shown) here/i);
+    const borderColor = (this.props.activeClue && !this.props.showClueAnimation ? '#1D08A3' : 'white');
     let classes = 'clue-border';
     let text = <br />;
     let title;
@@ -36,7 +37,7 @@ class Clue extends React.Component {
       title = 'This clue was not revealed during the show.';
     }
     return (
-      <Box className="clue" fontWeight={fontWeight} position="relative" userSelect="none" onClick={this.handleClick}>
+      <Box className="clue" border={`2px solid ${borderColor}`} fontWeight={fontWeight} position="relative" userSelect="none" onClick={this.handleClick}>
         <Box className={classes} py={1} title={title}>{text}</Box>
         {isContextual && !this.props.clue.played && (
           <Flex fontSize="sm" position="absolute" textColor="white" top={2} right={2}>

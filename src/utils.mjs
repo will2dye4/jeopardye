@@ -60,6 +60,8 @@ const INTERCHANGEABLE_TERMS = [
   new Set(['theodore roosevelt', 'teddy roosevelt']),
   new Set(['uk', 'united kingdom']),
   new Set(['un', 'united nations']),
+  new Set(['wwi', 'ww1', 'world war i', 'world war 1']),
+  new Set(['wwii', 'ww2', 'world war ii', 'world war 2']),
 ];
 
 const AMBIGUOUS_LAST_NAMES = new Set(['bronte', 'kennedy', 'roosevelt']);
@@ -247,18 +249,31 @@ export function getUnrevealedClues(board) {
 }
 
 export function getAugmentedPlayerStats(playerStats) {
-  const {
-    gamesPlayed,
-    gamesWon,
-    cluesAnswered,
-    cluesAnsweredCorrectly,
-    dailyDoublesAnswered,
-    dailyDoublesAnsweredCorrectly,
-  } = playerStats;
+  const overallScore = playerStats.overallScore || 0;
+  const highestGameScore = playerStats.highestGameScore || 0;
+  const gamesPlayed = playerStats.gamesPlayed || 0;
+  const gamesWon = playerStats.gamesWon || 0;
+  const cluesAnswered = playerStats.cluesAnswered || 0;
+  const cluesAnsweredCorrectly = playerStats.cluesAnsweredCorrectly || 0;
+  const dailyDoublesAnswered = playerStats.dailyDoublesAnswered || 0;
+  const dailyDoublesAnsweredCorrectly = playerStats.dailyDoublesAnsweredCorrectly || 0;
+  const finalCluesAnswered = playerStats.finalCluesAnswered || 0;
+  const finalCluesAnsweredCorrectly = playerStats.finalCluesAnsweredCorrectly || 0;
   return {
-    ...playerStats,
+    overallScore: overallScore,
+    highestGameScore: highestGameScore,
+    gamesPlayed: gamesPlayed,
+    gamesWon: gamesWon,
+    cluesAnswered: cluesAnswered,
+    cluesAnsweredCorrectly: cluesAnsweredCorrectly,
+    dailyDoublesAnswered: dailyDoublesAnswered,
+    dailyDoublesAnsweredCorrectly: dailyDoublesAnsweredCorrectly,
+    finalCluesAnswered: finalCluesAnswered,
+    finalCluesAnsweredCorrectly: finalCluesAnsweredCorrectly,
+    averageScore: Math.round(gamesPlayed === 0 ? 0 : (overallScore / gamesPlayed)),
     correctPercentage: Math.round((cluesAnswered === 0 ? 0 : (cluesAnsweredCorrectly / cluesAnswered)) * 100),
     dailyDoublePercentage: Math.round((dailyDoublesAnswered === 0 ? 0 : (dailyDoublesAnsweredCorrectly / dailyDoublesAnswered)) * 100),
+    finalRoundPercentage: Math.round((finalCluesAnswered === 0 ? 0 : (finalCluesAnsweredCorrectly / finalCluesAnswered)) * 100),
     winningPercentage: Math.round((gamesPlayed === 0 ? 0 : (gamesWon / gamesPlayed)) * 100),
   };
 }

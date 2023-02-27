@@ -33,7 +33,7 @@ class StatusBarText extends React.Component {
     const classes = 'status-text' + (animate ? ' animate__animated animate__pulse animate__infinite' : '');
     const emoji = this.getEmoji();
     const text = (this.props.status.hasOwnProperty('text') ? this.props.status.text : this.props.status);
-    return <Text className={classes} fontSize="3xl" fontWeight={fontWeight}>{emoji} {text}</Text>;
+    return <Text className={classes} fontSize="3xl" fontWeight={fontWeight} textAlign="center" w="90%">{emoji} {text}</Text>;
   }
 }
 

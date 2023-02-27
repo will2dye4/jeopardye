@@ -118,7 +118,7 @@ class ActiveClue extends React.Component {
 
     let content, title;
     if (this.props.gameState.isDailyDouble && !this.props.currentWager && !this.props.revealAnswer) {
-      content = <Image src="/images/daily_double.jpg" alt="Daily Double" w={width} h={height} objectFit="cover" />;
+      content = <Image src="/images/daily_double.jpg" alt="Daily Double" w={width} h={height} objectFit="contain" />;
     } else {
       let classes = 'active-clue';
       if (this.state.text.length > EXTRA_LONG_CLUE_LENGTH_THRESHOLD) {

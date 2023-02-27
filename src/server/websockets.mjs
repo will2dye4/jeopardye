@@ -19,6 +19,8 @@ import {
   CLUES_ANSWERED_CORRECTLY_STAT,
   DAILY_DOUBLES_ANSWERED_STAT,
   DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT,
+  FINAL_CLUES_ANSWERED_STAT,
+  FINAL_CLUES_ANSWERED_CORRECTLY_STAT,
   GAMES_PLAYED_STAT,
   GAMES_WON_STAT,
   OVERALL_SCORE_STAT,
@@ -306,11 +308,13 @@ function revealFinalRoundAnswers(game) {
       setTimeout(function() {
         updateGame(game.gameID, {playerAnswering: playerID, [`scores.${playerID}`]: answer.score}).then(() => {
           let promises = [
-            incrementPlayerStat(playerID, CLUES_ANSWERED_STAT),
             incrementPlayerStat(playerID, OVERALL_SCORE_STAT, (answer.correct ? answer.wager : -answer.wager)),
           ];
           if (answer.correct) {
-            promises.push(incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT));
+            promises.push(
+              incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT),
+              incrementPlayerStat(playerID, FINAL_CLUES_ANSWERED_CORRECTLY_STAT),
+            );
           }
           return Promise.all(promises);
         }).then(() => {
@@ -958,7 +962,7 @@ async function handleSubmitAnswer(ws, event) {
     isFinalRound ? Promise.resolve() : incrementPlayerStat(playerID, OVERALL_SCORE_STAT, (correct ? value : -value))
   ).then(() => {
     const name = getPlayerName(playerID);
-    roomLogger.info(roomID, `${name} answered "${answer}" (${correct ? 'correct' : 'incorrect'}).`);
+    roomLogger.info(roomID, `${name} answered "${answer}" (${correct ? 'correct' : 'incorrect'})${isLastPlayerToAnswer ? ' - last player to answer' : ''}.`);
     if (isFinalRound) {
       if (isLastPlayerToAnswer) {
         const payload = {
@@ -1018,9 +1022,9 @@ function submitWager(game, categoryID, clueID, playerID, wager, isFinalRound = f
   updateGame(game.gameID, newFields, arrayFilters).then(() =>
     incrementPlayerStat(playerID, CLUES_ANSWERED_STAT)
   ).then(() =>
-    isFinalRound ? Promise.resolve() : incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_STAT)
+    incrementPlayerStat(playerID, isFinalRound ? FINAL_CLUES_ANSWERED_STAT : DAILY_DOUBLES_ANSWERED_STAT)
   ).then(() => {
-    roomLogger.info(game.roomID, `${getPlayerName(playerID)} wagered $${wager.toLocaleString()}.`);
+    roomLogger.info(game.roomID, `${getPlayerName(playerID)} wagered $${wager.toLocaleString()}${isLastPlayerToWager ? ' - last player to wager' : ''}.`);
     let payload = {roomID: game.roomID, playerID: playerID, wager: wager};
     if (isLastPlayerToWager) {
       payload.isLastPlayerToWager = true;
@@ -1200,12 +1204,12 @@ async function handleVoteToSkipClue(ws, event) {
     return;
   }
   voteToSkipActiveClue(gameID, playerID).then(() => {
-    roomLogger.info(roomID, `${getPlayerName(playerID)} voted to skip clue ${clueID} (category ${categoryID}).`);
+    roomLogger.info(roomID, `${getPlayerName(playerID)} voted to skip the clue.`);
     broadcast(new WebsocketEvent(EventTypes.PLAYER_VOTED_TO_SKIP_CLUE, event.payload));
     const numPlayers = players.filter(player => player.active && !player.spectating).length;
     const votingPlayers = [...new Set(game.activeClue.playersVotingToSkip.concat(game.activeClue.playersAttempted))];
     if (votingPlayers.length >= numPlayers - 1) {
-      roomLogger.info(roomID, `Skipping clue ${clueID} (category ${categoryID}).`);
+      roomLogger.info(roomID, `Skipping the active clue.`);
       updateGame(gameID, {activeClue: null, playerAnswering: null, currentWager: null}).then(() => {
         broadcast(new WebsocketEvent(EventTypes.BUZZING_PERIOD_ENDED, {context: event.payload.context, skipped: true}));
         clearTimeout(buzzTimers[gameID].timerID);

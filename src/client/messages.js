@@ -60,13 +60,13 @@ const TIME_ELAPSED_RESPONSES = {
   ],
 };
 
-export function getStartOfRoundMessage(currentRound, isNewRound, playerHasControl, playerInControlReassigned, playerName) {
+export function getStartOfRoundMessage(game, isNewRound, playerHasControl, playerInControlReassigned, playerName) {
   let response;
   if (isNewRound) {
-    if (currentRound === Rounds.SINGLE) {
+    if (game.currentRound === Object.keys(game.rounds)[0]) {
       response = `Game started. ${playerName} will be the first to select a clue.`;
     } else {
-      response = `Let's play the ${currentRound} Jeopardye round! ${playerName} will choose first.`;
+      response = `Let's play the ${game.currentRound} Jeopardye round! ${playerName} will choose first.`;
     }
   } else if (playerInControlReassigned) {
     if (playerHasControl) {
@@ -75,7 +75,7 @@ export function getStartOfRoundMessage(currentRound, isNewRound, playerHasContro
       response = `It's now ${playerName}'s turn.`;
     }
   } else {
-    response = `Joined existing game in the ${currentRound} Jeopardye round.`;
+    response = `Joined existing game in the ${game.currentRound} Jeopardye round.`;
     if (playerHasControl) {
       response += ` It's your turn!`;
     } else {
@@ -86,7 +86,8 @@ export function getStartOfRoundMessage(currentRound, isNewRound, playerHasContro
 }
 
 export function getBuzzInMessage(categoryName) {
-  return `Buzz in if you know the answer in ${categoryName}!`;
+  const punctuation = (categoryName.endsWith('!') ? '' : '!');
+  return `Buzz in if you know the answer in ${categoryName}${punctuation}`;
 }
 
 export function getWaitingForBuzzMessage(isSpectating = false) {

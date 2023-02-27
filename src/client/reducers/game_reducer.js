@@ -403,7 +403,7 @@ function handlePlayerMarkedClueAsInvalid(storeData, event) {
     console.log(`Ignoring player marking active clue as invalid because ${name} already marked this clue.`);
     return storeData;
   }
-  console.log(`${name} marked clue ${clueID} (category ${categoryID}) as invalid.`);
+  console.log(`${name} marked the clue as invalid.`);
   return {...storeData, playersMarkingClueInvalid: storeData.playersMarkingClueInvalid.concat(playerID)};
 }
 
@@ -418,7 +418,7 @@ function handlePlayerVotedToSkipClue(storeData, event) {
     console.log(`Ignoring vote to skip active clue because ${name} already voted for this clue.`);
     return storeData;
   }
-  console.log(`${name} voted to skip clue ${clueID} (category ${categoryID}).`);
+  console.log(`${name} voted to skip the clue.`);
   return {...storeData, playersVotingToSkipClue: storeData.playersVotingToSkipClue.concat(playerID)};
 }
 
@@ -501,9 +501,9 @@ function handlePlayerMarkedReadyForNextRound(storeData, event) {
 }
 
 function handleBuzzingPeriodEnded(storeData, event) {
-  const { categoryID, clueID } = event.payload.context;
+  const { clueID } = event.payload.context;
   if (storeData.activeClue?.clueID === clueID) {
-    console.log(`Time expired for clue ${clueID} (category ${categoryID}).`);
+    console.log(`Time expired.`);
     return {...storeData, playerAnswering: null, allowAnswers: false, revealAnswer: true, skippedClue: event.payload.skipped};
   }
   return storeData;
@@ -533,9 +533,12 @@ function handleResponsePeriodEnded(storeData, event) {
 }
 
 function handleWaitingPeriodEnded(storeData, event) {
-  const { categoryID, clueID } = event.payload.context;
-  console.log(`Now accepting answers for clue ${clueID} (category ${categoryID}).`);
-  return {...storeData, allowAnswers: true};
+  const { clueID } = event.payload.context;
+  if (storeData.activeClue?.clueID === clueID) {
+    console.log('Now accepting answers.');
+    return {...storeData, allowAnswers: true};
+  }
+  return storeData;
 }
 
 function handleFinalRoundAnswerRevealed(storeData, _) {

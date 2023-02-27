@@ -242,6 +242,10 @@ async function handleGetRoomLeaderboard(req, res, next) {
   players.forEach(player => player.score = player.stats.highestGameScore);
   const singleGameScoreLeaders = getPlaces(players);
 
+  /* average score */
+  players.forEach(player => player.score = player.stats.averageScore);
+  const averageScoreLeaders = getPlaces(players);
+
   /* response accuracy */
   players.forEach(player => player.score = player.stats.correctPercentage);
   const responseAccuracyLeaders = getPlaces(players);
@@ -250,6 +254,10 @@ async function handleGetRoomLeaderboard(req, res, next) {
   players.forEach(player => player.score = player.stats.dailyDoublePercentage);
   const dailyDoubleAccuracyLeaders = getPlaces(players);
 
+  /* final round accuracy */
+  players.forEach(player => player.score = player.stats.finalRoundPercentage);
+  const finalRoundAccuracyLeaders = getPlaces(players);
+
   /* winning percentage */
   players.forEach(player => player.score = player.stats.winningPercentage);
   const winLeaders = getPlaces(players);
@@ -257,8 +265,10 @@ async function handleGetRoomLeaderboard(req, res, next) {
   res.json({
     [LeaderboardKeys.OVERALL_SCORE]: overallScoreLeaders,
     [LeaderboardKeys.HIGHEST_GAME_SCORE]: singleGameScoreLeaders,
+    [LeaderboardKeys.AVERAGE_SCORE]: averageScoreLeaders,
     [LeaderboardKeys.CORRECT_PERCENTAGE]: responseAccuracyLeaders,
     [LeaderboardKeys.DAILY_DOUBLE_PERCENTAGE]: dailyDoubleAccuracyLeaders,
+    [LeaderboardKeys.FINAL_ROUND_PERCENTAGE]: finalRoundAccuracyLeaders,
     [LeaderboardKeys.WINNING_PERCENTAGE]: winLeaders,
   });
 }

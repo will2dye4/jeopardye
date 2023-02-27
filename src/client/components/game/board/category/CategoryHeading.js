@@ -10,6 +10,7 @@ function shouldReduceSize(name) {
 }
 
 function CategoryHeading(props) {
+  const borderColor = (props.activeClue && !props.showClueAnimation ? '#1D08A3' : 'white');
   let classes = 'category-heading';
   let finished = true;
   let name = <br />;
@@ -37,7 +38,8 @@ function CategoryHeading(props) {
     }
   }
   return (
-    <Flex className={classes} align="center" justify="center" position="relative" px={3} py={2} title={title} userSelect="none">
+    <Flex className={classes} border={`2px solid ${borderColor}`} align="center" justify="center" position="relative"
+          px={3} py={2} title={title} userSelect="none">
       {name}
       {props.category?.comments && !finished && (
         <Flex fontSize="sm" position="absolute" top={2} right={2}>

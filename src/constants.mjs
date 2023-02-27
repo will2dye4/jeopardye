@@ -111,8 +111,10 @@ export const PlayerEditorModes = {
 export const LeaderboardKeys = {
   OVERALL_SCORE: 'overallScore',
   HIGHEST_GAME_SCORE: 'highestGameScore',
+  AVERAGE_SCORE: 'averageScore',
   CORRECT_PERCENTAGE: 'correctPercentage',
   DAILY_DOUBLE_PERCENTAGE: 'dailyDoublePercentage',
+  FINAL_ROUND_PERCENTAGE: 'finalRoundPercentage',
   WINNING_PERCENTAGE: 'winningPercentage',
 };
 

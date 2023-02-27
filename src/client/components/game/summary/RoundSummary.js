@@ -51,7 +51,7 @@ function RoundSummary(props) {
     if (waitingPlayers.length > 3) {
       waitingText = `Waiting for ${waitingPlayers.length} players...`;
     } else if (waitingPlayers.length > 1 || (waitingPlayers.length === 1 && waitingPlayers[0].playerID !== props.room?.hostPlayerID)) {
-      waitingText = `Waiting for ${formatList(waitingPlayers.map(player => player.playerID === props.gameState.playerID ? 'you' : player.name))}...`;
+      waitingText = `Waiting for ${formatList(waitingPlayers.map(player => player.playerID === props.gameState.playerID ? 'you' : player.name).sort())}...`;
     } else if (!props.gameState.playerIsHost) {
       const hostName = (props.room ? getPlayerName(props.room.hostPlayerID) : 'host');
       waitingText = `Waiting for ${hostName} to start the ${nextRound} round...`;

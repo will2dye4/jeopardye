@@ -165,7 +165,8 @@ export class Game {
     if (episode.hasInvalidRounds) {
       episode.metadata.hasInvalidRounds = true;
     }
-    return new Game(roomID, episode.rounds, playerIDs, playerInControl, null, Rounds.SINGLE, null, null, episode.metadata);
+    const currentRound = Object.keys(episode.rounds)[0];
+    return new Game(roomID, episode.rounds, playerIDs, playerInControl, null, currentRound, null, null, episode.metadata);
   }
 
   constructor(roomID, rounds, playerIDs, playerInControl, playerAnswering, currentRound, activeClue, currentWager, episodeMetadata) {

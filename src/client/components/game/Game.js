@@ -154,6 +154,10 @@ class Game extends React.Component {
           }
         }.bind(this), SHOW_CLUE_DELAY_MILLIS);
 
+        setTimeout(function() {
+          this.setState({showClueAnimation: false});
+        }.bind(this), SHOW_CLUE_DELAY_MILLIS * 2);
+
         if (dailyDouble) {
           playSound('/audio/daily_double.m4a');
         }
@@ -197,9 +201,10 @@ class Game extends React.Component {
         });
       }
     } else if (!prevProps.revealAnswer && this.props.revealAnswer) {
-      const isCurrentPlayer = (this.isActiveDailyDouble() && this.playerHasControl());
+      const isDailyDouble = this.isActiveDailyDouble();
+      const isCurrentPlayer = (isDailyDouble && this.playerHasControl());
       const isFinalRound = this.isFinalRound();
-      this.revealAnswer(isCurrentPlayer, !isFinalRound, !isFinalRound);
+      this.revealAnswer(isCurrentPlayer, !isFinalRound && (!isDailyDouble || isCurrentPlayer), !isFinalRound && !isDailyDouble);
     }
 
     if (!prevProps.currentWager && this.props.currentWager && !this.isFinalRound()) {
@@ -428,8 +433,11 @@ class Game extends React.Component {
       this.props.clearPlayerInControlReassigned();
     }
 
-    if (!prevProps.activeClue?.played && this.props.activeClue?.played && this.isFinalRound() && !this.playerIsSpectating()) {
-      this.startResponseTimer();
+    if (!prevProps.activeClue?.played && this.props.activeClue?.played && this.isFinalRound()) {
+      if (!this.playerIsSpectating() && this.props.players[this.props.playerID]?.score > 0) {
+        this.startResponseTimer();
+      }
+      speakClue(this.props.activeClue);
     }
 
     if (this.isFinalRound() && (prevProps.currentWager !== this.props.currentWager || prevProps.roundSummary !== this.props.roundSummary ||
@@ -526,7 +534,7 @@ class Game extends React.Component {
         if (waitingPlayers.length > 2) {
           status = `Waiting for ${waitingPlayers.length} players to ${action}...`;
         } else if (waitingPlayers.length) {
-          status = `Waiting for ${formatList(waitingPlayers.map(player => player.name))} to ${action}...`;
+          status = `Waiting for ${formatList(waitingPlayers.map(player => player.name).sort())} to ${action}...`;
         } else {
           status = `Waiting for ${this.playerIsSpectating() ? '' : 'other '}players to ${action}...`;
         }
@@ -545,7 +553,7 @@ class Game extends React.Component {
       const isNewRound = (unplayedClueCount === fullBoardSize || fullBoardSize - unplayedClueCount === getUnrevealedClues(props.board).length);
       const playerHasControl = this.playerHasControl();
       const playerName = props.players[props.playerInControl]?.name;
-      status = getStartOfRoundMessage(props.game.currentRound, isNewRound, playerHasControl, props.playerInControlReassigned, playerName);
+      status = getStartOfRoundMessage(props.game, isNewRound, playerHasControl, props.playerInControlReassigned, playerName);
       if (playerHasControl) {
         appearance = 'action';
       }
@@ -621,7 +629,9 @@ class Game extends React.Component {
     }
     if (dailyDouble) {
       this.resetTimer();
-      this.revealAnswer(isCurrentPlayer, false, false);
+      if (!timeElapsed) {
+        this.revealAnswer(isCurrentPlayer, false, false);
+      }
     } else {
       this.resumeTimer(this.props.answerDelayMillis);
     }

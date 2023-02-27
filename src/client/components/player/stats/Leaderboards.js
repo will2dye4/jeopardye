@@ -6,7 +6,9 @@ import { comparePlayerNames, formatScore } from '../../../../utils.mjs';
 import Icon from '../../common/Icon';
 import {
   ALL_TIME_SCORE,
+  AVERAGE_SCORE,
   DAILY_DOUBLE_ACCURACY,
+  FINAL_ROUND_ACCURACY,
   HIGHEST_SINGLE_GAME_SCORE,
   RESPONSE_ACCURACY,
   WINNING_PERCENTAGE,
@@ -25,6 +27,16 @@ const LEADERBOARDS = {
     optionLabel: HIGHEST_SINGLE_GAME_SCORE,
     scoreColumnLabel: 'Score',
   },
+  [LeaderboardKeys.AVERAGE_SCORE]: {
+    formatter: formatScore,
+    optionLabel: AVERAGE_SCORE,
+    scoreColumnLabel: 'Avg. Score',
+  },
+  [LeaderboardKeys.WINNING_PERCENTAGE]: {
+    formatter: formatPercentage,
+    optionLabel: WINNING_PERCENTAGE,
+    scoreColumnLabel: 'Win %',
+  },
   [LeaderboardKeys.CORRECT_PERCENTAGE]: {
     formatter: formatPercentage,
     optionLabel: RESPONSE_ACCURACY,
@@ -35,10 +47,10 @@ const LEADERBOARDS = {
     optionLabel: DAILY_DOUBLE_ACCURACY,
     scoreColumnLabel: 'Accuracy',
   },
-  [LeaderboardKeys.WINNING_PERCENTAGE]: {
+  [LeaderboardKeys.FINAL_ROUND_PERCENTAGE]: {
     formatter: formatPercentage,
-    optionLabel: WINNING_PERCENTAGE,
-    scoreColumnLabel: 'Win %',
+    optionLabel: FINAL_ROUND_ACCURACY,
+    scoreColumnLabel: 'Accuracy',
   },
 };
 

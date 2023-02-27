@@ -11,7 +11,7 @@ function ClueGrid(props) {
       cells = Object.values(props.gameState.categories).map((category, j) => {
         const clue = {...category.clues[i], category: category.name};
         return <Clue key={clue.clueID || j} clue={clue} activeClue={props.activeClue} gameState={props.gameState}
-                     onClick={() => props.handleClueClick(clue)} />;
+                     showClueAnimation={props.showClueAnimation} onClick={() => props.handleClueClick(clue)} />;
       });
     } else {
       cells = range(CATEGORIES_PER_ROUND).map(j => <Clue key={`${i},${j}`} clue={{}} />)

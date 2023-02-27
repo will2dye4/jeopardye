@@ -32,7 +32,7 @@ function Podiums(props) {
     const isChampion = (player.playerID === props.room?.currentChampion);
     let active;
     if (props.gameState.isFinalRound) {
-      if (props.roundSummary || player.score <= 0) {
+      if (props.roundSummary || (player.score || 0) <= 0) {
         active = false;
       } else if (props.playerAnswering) {
         active = (player.playerID === props.playerAnswering);
