@@ -299,7 +299,7 @@ function revealFinalRoundAnswers(game) {
     const finalRoundAnswers = game.finalRoundAnswers;
     let allIncorrect = true;
     Object.entries(finalRoundAnswers).sort(
-      ([playerID1, a1], [playerID2, a2]) => game.scores[playerID1] - game.scores[playerID2]
+      ([playerID1, a1], [playerID2, _]) => game.scores[playerID1] - game.scores[playerID2]
     ).forEach(([playerID, answer], i) => {
       // Broadcast a PLAYER_ANSWERED event every few seconds.
       if (answer.correct) {
@@ -345,10 +345,18 @@ function revealFinalRoundAnswers(game) {
     // Broadcast a final event when all answers have been revealed.
     const increment = (allIncorrect ? 2 : 1);
     setTimeout(function() {
-      updateGame(game.gameID, {activeClue: null, playerAnswering: null, currentWager: null, finalRoundAnswers: null}).then(() => {
-        Object.entries(finalRoundAnswers).forEach(([playerID, answer]) => game.scores[playerID] = answer.score);
-        checkForLastClue(game);
-      });
+      if (Object.values(finalRoundAnswers).every(finalAnswer => finalAnswer.correct || finalAnswer.answer?.trim() === '')) {
+        // If every player got the right answer or didn't submit an answer, skip directly to the final scores.
+        updateGame(game.gameID, {activeClue: null, playerAnswering: null, currentWager: null, finalRoundAnswers: null}).then(() => {
+          Object.entries(finalRoundAnswers).forEach(([playerID, answer]) => game.scores[playerID] = answer.score);
+          checkForLastClue(game);
+        }).catch(e => roomLogger.error(game.roomID, `Error occurred while updating game (end of final round): ${e}`));
+      } else {
+        // If any player's answer was judged as incorrect, give the host a chance to finalize the scores.
+        updateGame(game.gameID, {playerAnswering: null, hostFinalizingScores: true}).then(() => {
+          broadcast(new WebsocketEvent(EventTypes.HOST_FINALIZING_SCORES, {context: EventContext.fromGameAndClue(game, activeClue)}));
+        }).catch(e => roomLogger.error(game.roomID, `Error occurred while updating game (finalizing scores): ${e}`));
+      }
     }, REVEAL_FINAL_ANSWERS_DELAY_MILLIS * (Object.keys(finalRoundAnswers).length + increment));
   }).catch(e => roomLogger.error(game.roomID, `Error occurred while getting game: ${e}`));
 }
@@ -1252,19 +1260,28 @@ async function handleOverrideServerDecision(ws, event) {
     return;
   }
   const dailyDouble = isDailyDouble(round, clueID);
-  if (!dailyDouble && value !== clue.value) {
+  const isFinalRound = game.currentRound === Rounds.FINAL;
+  if (!dailyDouble && !isFinalRound && value !== clue.value) {
     handleError(ws, event, 'invalid clue value', StatusCodes.BAD_REQUEST);
     return;
   }
   const increment = value * 2;  /* double the value that was subtracted from the player's score so they get money for being right */
   const score = game.scores[playerID] + increment;
-  updateGame(gameID, {[`scores.${playerID}`]: score}).then(() => incrementPlayerStat(playerID, OVERALL_SCORE_STAT, increment)).then(() => {
+  let newFields = {[`scores.${playerID}`]: score};
+  if (isFinalRound) {
+    newFields[`finalRoundAnswers.${playerID}.correct`] = true;
+    newFields[`finalRoundAnswers.${playerID}.hostOverrodeDecision`] = true;
+    newFields[`finalRoundAnswers.${playerID}.score`] = score;
+  }
+  updateGame(gameID, newFields).then(() => incrementPlayerStat(playerID, OVERALL_SCORE_STAT, increment)).then(() => {
     const name = getPlayerName(playerID);
     roomLogger.info(roomID, `Host overrode server's decision on ${name}'s previous answer (+$${increment.toLocaleString()}).`);
     broadcast(new WebsocketEvent(EventTypes.HOST_OVERRODE_SERVER_DECISION, {...event.payload, clue: clue, value: increment, score: score}));
     incrementPlayerStat(playerID, CLUES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct answer count for ${name}: ${e}`));
     if (dailyDouble) {
       incrementPlayerStat(playerID, DAILY_DOUBLES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct daily double count for ${name}: ${e}`));
+    } else if (isFinalRound) {
+      incrementPlayerStat(playerID, FINAL_CLUES_ANSWERED_CORRECTLY_STAT).catch(e => roomLogger.error(roomID, `Failed to increment correct final clue count for ${name}: ${e}`));
     }
   }).catch(e => roomLogger.error(roomID, `Error occurred while overriding server decision: ${e}`));
 }
@@ -1428,6 +1445,22 @@ async function handleMarkPlayerAsReadyForNextRound(ws, event) {
   }).catch(e => roomLogger.error(roomID, `Failed to mark player ${playerID} as ready for next round: ${e}`));
 }
 
+async function handleFinalizeScores(ws, event) {
+  const { roomID, gameID } = event.payload.context;
+  const { game, room } = await validateEventContext(ws, event, false);
+  if (!game) {
+    return;
+  }
+  const hostWS = getClient(roomID, room.hostPlayerID);
+  if (!hostWS || ws !== hostWS) {
+    handleError(ws, event, 'only the host may finalize scores', StatusCodes.FORBIDDEN);
+    return;
+  }
+  updateGame(gameID, {activeClue: null, currentWager: null, finalRoundAnswers: null, hostFinalizingScores: false}).then(() => {
+    checkForLastClue(game);
+  });
+}
+
 const eventHandlers = {
   [EventTypes.CLIENT_CONNECT]: handleClientConnect,
   [EventTypes.REASSIGN_ROOM_HOST]: handleReassignRoomHost,
@@ -1450,6 +1483,7 @@ const eventHandlers = {
   [EventTypes.OVERRIDE_SERVER_DECISION]: handleOverrideServerDecision,
   [EventTypes.ADVANCE_TO_NEXT_ROUND]: handleAdvanceToNextRound,
   [EventTypes.MARK_READY_FOR_NEXT_ROUND]: handleMarkPlayerAsReadyForNextRound,
+  [EventTypes.FINALIZE_SCORES]: handleFinalizeScores,
 }
 
 export function handleWebsocket(ws, req) {

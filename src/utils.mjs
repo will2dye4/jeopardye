@@ -196,7 +196,7 @@ export function isValidEpisodeDate(date, latestEpisodeDate) {
 
   const year = date.year().toString();
   const yearSeasonInfo = yearSeasonDates[year];
-  if (yearSeasonInfo) {
+  if (yearSeasonInfo && yearSeasonInfo.hasOwnProperty('seasonEnd') && yearSeasonInfo.hasOwnProperty('seasonStart')) {
     const lastSeasonEnd = yearSeasonInfo.seasonEnd;
     const nextSeasonStart = yearSeasonInfo.seasonStart;
     if (date.isAfter(moment(lastSeasonEnd), 'day') && date.isBefore(moment(nextSeasonStart), 'day')) {

@@ -408,10 +408,14 @@ class Game extends React.Component {
     }
 
     if (!prevProps.roundSummary && this.props.roundSummary) {
-      const delay = (this.props.prevAnswer && this.props.prevAnswer.correct ? SHOW_CLUE_DELAY_MILLIS : DISMISS_CLUE_DELAY_MILLIS);
-      setTimeout(function() {
+      if (this.isFinalRound()) {
         this.setState({showRoundSummary: true});
-      }.bind(this), delay);
+      } else {
+        const delay = (this.props.prevAnswer && this.props.prevAnswer.correct ? SHOW_CLUE_DELAY_MILLIS : DISMISS_CLUE_DELAY_MILLIS);
+        setTimeout(function() {
+          this.setState({showRoundSummary: true});
+        }.bind(this), delay);
+      }
     }
 
     if (prevProps.roundSummary && !this.props.roundSummary) {

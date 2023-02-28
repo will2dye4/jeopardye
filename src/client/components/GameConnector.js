@@ -31,6 +31,7 @@ import {
   fetchRooms,
   fetchRoomLinkRequests,
   fetchSeasonSummaries,
+  finalizeScores,
   joinGame,
   joinRoom,
   joinRoomWithCode,
@@ -59,6 +60,7 @@ import AdminDashboard from './admin/AdminDashboard';
 import KickPlayerDialog from './common/players/KickPlayerDialog';
 import Home from './home/Home';
 import EpisodeBrowser from './episode/EpisodeBrowser';
+import FinalizeScoresModal from './game/FinalizeScoresModal';
 import RoomHistory from './lobby/history/RoomHistory';
 import WhatsNewModal from './lobby/WhatsNewModal';
 import PlayerEditor from './player/PlayerEditor';
@@ -115,6 +117,7 @@ const actionCreators = {
   fetchRooms,
   fetchRoomLinkRequests,
   fetchSeasonSummaries,
+  finalizeScores,
   joinGame,
   joinRoom,
   joinRoomWithCode,
@@ -421,6 +424,7 @@ class Connector extends React.Component {
             </Route>
           </Switch>
         </Router>
+        {this.props.hostFinalizingScores && <FinalizeScoresModal {...this.props} />}
         {this.state.showAdminDashboard && <AdminDashboard modals={modals} {...this.props} />}
         {this.state.showEpisodeBrowser && <EpisodeBrowser modals={modals} {...this.props} />}
         {this.state.showKickPlayerDialog && <KickPlayerDialog player={this.getPlayer(this.state.kickPlayerID)}

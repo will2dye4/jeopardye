@@ -36,7 +36,7 @@ class ActiveClue extends React.Component {
       if (props.playerAnswering) {
         const { answer, correct, value } = props.prevAnswer || {};
         const playerName = getPlayerName(props.playerAnswering);
-        const label = (answer?.length > 0 ? `${playerName} answered:` : `${playerName} did not submit an answer.`);
+        const label = (answer?.trim()?.length > 0 ? `${playerName} answered:` : `${playerName} did not submit an answer.`);
         const prefix = (correct ? '+' : '-');
         const amount = `${prefix}$${value.toLocaleString()}`;
         const color = (correct ? 'green.200' : 'red.300');

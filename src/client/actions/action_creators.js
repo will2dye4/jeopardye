@@ -548,6 +548,10 @@ export function overrideServerDecision(context, value) {
   return send(new WebsocketEvent(EventTypes.OVERRIDE_SERVER_DECISION, {context, value}));
 }
 
+export function finalizeScores(context) {
+  return send(new WebsocketEvent(EventTypes.FINALIZE_SCORES, {context}));
+}
+
 export function clientConnect(playerID, roomID = null) {
   return send(new WebsocketEvent(EventTypes.CLIENT_CONNECT, {playerID, roomID}));
 }

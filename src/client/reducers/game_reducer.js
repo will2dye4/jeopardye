@@ -23,7 +23,9 @@ function newStoreData() {
     error: null,
     errorContext: null,
     eventHistory: [],
+    hostFinalizingScores: false,
     hostOverride: null,
+    finalRoundAnswers: null,
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
     redirectToHome: false,
     roomID: null,
@@ -132,6 +134,8 @@ function handleNewGame(storeData, newGame) {
     prevAnswer: null,
     redirectToHome: false,
     roundSummary: newGame.roundSummary || null,
+    hostFinalizingScores: newGame.hostFinalizingScores ?? false,
+    finalRoundAnswers: newGame.finalRoundAnswers || null,
   };
 }
 
@@ -199,6 +203,8 @@ function handleRoundEnded(storeData, event) {
       newRoom.currentChampion = currentChampion;
       newRoom.currentWinningStreak = (currentChampion ? 1 : 0);
     }
+    newStore.hostFinalizingScores = false;
+    newStore.finalRoundAnswers = null;
     newStore.room = newRoom;
   }
   return newStore;
@@ -344,6 +350,12 @@ function handlePlayerAnswered(storeData, event) {
       const newPlayer = {...storeData.players[playerID], score: score};
       newStoreData.players = {...storeData.players, [playerID]: newPlayer};
       newStoreData.playerAnswering = playerID;
+      const finalRoundAnswer = {answer: answer, correct: correct, wager: storeData.currentWager[playerID], score: score};
+      if (newStoreData.finalRoundAnswers) {
+        newStoreData.finalRoundAnswers[playerID] = finalRoundAnswer;
+      } else {
+        newStoreData.finalRoundAnswers = {[playerID]: finalRoundAnswer};
+      }
     } else {
       // Notification that the player has submitted an answer, without revealing the answer or whether it was correct.
       console.log(`${playerName} submitted an answer.`);
@@ -447,7 +459,12 @@ function handleHostOverrodeServerDecision(storeData, event) {
   console.log(`Host overrode server's decision on ${name}'s previous answer (+$${value.toLocaleString()}).`);
   const newPlayer = {...storeData.players[playerID], score: score};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
-  return {...storeData, hostOverride: event.payload, players: newPlayers};
+  let newStore = {...storeData, hostOverride: event.payload, players: newPlayers};
+  if (storeData.game?.currentRound === Rounds.FINAL) {
+    const newFinalAnswer = {...storeData.finalRoundAnswers[playerID], correct: true, hostOverrodeDecision: true, score: score};
+    newStore.finalRoundAnswers = {...storeData.finalRoundAnswers, [playerID]: newFinalAnswer};
+  }
+  return newStore;
 }
 
 function handlePlayerWentActive(storeData, event) {
@@ -546,6 +563,11 @@ function handleFinalRoundAnswerRevealed(storeData, _) {
   return {...storeData, playerAnswering: null, revealAnswer: true};
 }
 
+function handleHostFinalizingScores(storeData, _) {
+  console.log('Waiting for host to finalize scores...');
+  return {...storeData, playerAnswering: null, hostFinalizingScores: true};
+}
+
 const eventHandlers = {
   [EventTypes.ERROR]: handleError,
   [EventTypes.GAME_CREATION_FAILED]: handleGameCreationFailed,
@@ -578,6 +600,7 @@ const eventHandlers = {
   [EventTypes.RESPONSE_PERIOD_ENDED]: handleResponsePeriodEnded,
   [EventTypes.WAITING_PERIOD_ENDED]: handleWaitingPeriodEnded,
   [EventTypes.FINAL_ROUND_ANSWER_REVEALED]: handleFinalRoundAnswerRevealed,
+  [EventTypes.HOST_FINALIZING_SCORES]: handleHostFinalizingScores,
 }
 
 function handleWebsocketEvent(storeData, event) {

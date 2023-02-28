@@ -250,6 +250,8 @@ export const EventTypes = {
   OVERRIDE_SERVER_DECISION: 'override_server_decision',
   HOST_OVERRODE_SERVER_DECISION: 'host_overrode_server_decision',
   ADVANCE_TO_NEXT_ROUND: 'advance_to_next_round',
+  HOST_FINALIZING_SCORES: 'host_finalizing_scores',
+  FINALIZE_SCORES: 'finalize_scores',
   /* server timing events */
   BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
   RESPONSE_PERIOD_ENDED: 'response_period_ended',
