@@ -626,7 +626,7 @@ export async function getCategorySummariesForSearchTerm(searchTerm) {
   let match = {revealedClueCount: {$gte: MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH}};
   if (searchTerm) {
     searchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  // Escape regex characters
-    match.name = {$regex: searchTerm, $options: '$i'};
+    match.name = {$regex: searchTerm, $options: 'i'};
   }
   try {
     const cursor = await categoriesCollection.aggregate([

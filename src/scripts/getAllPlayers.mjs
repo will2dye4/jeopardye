@@ -3,7 +3,7 @@ import { formatDate } from '../utils.mjs';
 
 let cursor;
 if (process.argv.length > 2) {
-  cursor = await db.collection('players').find({name: {$regex: process.argv[2], $options: '$i'}});
+  cursor = await db.collection('players').find({name: {$regex: process.argv[2], $options: 'i'}});
 } else {
   cursor = await db.collection('players').find();
 }
