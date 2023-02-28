@@ -75,7 +75,7 @@ class RoomHistory extends React.Component {
           if (diff >= MILLISECONDS_PER_HOUR) {
             const hours = Math.round(diff / MILLISECONDS_PER_HOUR);
             duration.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
-            diff /= MILLISECONDS_PER_HOUR;
+            diff = diff % MILLISECONDS_PER_HOUR;
           }
           if (diff >= MILLISECONDS_PER_MINUTE) {
             const minutes = Math.round(diff / MILLISECONDS_PER_MINUTE);
