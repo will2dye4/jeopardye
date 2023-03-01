@@ -240,7 +240,7 @@ class EpisodeBrowser extends React.Component {
               <Table my={10} variant="striped">
                 <Thead>
                   <Tr>
-                    <Th cursor="default" userSelect="none">
+                    <Th cursor="default" whiteSpace="nowrap" userSelect="none">
                       Air Date
                       <Text as="span" className="hover-pointer" fontSize="xl" pl={2} onClick={this.toggleSortOrder}>{sortArrow}</Text>
                     </Th>
