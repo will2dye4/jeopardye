@@ -185,12 +185,12 @@ export function parseISODateString(date) {
 }
 
 export function isValidEpisodeDate(date, latestEpisodeDate) {
-  date = moment(date);
+  date = moment.utc(date);
   if (!date) {
     return false;
   }
 
-  if (date.isBefore(moment(EARLIEST_EPISODE_DATE), 'day') || date.isAfter(moment(latestEpisodeDate), 'day')) {
+  if (date.isBefore(moment.utc(EARLIEST_EPISODE_DATE), 'day') || date.isAfter(moment.utc(latestEpisodeDate), 'day')) {
     return false;
   }
 
@@ -199,7 +199,7 @@ export function isValidEpisodeDate(date, latestEpisodeDate) {
   if (yearSeasonInfo && yearSeasonInfo.hasOwnProperty('seasonEnd') && yearSeasonInfo.hasOwnProperty('seasonStart')) {
     const lastSeasonEnd = yearSeasonInfo.seasonEnd;
     const nextSeasonStart = yearSeasonInfo.seasonStart;
-    if (date.isAfter(moment(lastSeasonEnd), 'day') && date.isBefore(moment(nextSeasonStart), 'day')) {
+    if (date.isAfter(moment.utc(lastSeasonEnd), 'day') && date.isBefore(moment.utc(nextSeasonStart), 'day')) {
       return false;
     }
   }

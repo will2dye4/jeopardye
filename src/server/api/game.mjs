@@ -298,6 +298,10 @@ async function handleCreateGame(req, res, next) {
     } else {
       episode = await getFullRandomEpisodeFromDateRange(startDate, endDate, true);
     }
+    if (!episode) {
+      handleError('Failed to find episode matching requested criteria', StatusCodes.NOT_FOUND);
+      return;
+    }
     game = Game.fromEpisode(episode, roomID, playerIDs, playerInControl);
   } else if (mode === GameSettingModes.CATEGORY) {
     const round = await createRoundFromCategoryIDs(categoryIDs, Rounds.SINGLE, DailyDoubleSettings.NORMAL);

@@ -13,6 +13,7 @@ import {
   ModalContent,
   ModalOverlay,
   Select,
+  SimpleGrid,
   Spacer,
   Table,
   Tbody,
@@ -31,6 +32,8 @@ import Icon from '../common/Icon';
 import EpisodePopover from './EpisodePopover';
 
 const BADGE_COLORS = ['blackAlpha', 'blue', 'cyan', 'green', 'pink', 'purple', 'orange', 'red', 'teal', 'yellow'];
+
+const HYPHENATED_NAME_SPLIT_THRESHOLD = 10;
 
 const PLAYING_ROUND_PATTERN = /Playing the ((Double|Final) )?Jeopardy! Round:/gi;
 
@@ -153,41 +156,55 @@ class EpisodeBrowser extends React.Component {
             </Td>
             <Td wordBreak="break-word">{episode.metadata?.comments}</Td>
             <Td userSelect="none">
-              {episode.metadata?.contestants?.map(contestant => {
-                const contestantID = contestant.contestantID;
-                let name = contestant.name || contestant.rawText;
-                let shortName;
-                if (name.startsWith('Playing')) {
-                  shortName = name.replaceAll(PLAYING_ROUND_PATTERN, '').trim();
-                } else {
-                  shortName = name;
-                }
-                shortName = shortName.split(/\s+/)[0];
-                let title = name;
-                if (contestant.description) {
-                  title += `, ${contestant.description}`;
-                }
-                let color;
-                if (contestantColors.hasOwnProperty(contestantID)) {
-                  color = contestantColors[contestantID];
-                } else {
-                  color = getColorForName(name, BADGE_COLORS.filter(color => !usedColors.has(color)));
-                  contestantColors[contestantID] = color;
-                }
-                usedColors.add(color);
-                return (
-                  <Link key={contestantID} href={getURLForContestant(contestantID)} isExternal>
-                    <Badge borderRadius={10} colorScheme={color} mx={1} px={2} title={title}>
-                      {shortName}
-                      {contestantID === winnerContestantID && (
-                        <Text as="span" ml={1}>
-                          <Icon id={`winner-${winnerContestantID}`} icon={faCrown} title="Champion" clickable={false} />
-                        </Text>
-                      )}
-                    </Badge>
-                  </Link>
-                );
-              })}
+              <SimpleGrid columns={3} spacing={3}>
+                {episode.metadata?.contestants?.map(contestant => {
+                  const contestantID = contestant.contestantID;
+                  let name = contestant.name || contestant.rawText;
+                  let shortName;
+                  if (name.startsWith('Playing')) {
+                    shortName = name.replaceAll(PLAYING_ROUND_PATTERN, '').trim();
+                  } else {
+                    shortName = name;
+                  }
+                  shortName = shortName.split(/\s+/)[0];
+                  if (shortName.length > HYPHENATED_NAME_SPLIT_THRESHOLD && shortName.includes('-')) {
+                    const names = shortName.split('-');
+                    shortName = (
+                      <React.Fragment>
+                        {names.map((name, i) => (
+                          <Center>{i === names.length - 1 ? name : <React.Fragment>{name}-<br /></React.Fragment>}</Center>
+                        ))}
+                      </React.Fragment>
+                    );
+                  }
+                  let title = name;
+                  if (contestant.description) {
+                    title += `, ${contestant.description}`;
+                  }
+                  let color;
+                  if (contestantColors.hasOwnProperty(contestantID)) {
+                    color = contestantColors[contestantID];
+                  } else {
+                    color = getColorForName(name, BADGE_COLORS.filter(color => !usedColors.has(color)));
+                    contestantColors[contestantID] = color;
+                  }
+                  usedColors.add(color);
+                  return (
+                    <Center key={contestantID}>
+                      <Link href={getURLForContestant(contestantID)} isExternal>
+                        <Badge borderRadius={10} colorScheme={color} mx={1} px={2} title={title}>
+                          {shortName}
+                          {contestantID === winnerContestantID && (
+                            <Text as="span" ml={1}>
+                              <Icon id={`winner-${winnerContestantID}`} icon={faCrown} title="Champion" clickable={false} />
+                            </Text>
+                          )}
+                        </Badge>
+                      </Link>
+                    </Center>
+                  );
+                })}
+              </SimpleGrid>
             </Td>
           </Tr>
         );
@@ -227,8 +244,8 @@ class EpisodeBrowser extends React.Component {
                       Air Date
                       <Text as="span" className="hover-pointer" fontSize="xl" pl={2} onClick={this.toggleSortOrder}>{sortArrow}</Text>
                     </Th>
-                    <Th cursor="default" userSelect="none" width="40%">Comments</Th>
-                    <Th cursor="default" userSelect="none">Contestants</Th>
+                    <Th cursor="default" userSelect="none">Comments</Th>
+                    <Th cursor="default" textAlign="center" userSelect="none" width="40%">Contestants</Th>
                   </Tr>
                 </Thead>
                 <Tbody fontSize="lg">

@@ -127,11 +127,11 @@ export class Round {
       if (!usedCategories.has(categoryID) || numDailyDoubles > categoryIDs.length) {
         let clueIndex = Math.floor(Math.random() * dailyDoubleRange) + DAILY_DOUBLE_CLUES_TO_SKIP;
         if (category.clues.length >= clueIndex) {
-          let clueID = category.clues[clueIndex].clueID;
-          if (!usedClues.has(clueID)) {
-            dailyDoubles.push(clueID);
+          let clue = category.clues[clueIndex];
+          if (!clue.unrevealed && !usedClues.has(clue.clueID)) {
+            dailyDoubles.push(clue.clueID);
             usedCategories.add(categoryID);
-            usedClues.add(clueID);
+            usedClues.add(clue.clueID);
           }
         }
       }

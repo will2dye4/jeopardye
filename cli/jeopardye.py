@@ -155,14 +155,19 @@ class JeopardyeMain:
 
     @staticmethod
     def populate_index_html_template_values() -> None:
-        index_html_path = os.path.join(JEOPARDYE_GIT_HOME, 'build', 'index.html')
-        with open(index_html_path) as f:
-            content = f.read()
+        # Use this method to populate templated values in index.html.
+        # For example, this was previously used to populate a templated value {{FS_ORG_ID}} from an environment variable.
+        # Right now, there are no templated values in index.html, so this is a no-op.
+        return
 
-        content = content.replace('{{FS_ORG_ID}}', os.getenv('REACT_APP_FS_ORG'))
-
-        with open(index_html_path, 'w') as f:
-            f.write(content)
+        # index_html_path = os.path.join(JEOPARDYE_GIT_HOME, 'build', 'index.html')
+        # with open(index_html_path) as f:
+        #     content = f.read()
+        #
+        # content = content.replace('{{FS_ORG_ID}}', os.getenv('REACT_APP_FS_ORG'))
+        #
+        # with open(index_html_path, 'w') as f:
+        #     f.write(content)
 
     def deploy_app(self) -> bool:
         print(cyan('Preparing to fetch and deploy the latest version of the Jeopardye webapp.'))
