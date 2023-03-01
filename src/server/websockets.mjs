@@ -8,6 +8,7 @@ import {
   EventTypes,
   FINAL_ROUND_COUNTDOWN_SECONDS,
   FINAL_ROUND_MINIMUM_WAGER,
+  GameSettingModes,
   MAX_KICK_DURATION_SECONDS,
   MAX_PLAYERS_PER_GAME,
   Rounds,
@@ -606,7 +607,27 @@ async function handleGameCreationFailed(ws, event) {
 }
 
 async function handleGameSettingsChanged(ws, event) {
-  roomLogger.info(event.payload.roomID, 'Game settings changed.');
+  const { allowUnrevealedClues, categories, dailyDoubles, endDate, finalJeopardye, mode, numRounds, seasonNumber, startDate } = event.payload.settings;
+  let description;
+  if (mode === GameSettingModes.BY_DATE) {
+    description = 'by date: ';
+    if (seasonNumber) {
+      description += `season ${seasonNumber}`;
+    } else if (startDate === endDate) {
+      description += startDate;
+    } else {
+      description += `${startDate} – ${endDate}`;
+    }
+  } else if (mode === GameSettingModes.CATEGORY) {
+    description = `by category: ${categories.length} ${categories.length === 1 ? 'category' : 'categories'} selected`;
+  } else {  // random mode
+    const rounds = `${numRounds} ${numRounds === 1 ? 'round' : 'rounds'}`;
+    const finalRound = `${finalJeopardye ? '' : 'no '}final round`;
+    const dd = `${dailyDoubles === 'NONE' ? 'no' : dailyDoubles.toLowerCase()} DD`;
+    const unrevealedClues = `${allowUnrevealedClues ? 'allow' : 'no'} unrevealed clues`;
+    description = `random: ${rounds}, ${finalRound}, ${dd}, ${unrevealedClues}`;
+  }
+  roomLogger.info(event.payload.roomID, `Game settings changed (${description}).`);
   broadcast(event);
 }
 
