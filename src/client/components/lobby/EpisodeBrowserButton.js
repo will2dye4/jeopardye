@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@chakra-ui/react';
-import { faListUl } from '@fortawesome/free-solid-svg-icons';
+import { RETRO_TV_ICON }  from '../../../constants.mjs';
 import ActionIcon from '../common/ActionIcon';
 
 function EpisodeBrowserButton(props) {
@@ -8,7 +8,7 @@ function EpisodeBrowserButton(props) {
   return (
     <Badge variant="solid" bg="white" color="black" borderRadius="full" boxShadow="dark-lg" px={3} py={2} fontSize="xl"
            userSelect="none" title={title} className="hover-pointer" onClick={props.modals.episodeBrowser.open}>
-      <ActionIcon id="episode-browser-button" icon={faListUl} title={title} />
+      <ActionIcon id="episode-browser-button" icon={RETRO_TV_ICON} title={title} />
     </Badge>
   );
 }

@@ -18,11 +18,11 @@ import {
   faComments,
   faGavel,
   faHistory,
-  faListUl,
   faLowVision,
   faMessage,
   faRankingStar,
 } from '@fortawesome/free-solid-svg-icons';
+import { RETRO_TV_ICON } from '../../../constants.mjs';
 import Bold from '../common/Bold';
 import Card from '../common/card/Card';
 import GridRow from '../common/GridRow';
@@ -53,7 +53,7 @@ const NEW_FEATURES = [
   },
   {
     id: 'episode-browser',
-    icon: faListUl,
+    icon: RETRO_TV_ICON,
     heading: 'Episode Browser',
     description: (
       'The new Episode Browser shows a summary of all archived episodes for the selected season, including the air date, ' +
