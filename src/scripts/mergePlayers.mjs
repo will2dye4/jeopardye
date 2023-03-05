@@ -74,7 +74,7 @@ games.forEach(async game => {
     updates.$unset = {[`scores.${sourcePlayerID}`]: ''};
   }
   if (game.roundSummary) {
-    Object.entries(game.roundSummary).forEach(([place, players]) => {
+    Object.entries(game.roundSummary.places).forEach(([place, players]) => {
       const index = players.findIndex(player => player.playerID === sourcePlayerID);
       if (index !== -1) {
         updates.$set[`roundSummary.places.${place}.${index}.playerID`] = targetPlayerID;
