@@ -27,6 +27,7 @@ import {
   setRoomForRoomLinkRequest,
   updatePlayer,
 } from '../db.mjs';
+import { sendRoomCreatedMessage } from '../mail.mjs';
 import { removePlayerFromRoom } from '../utils.mjs';
 import { broadcast, playerNames } from '../websockets.mjs';
 
@@ -134,8 +135,9 @@ async function handleCreateRoom(req, res, next) {
   }
 
   let requestID = req.body.requestID?.toString().trim();
+  let roomLinkRequest = null;
   if (requestID) {
-    const roomLinkRequest = await getRoomLinkRequest(requestID);
+    roomLinkRequest = await getRoomLinkRequest(requestID);
     if (!roomLinkRequest || roomLinkRequest.resolution !== RoomLinkRequestResolution.APPROVED) {
       handleError(`Invalid room link request ID "${requestID}"`, StatusCodes.BAD_REQUEST);
       return;
@@ -178,6 +180,10 @@ async function handleCreateRoom(req, res, next) {
 
   res.json(room);
   logger.info(`Created room ${room.roomID} (short code: ${room.roomCode}).`);
+
+  if (roomLinkRequest) {
+    await sendRoomCreatedMessage(room.roomCode, roomLinkRequest);
+  }
 }
 
 async function handleGetRoom(req, res, next) {

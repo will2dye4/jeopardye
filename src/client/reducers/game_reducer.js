@@ -27,6 +27,8 @@ function newStoreData() {
     hostOverride: null,
     finalRoundAnswers: null,
     playerID: localStorage.getItem(PLAYER_ID_KEY) || null,
+    playerRetrievalEmail: null,
+    emailAvailable: null,
     redirectToHome: false,
     roomID: null,
     room: null,
@@ -272,15 +274,15 @@ function handlePlayerLeftRoom(storeData, event) {
   return newStore;
 }
 
-function handlePlayerChangedName(storeData, event) {
-  const { playerID, name, preferredFontStyle, prevName } = event.payload;
+function handlePlayerChangedNameAndEmail(storeData, event) {
+  const { playerID, name, email, preferredFontStyle, prevName } = event.payload;
   if (!storeData.players.hasOwnProperty(playerID)) {
     console.log(`Cannot change name of unknown player "${playerID}".`);
     return storeData;
   }
   console.log(`Player changed name from "${prevName}" to "${name}" (font: ${preferredFontStyle}).`);
   playerNames[playerID] = name;
-  const newPlayer = {...storeData.players[playerID], name: name, preferredFontStyle: preferredFontStyle};
+  const newPlayer = {...storeData.players[playerID], name: name, email: email, preferredFontStyle: preferredFontStyle};
   const newPlayers = {...storeData.players, [playerID]: newPlayer};
   return {...storeData, players: newPlayers};
 }
@@ -580,7 +582,7 @@ const eventHandlers = {
   [EventTypes.ROOM_HOST_REASSIGNED]: handleRoomHostReassigned,
   [EventTypes.PLAYER_JOINED_ROOM]: handlePlayerJoinedRoom,
   [EventTypes.PLAYER_LEFT_ROOM]: handlePlayerLeftRoom,
-  [EventTypes.PLAYER_CHANGED_NAME]: handlePlayerChangedName,
+  [EventTypes.PLAYER_CHANGED_NAME_AND_EMAIL]: handlePlayerChangedNameAndEmail,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
   [EventTypes.PLAYER_BUZZED]: handlePlayerBuzzed,
@@ -704,8 +706,10 @@ export function GameReducer(storeData, action) {
       }
       const newPlayers = {...storeData.players, [player.playerID]: {...player, score: player.score || storeData.players[player.playerID]?.score}};
       let newStore = {...storeData, players: newPlayers};
-      if (action.type === ActionTypes.CREATE_NEW_PLAYER) {
-        localStorage.setItem(PLAYER_ID_KEY, player.playerID);
+      if (action.type === ActionTypes.CREATE_NEW_PLAYER || action.type === ActionTypes.FETCH_CURRENT_PLAYER) {
+        if (localStorage.getItem(PLAYER_ID_KEY) !== player.playerID) {
+          localStorage.setItem(PLAYER_ID_KEY, player.playerID);
+        }
         newStore.playerID = player.playerID;
       }
       return newStore;
@@ -722,6 +726,18 @@ export function GameReducer(storeData, action) {
       }
       const allPlayers = {...response, players: players};
       return {...storeData, allPlayers: allPlayers};
+    case ActionTypes.RETRIEVE_PLAYER_BY_EMAIL:
+      response = action.payload;
+      if (response.error) {
+        return {...storeData, errorContext: {...response, eventType: action.type}};
+      }
+      return {...storeData, playerRetrievalEmail: response.email};
+    case ActionTypes.SEARCH_PLAYERS_BY_EMAIL:
+      response = action.payload;
+      if (response.error) {
+        return {...storeData, error: response.error};
+      }
+      return {...storeData, emailAvailable: (response.total === 0)};
     case ActionTypes.FETCH_ROOM_LINK_REQUESTS:
       response = action.payload;
       if (response.error) {
@@ -823,6 +839,8 @@ export function GameReducer(storeData, action) {
         return {...storeData, game: null, board: null};
       }
       return storeData;
+    case ActionTypes.CLEAR_EMAIL_AVAILABLE:
+      return {...storeData, emailAvailable: null};
     case ActionTypes.CLEAR_ERROR:
       const { error } = action.payload;
       if (storeData.error === error) {
@@ -842,6 +860,8 @@ export function GameReducer(storeData, action) {
       return {...storeData, playerInControlReassigned: false};
     case ActionTypes.CLEAR_ROOM_LINK_REQUEST_SUCCEEDED:
       return {...storeData, roomLinkRequestSucceeded: false};
+    case ActionTypes.CLEAR_PLAYER_RETRIEVAL_EMAIL:
+      return {...storeData, playerRetrievalEmail: null};
     case ActionTypes.REDUX_WEBSOCKET_OPEN:
       return {...storeData, connected: true};
     case ActionTypes.REDUX_WEBSOCKET_CLOSED:

@@ -27,8 +27,10 @@ function ConfirmLeaveGameDialog(props) {
     <AlertDialog isOpen={props.isOpen} leastDestructiveRef={cancelRef} onClose={props.onClose}>
       <AlertDialogOverlay>
         <AlertDialogContent>
-          <AlertDialogHeader fontSize="2xl" fontWeight="bold">{heading}</AlertDialogHeader>
-          <AlertDialogBody fontSize="xl" pb={5}>Are you sure you want to {action} and return to the {destination}?</AlertDialogBody>
+          <AlertDialogHeader fontSize="2xl" fontWeight="bold" textAlign="center">{heading}</AlertDialogHeader>
+          <AlertDialogBody fontSize="lg" fontStyle="italic" pb={5} textAlign="center">
+            Are you sure you want to {action} and return to the {destination}?
+          </AlertDialogBody>
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={props.onClose}>Cancel</Button>
             <Button colorScheme={colorScheme} onClick={props.onConfirm} ml={3}>{heading}</Button>

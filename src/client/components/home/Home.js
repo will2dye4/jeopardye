@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react';
 import { withRouter } from 'react-router-dom';
+import { PLAYER_ID_KEY } from '../../../constants.mjs';
 import Card from '../common/card/Card';
 import LogoPage from '../common/LogoPage';
 import CreateRoomDialog from './CreateRoomDialog';
@@ -28,6 +29,12 @@ class Home extends React.Component {
   componentDidMount() {
     if (this.props.roomCode && !this.props.roomID) {
       this.openRoomCodeDialog();
+    }
+
+    const urlSearchParams = new URLSearchParams(this.props.location.search);
+    if (urlSearchParams.has('pid') && !this.props.playerID) {
+      localStorage.setItem(PLAYER_ID_KEY, urlSearchParams.get('pid'));
+      this.props.fetchCurrentPlayer();
     }
   }
 
@@ -65,7 +72,11 @@ class Home extends React.Component {
     if (this.props.playerID) {
       this.setState({showRoomCodeDialog: true});
     } else {
-      this.props.modals.playerEditor.open(() => this.setState({showRoomCodeDialog: true}));
+      this.props.modals.playerEditor.open(function(submitted) {
+        if (submitted) {
+          this.setState({showRoomCodeDialog: true});
+        }
+      }.bind(this));
     }
   }
 

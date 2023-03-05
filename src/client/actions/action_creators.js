@@ -15,15 +15,19 @@ export const ActionTypes = {
   FETCH_PLAYER: 'JEOPARDYE::FETCH_PLAYER',
   FETCH_PLAYERS: 'JEOPARDYE::FETCH_PLAYERS',
   CREATE_NEW_PLAYER: 'JEOPARDYE::CREATE_NEW_PLAYER',
-  CHANGE_PLAYER_NAME: 'JEOPARDYE::CHANGE_PLAYER_NAME',
+  CHANGE_PLAYER_NAME_AND_EMAIL: 'JEOPARDYE::CHANGE_PLAYER_NAME_AND_EMAIL',
+  RETRIEVE_PLAYER_BY_EMAIL: 'JEOPARDYE::RETRIEVE_PLAYER_BY_EMAIL',
+  SEARCH_PLAYERS_BY_EMAIL: 'JEOPARDYE::SEARCH_PLAYERS_BY_EMAIL',
   FETCH_ROOM_LINK_REQUESTS: 'JEOPARDYE::FETCH_ROOM_LINK_REQUESTS',
   REQUEST_NEW_ROOM_LINK: 'JEOPARDYE::REQUEST_NEW_ROOM_LINK',
   RESOLVE_ROOM_LINK_REQUEST: 'JEOPARDYE::RESOLVE_ROOM_LINK_REQUEST',
   DISMISS_CLUE: 'JEOPARDYE::DISMISS_CLUE',
   CLEAR_CURRENT_GAME: 'JEOPARDYE::CLEAR_CURRENT_GAME',
+  CLEAR_EMAIL_AVAILABLE: 'JEOPARDYE::CLEAR_EMAIL_AVAILABLE',
   CLEAR_ERROR: 'JEOPARDYE::CLEAR_ERROR',
   CLEAR_HOST_OVERRIDE: 'JEOPARDYE::CLEAR_HOST_OVERRIDE',
   CLEAR_PLAYER_IN_CONTROL_REASSIGNED: 'JEOPARDYE::CLEAR_PLAYER_IN_CONTROL_REASSIGNED',
+  CLEAR_PLAYER_RETRIEVAL_EMAIL: 'JEOPARDYE::CLEAR_PLAYER_RETRIEVAL_EMAIL',
   CLEAR_ROOM_LINK_REQUEST_SUCCEEDED: 'JEOPARDYE::CLEAR_ROOM_LINK_REQUEST_SUCCEEDED',
   FETCH_CATEGORY_STATS: 'JEOPARDYE::FETCH_CATEGORY_STATS',
   SEARCH_CATEGORY_SUMMARIES: 'JEOPARDYE::SEARCH_CATEGORY_SUMMARIES',
@@ -174,10 +178,22 @@ function getPlayerByID(playerID) {
   );
 }
 
-function createPlayer(name, preferredFontStyle) {
+function getPlayersByEmail(email) {
+  const url = new URL(PLAYER_URL);
+  const params = {email: email};
+  url.search = new URLSearchParams(params).toString();
+  return fetch(url.toString()).then(response =>
+    getJSON(response, `Error occurred while fetching players by email.`)
+  ).catch(e =>
+    handleError(e, `Unexpected error occurred while fetching players by email.`)
+  );
+}
+
+function createPlayer(name, email, preferredFontStyle) {
   const opts = {
     body: JSON.stringify({
       name: name,
+      email: email,
       preferredFontStyle: preferredFontStyle,
     }),
     headers: {
@@ -192,10 +208,11 @@ function createPlayer(name, preferredFontStyle) {
   );
 }
 
-function updatePlayerName(playerID, name, preferredFontStyle) {
+function updatePlayerNameAndEmail(playerID, name, email, preferredFontStyle) {
   return fetch(`${PLAYER_URL}/${playerID}`, {
     body: JSON.stringify({
       name: name,
+      email: email,
       preferredFontStyle: preferredFontStyle,
     }),
     headers: {
@@ -203,6 +220,23 @@ function updatePlayerName(playerID, name, preferredFontStyle) {
     },
     method: 'PATCH',
   }).catch(e => handleError(e, `Unexpected error occurred while updating name for player ${playerID}.`));
+}
+
+function retrievePlayerByEmail(email) {
+  return fetch(`${PLAYER_URL}/retrieve`, {
+    body: JSON.stringify({email: email}),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  }).then(response => {
+    if (response.ok) {
+      return {email: email};
+    }
+    const errorMessage = `Error occurred while retrieving player for email ${email}.`;
+    console.log(`${errorMessage}: ${response.status} ${response.statusText}`);
+    return {error: errorMessage, status: response.status};
+  }).catch(e => handleError(e, `Unexpected error occurred while retrieving player for email ${email}.`));
 }
 
 function getRoomLinkRequests(resolution, page = 1) {
@@ -387,17 +421,31 @@ export function fetchPlayer(playerID) {
   };
 }
 
-export function createNewPlayer(name, preferredFontStyle) {
+export function createNewPlayer(name, email, preferredFontStyle) {
   return {
     type: ActionTypes.CREATE_NEW_PLAYER,
-    payload: createPlayer(name, preferredFontStyle),
+    payload: createPlayer(name, email, preferredFontStyle),
   };
 }
 
-export function changePlayerName(playerID, name, preferredFontStyle) {
+export function changePlayerNameAndEmail(playerID, name, email, preferredFontStyle) {
   return {
-    type: ActionTypes.CHANGE_PLAYER_NAME,
-    payload: updatePlayerName(playerID, name, preferredFontStyle),
+    type: ActionTypes.CHANGE_PLAYER_NAME_AND_EMAIL,
+    payload: updatePlayerNameAndEmail(playerID, name, email, preferredFontStyle),
+  };
+}
+
+export function searchPlayersByEmail(email) {
+  return {
+    type: ActionTypes.SEARCH_PLAYERS_BY_EMAIL,
+    payload: getPlayersByEmail(email),
+  };
+}
+
+export function retrievePlayer(email) {
+  return {
+    type: ActionTypes.RETRIEVE_PLAYER_BY_EMAIL,
+    payload: retrievePlayerByEmail(email),
   };
 }
 
@@ -567,6 +615,13 @@ export function dismissActiveClue() {
   };
 }
 
+export function clearEmailAvailable() {
+  return {
+    type: ActionTypes.CLEAR_EMAIL_AVAILABLE,
+    payload: {},
+  };
+}
+
 export function clearError(error) {
   return {
     type: ActionTypes.CLEAR_ERROR,
@@ -591,6 +646,13 @@ export function clearPlayerInControlReassigned() {
 export function clearRoomLinkRequestSucceeded() {
   return {
     type: ActionTypes.CLEAR_ROOM_LINK_REQUEST_SUCCEEDED,
+    payload: {},
+  };
+}
+
+export function clearPlayerRetrievalEmail() {
+  return {
+    type: ActionTypes.CLEAR_PLAYER_RETRIEVAL_EMAIL,
     payload: {},
   };
 }

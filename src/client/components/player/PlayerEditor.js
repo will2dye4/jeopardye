@@ -20,7 +20,7 @@ function PlayerEditor(props) {
       <ModalContent>
         {allowClose && <ModalCloseButton />}
         <ModalBody p={0}>
-          <PlayerSettings mode={mode} onSubmit={props.modals.playerEditor.close} {...props} />
+          <PlayerSettings mode={mode} onSubmit={() => props.modals.playerEditor.close(true)} {...props} />
         </ModalBody>
       </ModalContent>
     </Modal>

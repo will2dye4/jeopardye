@@ -338,6 +338,10 @@ export async function getPlayer(playerID) {
   return await playersCollection.findOne({_id: playerID});
 }
 
+export async function getPlayerByEmail(email) {
+  return await playersCollection.findOne({email: email});
+}
+
 export async function getPlayers(playerIDs) {
   const cursor = await playersCollection.find({_id: {$in: playerIDs}});
   const players = await cursor.toArray();
@@ -351,8 +355,8 @@ export async function updatePlayer(playerID, newFields) {
   await playersCollection.updateOne({_id: playerID}, {$set: newFields});
 }
 
-export async function updatePlayerName(playerID, name, preferredFontStyle) {
-  await updatePlayer(playerID, {name: name, preferredFontStyle: preferredFontStyle});
+export async function updatePlayerNameAndEmail(playerID, name, email, preferredFontStyle) {
+  await updatePlayer(playerID, {name: name, email: email, preferredFontStyle: preferredFontStyle});
 }
 
 export async function incrementPlayerStat(playerID, statName, value = 1) {

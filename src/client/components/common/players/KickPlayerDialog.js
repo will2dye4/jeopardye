@@ -43,6 +43,7 @@ class KickPlayerDialog extends React.Component {
   handleDurationChanged(event) {
     this.setState({selectedDuration: event.target.value});
   }
+
   handleSubmit() {
     this.props.kickPlayer(this.props.roomID, this.props.player.playerID, this.state.selectedDuration);
     this.props.modals.kickPlayerDialog.close();
@@ -53,7 +54,7 @@ class KickPlayerDialog extends React.Component {
       <AlertDialog isOpen={true} leastDestructiveRef={this.state.cancelRef} onClose={this.props.modals.kickPlayerDialog.close}>
         <AlertDialogOverlay>
           <AlertDialogContent>
-            <AlertDialogHeader fontSize="2xl" fontWeight="bold">Kick {this.props.player.name}</AlertDialogHeader>
+            <AlertDialogHeader fontSize="2xl" fontWeight="bold" textAlign="center">Kick {this.props.player.name}</AlertDialogHeader>
             <AlertDialogBody fontSize="xl" pb={5}>
               <Text fontStyle="italic" fontSize="md" textAlign="center">
                 You can kick a player out of the room for misbehaving, or if they leave the game without closing their browser.

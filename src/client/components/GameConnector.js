@@ -6,11 +6,13 @@ import {
   abandonGame,
   advanceToNextRound,
   buzzIn,
-  changePlayerName,
+  changePlayerNameAndEmail,
   clearCurrentGame,
+  clearEmailAvailable,
   clearError,
   clearHostOverride,
   clearPlayerInControlReassigned,
+  clearPlayerRetrievalEmail,
   clearRoomLinkRequestSucceeded,
   clientConnect,
   createNewGameFailed,
@@ -43,7 +45,9 @@ import {
   reassignRoomHost,
   requestNewRoomLink,
   resolveRoomLinkRequest,
+  retrievePlayer,
   searchCategorySummaries,
+  searchPlayersByEmail,
   selectClue,
   startSpectating,
   stopSpectating,
@@ -53,7 +57,7 @@ import {
   voteToSkipClue,
   websocketConnect,
 } from '../actions/action_creators';
-import {ADMIN_PLAYER_IDS, MAX_PLAYERS_PER_GAME, Rounds} from '../../constants.mjs';
+import { ADMIN_PLAYER_IDS, MAX_PLAYERS_PER_GAME, Rounds } from '../../constants.mjs';
 import { getPlayerName } from '../reducers/game_reducer';
 import JEOPARDYE_THEME from '../theme';
 import AdminDashboard from './admin/AdminDashboard';
@@ -64,6 +68,7 @@ import FinalizeScoresModal from './game/FinalizeScoresModal';
 import RoomHistory from './lobby/history/RoomHistory';
 import WhatsNewModal from './lobby/WhatsNewModal';
 import PlayerEditor from './player/PlayerEditor';
+import PlayerEmailDialog from './player/PlayerEmailDialog';
 import PlayerStatistics from './player/stats/PlayerStatistics';
 import Room from './Room';
 
@@ -92,11 +97,13 @@ const actionCreators = {
   abandonGame,
   advanceToNextRound,
   buzzIn,
-  changePlayerName,
+  changePlayerNameAndEmail,
   clearCurrentGame,
+  clearEmailAvailable,
   clearError,
   clearHostOverride,
   clearPlayerInControlReassigned,
+  clearPlayerRetrievalEmail,
   clearRoomLinkRequestSucceeded,
   clientConnect,
   createNewGameFailed,
@@ -129,7 +136,9 @@ const actionCreators = {
   reassignRoomHost,
   requestNewRoomLink,
   resolveRoomLinkRequest,
+  retrievePlayer,
   searchCategorySummaries,
+  searchPlayersByEmail,
   selectClue,
   startSpectating,
   stopSpectating,
@@ -152,6 +161,7 @@ class Connector extends React.Component {
       showEpisodeBrowser: false,
       showKickPlayerDialog: false,
       showPlayerEditor: false,
+      showPlayerEmailDialog: false,
       showPlayerStats: false,
       showRoomHistory: false,
       showWhatsNewModal: false,
@@ -160,6 +170,7 @@ class Connector extends React.Component {
     this.closeEpisodeBrowser = this.closeEpisodeBrowser.bind(this);
     this.closeKickPlayerDialog = this.closeKickPlayerDialog.bind(this);
     this.closePlayerEditor = this.closePlayerEditor.bind(this);
+    this.closePlayerEmailDialog = this.closePlayerEmailDialog.bind(this);
     this.closePlayerStats = this.closePlayerStats.bind(this);
     this.closeRoomHistory = this.closeRoomHistory.bind(this);
     this.closeWhatsNewModal = this.closeWhatsNewModal.bind(this);
@@ -167,6 +178,7 @@ class Connector extends React.Component {
     this.openEpisodeBrowser = this.openEpisodeBrowser.bind(this);
     this.openKickPlayerDialog = this.openKickPlayerDialog.bind(this);
     this.openPlayerEditor = this.openPlayerEditor.bind(this);
+    this.openPlayerEmailDialog = this.openPlayerEmailDialog.bind(this);
     this.openPlayerStats = this.openPlayerStats.bind(this);
     this.openRoomHistory = this.openRoomHistory.bind(this);
     this.openWhatsNewModal = this.openWhatsNewModal.bind(this);
@@ -265,6 +277,18 @@ class Connector extends React.Component {
       });
       this.props.clearRoomLinkRequestSucceeded();
     }
+
+    if (!prevProps.playerRetrievalEmail && this.props.playerRetrievalEmail) {
+      toast({
+        position: 'top',
+        title: `A player restoration link has been sent to ${this.props.playerRetrievalEmail}.`,
+        status: 'success',
+        isClosable: true,
+      });
+      this.props.clearPlayerRetrievalEmail();
+      this.closePlayerEmailDialog();
+      this.closePlayerEditor();
+    }
   }
 
   connectAndFetchCurrentState() {
@@ -327,6 +351,10 @@ class Connector extends React.Component {
     });
   }
 
+  openPlayerEmailDialog() {
+    this.setState({showPlayerEmailDialog: true});
+  }
+
   openPlayerStats() {
     this.setState({showPlayerStats: true});
   }
@@ -351,12 +379,16 @@ class Connector extends React.Component {
     this.setState({kickPlayerID: null, showKickPlayerDialog: false});
   }
 
-  closePlayerEditor() {
+  closePlayerEditor(submitted = null) {
     this.setState({showPlayerEditor: false});
     if (this.state.onPlayerEditorClose) {
-      this.state.onPlayerEditorClose();
+      this.state.onPlayerEditorClose(submitted);
       this.setState({onPlayerEditorClose: null});
     }
+  }
+
+  closePlayerEmailDialog() {
+    this.setState({showPlayerEmailDialog: false});
   }
 
   closePlayerStats() {
@@ -397,6 +429,10 @@ class Connector extends React.Component {
         open: this.openPlayerEditor,
         close: this.closePlayerEditor,
       },
+      playerEmailDialog: {
+        open: this.openPlayerEmailDialog,
+        close: this.closePlayerEmailDialog,
+      },
       playerStats: {
         open: this.openPlayerStats,
         close: this.closePlayerStats,
@@ -431,7 +467,8 @@ class Connector extends React.Component {
                                                               roomID={this.props.roomID}
                                                               modals={modals}
                                                               kickPlayer={this.props.kickPlayer} />}
-        {this.state.showPlayerEditor && <PlayerEditor modals={modals} {...this.props} />}
+        {this.state.showPlayerEditor && <PlayerEditor modals={modals} toast={toast} {...this.props} />}
+        {this.state.showPlayerEmailDialog && <PlayerEmailDialog modals={modals} toast={toast} {...this.props} />}
         {this.state.showPlayerStats && <PlayerStatistics modals={modals} {...this.props} />}
         {this.state.showRoomHistory && <RoomHistory modals={modals} {...this.props} />}
         {this.state.showWhatsNewModal && <WhatsNewModal modals={modals} {...this.props} />}

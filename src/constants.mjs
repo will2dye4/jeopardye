@@ -82,6 +82,8 @@ export const ALL_FONT_STYLES = [
 
 export const PLACEHOLDER_PLAYER_NAME = 'Alex';
 
+export  const PLACEHOLDER_PLAYER_EMAIL = 'alex@jeopardye.com';
+
 export const GAME_HISTORY_SCROLL_KEY = 'gameHistoryScroll';
 export const GAME_HISTORY_SIDE_KEY = 'gameHistorySide';
 export const GAME_HISTORY_SIZE_KEY = 'gameHistorySize';
@@ -226,7 +228,7 @@ export const EventTypes = {
   REASSIGN_ROOM_HOST: 'reassign_room_host',
   ROOM_HOST_REASSIGNED: 'room_host_reassigned',
   /* player events */
-  PLAYER_CHANGED_NAME: 'player_changed_name',
+  PLAYER_CHANGED_NAME_AND_EMAIL: 'player_changed_name_and_email',
   JOIN_ROOM: 'join_room',
   JOIN_ROOM_WITH_CODE: 'join_room_with_code',
   PLAYER_JOINED_ROOM: 'player_joined_room',

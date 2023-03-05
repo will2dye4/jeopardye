@@ -6,14 +6,16 @@ import {
   getCountOfPlayers,
   getPageOfPlayers,
   getPlayer,
+  getPlayerByEmail,
   getRoom,
   PAGE_SIZE,
-  updatePlayerName,
+  updatePlayerNameAndEmail,
 } from '../db.mjs';
 import { broadcast, playerNames } from '../websockets.mjs';
 import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, StatusCodes } from '../../constants.mjs';
 import { Player, validatePlayerName } from '../../models/player.mjs';
-import { WebsocketEvent } from '../../utils.mjs';
+import { validateEmail, WebsocketEvent } from '../../utils.mjs';
+import { sendPlayerEmailUpdatedMessage, sendPlayerRegistrationMessage, sendPlayerRetrievalMessage } from '../mail.mjs';
 
 const logger = log.get('api:player');
 
@@ -22,6 +24,22 @@ async function handleGetPlayers(req, res, next) {
     const error = new Error(message);
     error.status = status;
     next(error);
+  }
+
+  if (req.query.hasOwnProperty('email')) {
+    const player = await getPlayerByEmail(req.query.email.trim());
+    const found = !!player;
+    let players = [];
+    if (found) {
+      players.push(player);
+    }
+    res.json({
+      more: false,
+      total: (found ? 1 : 0),
+      page: 1,
+      players: players,
+    });
+    return;
   }
 
   const pageParam = req.query.page || 1;
@@ -99,6 +117,22 @@ async function handleCreatePlayer(req, res, next) {
     }
   }
 
+  let email = null;
+  if (req.body.hasOwnProperty('email')) {
+    email = req.body.email.toString().trim();
+    if (email !== '') {
+      if (!validateEmail(email)) {
+        handleError(`Invalid email "${email}"`, StatusCodes.BAD_REQUEST);
+        return;
+      }
+      const existingPlayer = await getPlayerByEmail(email);
+      if (existingPlayer) {
+        handleError(`Player with email "${email}" already exists`, StatusCodes.CONFLICT);
+        return;
+      }
+    }
+  }
+
   const roomID = req.body.roomID?.toString().trim();
   if (roomID) {
     const room = await getRoom(roomID);
@@ -108,7 +142,7 @@ async function handleCreatePlayer(req, res, next) {
     }
   }
 
-  const player = new Player(name, preferredFontStyle);
+  const player = new Player(name, preferredFontStyle, email);
   try {
     await createPlayer(player);
     if (roomID) {
@@ -122,6 +156,35 @@ async function handleCreatePlayer(req, res, next) {
   res.json(player);
   broadcast(new WebsocketEvent(EventTypes.PLAYER_JOINED, {player}));
   logger.info(`Created player ${player.playerID}.`);
+
+  if (!!email && email !== '') {
+    await sendPlayerRegistrationMessage(player);
+  }
+}
+
+async function handleRetrievePlayer(req, res, next) {
+  const handleError = (message, status) => {
+    logger.error(`Error retrieving player by email: ${message} (${status})`);
+    const error = new Error(message);
+    error.status = status;
+    next(error);
+  }
+
+  const email = req.body.email?.toString().trim();
+  if (!validateEmail(email)) {
+    handleError(`Invalid email "${email}"`, StatusCodes.BAD_REQUEST);
+    return;
+  }
+
+  const player = await getPlayerByEmail(email);
+  if (!player) {
+    handleError(`Player with email "${email}" not found`, StatusCodes.NOT_FOUND);
+    return;
+  }
+
+  res.status(StatusCodes.NO_CONTENT).end();
+  await sendPlayerRetrievalMessage(player);
+  logger.info(`Sent player retrieval email to ${player.name} at ${email} (player ID: ${player.playerID}).`);
 }
 
 async function handleGetPlayer(req, res, next) {
@@ -169,22 +232,50 @@ async function handleUpdatePlayer(req, res, next) {
     }
   }
 
+  let email = player.email;
+  if (req.body.hasOwnProperty('email')) {
+    email = req.body.email.toString().trim();
+    if (email !== '') {
+      if (!validateEmail(email)) {
+        handleError(`Invalid email "${email}"`, StatusCodes.BAD_REQUEST);
+        return;
+      }
+      const existingPlayer = await getPlayerByEmail(email);
+      if (existingPlayer) {
+        handleError(`Player with email "${email}" already exists`, StatusCodes.CONFLICT);
+        return;
+      }
+    }
+  }
+
   try {
-    await updatePlayerName(playerID, name, preferredFontStyle);
+    await updatePlayerNameAndEmail(playerID, name, email, preferredFontStyle);
   } catch (e) {
     handleError(`Failed to update player name in database: ${e}`, StatusCodes.INTERNAL_SERVER_ERROR);
     return;
   }
 
-  logger.info(`Player ${playerID} changed name from "${player.name}" to "${name}" (font: ${preferredFontStyle}).`);
-  playerNames[playerID] = name;
-  broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME, {playerID, name, preferredFontStyle, prevName: player.name, roomID: player.currentRoomID}));
+  if (name !== player.name || (email || '') !== (player.email || '') || preferredFontStyle !== player.preferredFontStyle) {
+    if (name !== player.name || preferredFontStyle !== player.preferredFontStyle) {
+      logger.info(`Player ${playerID} changed name from "${player.name}" to "${name}" (font: ${preferredFontStyle}).`);
+      playerNames[playerID] = name;
+    }
+    if ((email || '') !== (player.email || '')) {
+      logger.info(`${name} changed email from "${player.email || ''}" to "${email || ''}".`);
+    }
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME_AND_EMAIL, {playerID, name, email, preferredFontStyle, prevName: player.name, roomID: player.currentRoomID}));
+  }
   res.status(StatusCodes.NO_CONTENT).end();
+
+  if ((email || '') !== (player.email || '') && (email || '') !== '' && (player.email || '') !== '') {
+    await sendPlayerEmailUpdatedMessage(name, email, player.email);
+  }
 }
 
 const router = express.Router();
 router.get('/', handleGetPlayers);
 router.post('/', handleCreatePlayer);
+router.post('/retrieve', handleRetrievePlayer);
 router.get('/:playerID', handleGetPlayer);
 router.patch('/:playerID', handleUpdatePlayer);
 
