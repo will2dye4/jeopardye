@@ -1,7 +1,7 @@
 import express from 'express';
 import log from 'log';
 import {
-  MAX_ROOM_REQUEST_EMAIL_LENGTH,
+  MAX_EMAIL_LENGTH,
   MAX_ROOM_REQUEST_NAME_LENGTH,
   StatusCodes,
 } from '../../constants.mjs';
@@ -102,7 +102,7 @@ async function handleCreateRoomLinkRequest(req, res, next) {
     return;
   }
   const email = req.body.email?.toString().trim();
-  if (!email || email.length > MAX_ROOM_REQUEST_EMAIL_LENGTH || !validateEmail(email)) {
+  if (!email || email.length > MAX_EMAIL_LENGTH || !validateEmail(email)) {
     handleError(`Invalid email "${email}"`, StatusCodes.BAD_REQUEST);
     return;
   }

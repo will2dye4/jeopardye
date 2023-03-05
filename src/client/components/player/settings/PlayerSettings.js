@@ -8,6 +8,7 @@ import {
   SOUND_EFFECTS_ENABLED_KEY,
   SPEAK_CLUES_ENABLED_KEY,
   SPEAK_ANSWERS_ENABLED_KEY,
+  MAX_EMAIL_LENGTH,
 } from '../../../../constants.mjs';
 import { validatePlayerName } from '../../../../models/player.mjs';
 import { validateEmail } from '../../../../utils.mjs';
@@ -120,7 +121,7 @@ class PlayerSettings extends React.Component {
 
   handleEmailChanged(event) {
     const email = event.target.value.trim();
-    this.setState({emailInvalid: (email !== '' && !validateEmail(email)), email: email});
+    this.setState({emailInvalid: (email !== '' && !validateEmail(email)), email: email.substring(0, MAX_EMAIL_LENGTH)});
   }
 
   handleSoundEffectsChanged() {

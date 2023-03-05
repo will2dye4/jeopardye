@@ -14,7 +14,7 @@ import {
   ModalOverlay,
   Text,
 } from '@chakra-ui/react';
-import { MAX_ROOM_REQUEST_EMAIL_LENGTH, MAX_ROOM_REQUEST_NAME_LENGTH } from '../../../constants.mjs';
+import { MAX_EMAIL_LENGTH, MAX_ROOM_REQUEST_NAME_LENGTH } from '../../../constants.mjs';
 import { validateEmail } from '../../../utils.mjs';
 import Card from '../common/card/Card';
 import GridRow from '../common/GridRow';
@@ -43,7 +43,7 @@ class RequestLinkDialog extends React.Component {
   handleEmailChanged(event) {
     const newEmail = event.target.value;
     const invalid = !validateEmail(newEmail);
-    this.setState({emailInvalid: invalid, email: newEmail.substring(0, MAX_ROOM_REQUEST_EMAIL_LENGTH)});
+    this.setState({emailInvalid: invalid, email: newEmail.substring(0, MAX_EMAIL_LENGTH)});
   }
 
   handleKeyUp(event) {

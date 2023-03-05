@@ -12,7 +12,7 @@ import {
   updatePlayerNameAndEmail,
 } from '../db.mjs';
 import { broadcast, playerNames } from '../websockets.mjs';
-import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, StatusCodes } from '../../constants.mjs';
+import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, MAX_EMAIL_LENGTH, StatusCodes } from '../../constants.mjs';
 import { Player, validatePlayerName } from '../../models/player.mjs';
 import { validateEmail, WebsocketEvent } from '../../utils.mjs';
 import { sendPlayerEmailUpdatedMessage, sendPlayerRegistrationMessage, sendPlayerRetrievalMessage } from '../mail.mjs';
@@ -121,7 +121,7 @@ async function handleCreatePlayer(req, res, next) {
   if (req.body.hasOwnProperty('email')) {
     email = req.body.email.toString().trim();
     if (email !== '') {
-      if (!validateEmail(email)) {
+      if (email.length > MAX_EMAIL_LENGTH || !validateEmail(email)) {
         handleError(`Invalid email "${email}"`, StatusCodes.BAD_REQUEST);
         return;
       }
@@ -236,7 +236,7 @@ async function handleUpdatePlayer(req, res, next) {
   if (req.body.hasOwnProperty('email')) {
     email = req.body.email.toString().trim();
     if (email !== '') {
-      if (!validateEmail(email)) {
+      if (email.length > MAX_EMAIL_LENGTH || !validateEmail(email)) {
         handleError(`Invalid email "${email}"`, StatusCodes.BAD_REQUEST);
         return;
       }
