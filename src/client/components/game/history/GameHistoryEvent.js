@@ -99,7 +99,7 @@ function getEventDescription(props) {
         };
       }
       break;
-    case EventTypes.PLAYER_CHANGED_NAME:
+    case EventTypes.PLAYER_CHANGED_NAME_AND_EMAIL:
       if (event.payload.name !== event.payload.prevName) {
         eventConfig = {
           description: <React.Fragment><PlayerName>{event.payload.prevName}</PlayerName> is now known as <PlayerName>{event.payload.name}</PlayerName>.</React.Fragment>,
