@@ -29,12 +29,16 @@ const DEFAULT_LOCALE = 'en';
 /* anything@anything.anything */
 const EMAIL_REGEX = /\S+@\S+\.\S+/;
 
+const AND_REGEX = /\s+and|&\s+/;
+const OR_REGEX = /\s+or\s+/;
+
 const MIN_ANSWER_SIMILARITY_RATIO = 0.8;
 
 const INTERCHANGEABLE_TERMS = [
   new Set(['america', 'united states', 'united states of america', 'us', 'usa']),
   new Set(['brother love', 'diddy', 'p diddy', 'puff daddy', 'puffy', 'sean combs', 'sean john combs', 'sean love combs']),
   new Set(['chairman mao', 'chairman mao zedong', 'chairman mao tse-tung', 'mao zedong', 'mao tse-tung']),
+  new Set(['cs lewis', 'c s lewis', 'lewis']),
   new Set(['ellen', 'ellen degeneres']),
   new Set(['eminem', 'marshall mathers', 'slim shady']),
   new Set(['eu', 'european union']),
@@ -48,6 +52,7 @@ const INTERCHANGEABLE_TERMS = [
   new Set(['jfk', 'john f kennedy', 'john fitzgerald kennedy', 'john kennedy']),
   new Set(['kanye', 'kanye omari west', 'kanye west', 'ye', 'yeezus', 'yeezy']),
   new Set(['lbj', 'lyndon b johnson', 'lyndon baines johnson', 'lyndon johnson']),
+  new Set(['lord voldemort', 'voldemort', 'tom riddle', 'tom marvolo riddle', 'riddle']),
   new Set(['martin luther king', 'martin luther king jr', 'mlk', 'mlk jr']),
   new Set(['martin luther king day', 'martin luther king jr day', 'mlk day']),
   new Set(['napoleon', 'napoleon bonaparte']),
@@ -452,13 +457,20 @@ export function checkSubmittedAnswer(correctAnswer, submittedAnswer) {
     }
   }
   /* Try comparing items without considering order, e.g., '<x> and <y>' or '<x> or <y>' --> {'<x>', '<y>'} */
-  for (const conjunction of [/and|&/, 'or']) {
+  for (const conjunction of [AND_REGEX, OR_REGEX]) {
     if (correctAnswer.search(conjunction) !== -1 && submittedAnswer.search(conjunction) !== -1) {
       const splitCorrectAnswer = correctAnswer.split(conjunction).map(normalizeAnswerText).sort();
       const splitSubmittedAnswer = submittedAnswer.split(conjunction).map(normalizeAnswerText).sort();
       if (splitCorrectAnswer.every((value, i) => isCloseEnough(value, splitSubmittedAnswer[i]))) {
         return true;
       }
+    }
+  }
+  /* Accept '<x>' or '<y>' if the correct answer is '<x> or <y>' */
+  if (correctAnswer.search(OR_REGEX) !== -1) {
+    const splitCorrectAnswer = correctAnswer.split(OR_REGEX).map(normalizeAnswerText).sort();
+    if (splitCorrectAnswer.find(value => isCloseEnough(value, submittedAnswer))) {
+      return true;
     }
   }
   /* Try checking either answer if there's a slash, e.g., 'snake/serpent' --> 'snake' or 'serpent' */
