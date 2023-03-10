@@ -240,10 +240,12 @@ async function handleUpdatePlayer(req, res, next) {
         handleError(`Invalid email "${email}"`, StatusCodes.BAD_REQUEST);
         return;
       }
-      const existingPlayer = await getPlayerByEmail(email);
-      if (existingPlayer) {
-        handleError(`Player with email "${email}" already exists`, StatusCodes.CONFLICT);
-        return;
+      if (email !== player.email) {
+        const existingPlayer = await getPlayerByEmail(email);
+        if (existingPlayer) {
+          handleError(`Player with email "${email}" already exists`, StatusCodes.CONFLICT);
+          return;
+        }
       }
     }
   }

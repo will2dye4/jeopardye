@@ -147,7 +147,7 @@ class PlayerSettings extends React.Component {
       valid = false;
     }
     if (valid) {
-      if (this.state.email.trim() === '') {
+      if (this.state.email.trim() === '' || this.state.email.trim() === this.getPlayer()?.email) {
         this.submit();
       } else {
         // Need to confirm if the email address is available (unclaimed) before submitting/closing the modal.
