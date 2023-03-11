@@ -1,3 +1,4 @@
+import { EventContext as AleaEventContext } from '@dyesoft/alea-core';
 import langEn from '@nlpjs/lang-en';
 import similarity from '@nlpjs/similarity';
 import '@gouch/to-title-case';
@@ -23,11 +24,6 @@ import yearSeasonDates from './config/yearSeasonDates.json' assert { type: 'json
 
 const { StemmerEn, StopwordsEn } = langEn;
 const { leven } = similarity;
-
-const DEFAULT_LOCALE = 'en';
-
-/* anything@anything.anything */
-const EMAIL_REGEX = /\S+@\S+\.\S+/;
 
 const AND_REGEX = /\s+and|&\s+/;
 const OR_REGEX = /\s+or\s+/;
@@ -71,37 +67,25 @@ const INTERCHANGEABLE_TERMS = [
 
 const AMBIGUOUS_LAST_NAMES = new Set(['bronte', 'kennedy', 'roosevelt']);
 
-const PLACE_NAMES = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', 'Honorable Mention'];
-const MAX_PLACE_INDEX = PLACE_NAMES.length - 1;
-
 const stemmer = new StemmerEn();
 stemmer.stopwords = new StopwordsEn();
 
-export class WebsocketEvent {
-  constructor(eventType, payload) {
-    this.eventType = eventType;
-    this.payload = payload;
-  }
-}
-
-export class EventContext {
+export class EventContext extends AleaEventContext {
   static fromGameAndClue(game, clue, playerID = null) {
     return new EventContext(game.roomID, game.gameID, playerID, clue.categoryID, clue.clueID);
   }
 
   static fromProps(props) {
-    const roomID = props.gameState?.roomID || props.roomID;
-    const gameID = props.gameState?.gameID || props.game?.gameID || props.gameID;
-    const playerID = props.gameState?.playerID || props.player?.playerID || props.playerID;
-    return new EventContext(roomID, gameID, playerID, props.activeClue?.categoryID, props.activeClue?.clueID);
+    let context = super.fromProps(props);
+    if (props.activeClue) {
+      context.categoryID = props.activeClue.categoryID;
+      context.clueID = props.activeClue.clueID;
+    }
+    return context;
   }
 
   constructor(roomID, gameID, playerID, categoryID, clueID) {
-    this.roomID = roomID;
-    this.gameID = gameID;
-    if (playerID) {
-      this.playerID = playerID;
-    }
+    super(roomID, gameID, playerID);
     if (categoryID) {
       this.categoryID = categoryID;
     }
@@ -111,82 +95,8 @@ export class EventContext {
   }
 }
 
-export function range(n) {
-  return [...Array(n).keys()];
-}
-
-export function randomChoice(values) {
-  return values[Math.floor(Math.random() * values.length)];
-}
-
-export function isSuperset(set, subset) {
-  for (let elem of subset) {
-    if (!set.has(elem)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-export function comparePlayerNames(player1, player2) {
-  return player1.name.toLowerCase().localeCompare(player2.name.toLowerCase());
-}
-
-export function comparePlayerEntries([id1, player1], [id2, player2]) {
-  return comparePlayerNames(player1, player2);
-}
-
-export function formatDate(date, fullMonthName = false) {
-  if (typeof date === 'string') {
-    date = new Date(date);
-  }
-  const monthOption = (fullMonthName ? 'long' : 'short');
-  const month = new Intl.DateTimeFormat(DEFAULT_LOCALE, {month: monthOption, timeZone: 'GMT'}).format(date);
-  const day = new Intl.DateTimeFormat(DEFAULT_LOCALE, {day: 'numeric', timeZone: 'GMT'}).format(date);
-  const year = new Intl.DateTimeFormat(DEFAULT_LOCALE, {year: 'numeric', timeZone: 'GMT'}).format(date);
-  return `${month} ${day}, ${year}`;
-}
-
-export function formatWeekday(date) {
-  if (typeof date === 'string') {
-    date = new Date(date);
-  }
-  return new Intl.DateTimeFormat(DEFAULT_LOCALE, {weekday: 'long', timeZone: 'GMT'}).format(date);
-}
-
-export function formatScore(score) {
-  score = score || 0;
-  const scoreString = score.toLocaleString();
-  if (score < 0) {
-    return '-$' + scoreString.substring(1);
-  }
-  return '$' + scoreString;
-}
-
-export function formatList(items) {
-  let result = '';
-  items.forEach((item, i) => {
-    result += item;
-    if (i < items.length - 2) {
-      result += ', ';
-    } else if (i === items.length - 2) {
-      result += ' and ';
-    }
-  });
-  return result;
-}
-
 export function getURLForContestant(contestantID) {
   return `https://j-archive.com/showplayer.php?player_id=${contestantID}`;
-}
-
-export function getISODateString(date) {
-  return date.toISOString().substring(0, 10);
-}
-
-export function parseISODateString(date) {
-  const [year, month, day] = date.split('-');
-  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 }
 
 export function isValidEpisodeDate(date, latestEpisodeDate) {
@@ -219,10 +129,6 @@ export function isValidEpisodeDate(date, latestEpisodeDate) {
     return false;
   }
   return true;
-}
-
-export function validateEmail(email) {
-  return EMAIL_REGEX.test(email);
 }
 
 export function getUnplayedClues(board, limit = -1) {
@@ -281,44 +187,6 @@ export function getAugmentedPlayerStats(playerStats) {
     finalRoundPercentage: Math.round((finalCluesAnswered === 0 ? 0 : (finalCluesAnsweredCorrectly / finalCluesAnswered)) * 100),
     winningPercentage: Math.round((gamesPlayed === 0 ? 0 : (gamesWon / gamesPlayed)) * 100),
   };
-}
-
-export function getCurrentPlaces(game, players) {
-  let scores = [];
-  Object.entries(game.scores).forEach(([playerID, score]) => {
-    const player = players.find(player => player.playerID === playerID);
-    if (player && (!player.spectating || score !== 0)) {
-      scores.push({...player, score: score});
-    }
-  });
-  return getPlaces(scores);
-}
-
-export function getPlaces(scores) {
-  let places = {};
-  let i = 0;
-  let prevScore = null;
-  let players = [];
-  scores.sort((player1, player2) => player2.score - player1.score).forEach(player => {
-    const playerScore = {playerID: player.playerID, name: player.name, score: player.score};
-    if (prevScore === null || player.score === prevScore || i === MAX_PLACE_INDEX) {
-      players.push(playerScore);
-    } else {
-      places[PLACE_NAMES[i]] = players;
-      i = Math.min(i + players.length, MAX_PLACE_INDEX);
-      players = [playerScore];
-    }
-    prevScore = player.score;
-  });
-  if (players.length) {
-    places[PLACE_NAMES[i]] = players;
-  }
-  return places;
-}
-
-export function getCurrentChampion(places) {
-  const winners = places[Object.keys(places)[0]];
-  return (winners.length === 1 ? winners[0].playerID : null);
 }
 
 export function getWagerRange(currentRound, playerScore) {

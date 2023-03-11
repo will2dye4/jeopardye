@@ -14,9 +14,9 @@ import {
   Thead,
   Tr,
 } from '@chakra-ui/react';
+import { RoomLinkRequestResolution } from '@dyesoft/alea-core';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { SORT_ARROW_DESCENDING } from '../../../constants.mjs';
-import { RoomLinkRequestResolution } from '../../../models/roomLinkRequest.mjs';
 import ActionIcon from '../common/ActionIcon';
 
 function getResolveButtons(props, request) {

@@ -14,8 +14,8 @@ import {
   Input,
   Text,
 } from '@chakra-ui/react';
-import { PLACEHOLDER_PLAYER_EMAIL, StatusCodes } from '../../../constants.mjs';
-import { validateEmail } from '../../../utils.mjs';
+import { StatusCodes, validateEmail } from '@dyesoft/alea-core';
+import { PLACEHOLDER_PLAYER_EMAIL } from '../../../constants.mjs';
 import { ActionTypes } from '../../actions/action_creators';
 import GridRow from '../common/GridRow';
 

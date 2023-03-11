@@ -1,8 +1,8 @@
 import React from 'react';
 import { Flex, Select, Table, Tbody, Td, Text, Th, Thead, Tr } from '@chakra-ui/react';
 import { faCrown } from '@fortawesome/free-solid-svg-icons';
+import { comparePlayerNames, formatScore } from '@dyesoft/alea-core';
 import { LeaderboardKeys } from '../../../../constants.mjs';
-import { comparePlayerNames, formatScore } from '../../../../utils.mjs';
 import Icon from '../../common/Icon';
 import {
   ALL_TIME_SCORE,

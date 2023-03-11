@@ -1,5 +1,5 @@
+import { formatDate } from '@dyesoft/alea-core';
 import db from '../server/db.mjs';
-import { formatDate } from '../utils.mjs';
 
 let cursor;
 if (process.argv.length > 2) {

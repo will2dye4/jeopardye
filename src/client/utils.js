@@ -1,10 +1,10 @@
 import React from 'react';
+import { formatDate, formatWeekday } from '@dyesoft/alea-core';
 import {
   SOUND_EFFECTS_ENABLED_KEY,
   SPEAK_CLUES_ENABLED_KEY,
   SPEAK_ANSWERS_ENABLED_KEY,
 } from '../constants.mjs';
-import { formatDate, formatWeekday } from '../utils.mjs';
 
 const DEFAULT_SOUND_EFFECT_VOLUME = 0.5;
 const DEFAULT_SPEECH_VOLUME = 0.4;

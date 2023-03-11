@@ -12,6 +12,7 @@ import {
   TabPanels,
   Tabs,
 } from '@chakra-ui/react';
+import { parseISODateString } from '@dyesoft/alea-core';
 import {
   CATEGORIES_PER_ROUND,
   DEFAULT_GAME_SETTINGS_MODE,
@@ -21,7 +22,6 @@ import {
   SELECTED_TAB_STYLES,
 } from '../../../../constants.mjs';
 import { GameSettings as Settings } from '../../../../models/game.mjs';
-import { parseISODateString } from '../../../../utils.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
 import Card from '../../common/card/Card';
 import ByCategoryGameSettings from './ByCategoryGameSettings';

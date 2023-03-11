@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, GridItem, SimpleGrid, Text } from '@chakra-ui/react';
-import { range } from '../../../../utils.mjs';
+import { range } from '@dyesoft/alea-core';
 import { ALL_FONT_STYLES } from '../../../../constants.mjs';
 import GridRow from '../../common/GridRow';
 

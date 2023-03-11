@@ -3,10 +3,11 @@ import log from 'log';
 import {
   MAX_EMAIL_LENGTH,
   MAX_ROOM_REQUEST_NAME_LENGTH,
+  RoomLinkRequest,
+  RoomLinkRequestResolution,
   StatusCodes,
-} from '../../constants.mjs';
-import { RoomLinkRequest, RoomLinkRequestResolution } from '../../models/roomLinkRequest.mjs';
-import { validateEmail } from '../../utils.mjs';
+  validateEmail,
+} from '@dyesoft/alea-core';
 import {
   createRoomLinkRequest,
   getCountOfRoomLinkRequests,

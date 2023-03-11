@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@chakra-ui/react';
+import { range } from '@dyesoft/alea-core';
 import { DailyDoubleSettings, MAX_NUM_ROUNDS } from '../../../../constants.mjs';
-import { range } from '../../../../utils.mjs';
 import RadioToggleGroup from '../../common/form/RadioToggleGroup';
 import ToggleSwitch from '../../common/form/ToggleSwitch';
 import GameSetting from './GameSetting';

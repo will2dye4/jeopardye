@@ -1,13 +1,13 @@
+import { getCurrentChampion, parseISODateString, StatusCodes } from '@dyesoft/alea-core';
 import { ActionTypes } from '../actions/action_creators';
 import {
   EventTypes,
   GAME_HISTORY_EVENT_TYPES,
   PLAYER_ID_KEY,
   Rounds,
-  StatusCodes,
 } from '../../constants.mjs';
 import { GameSettings } from '../../models/game.mjs';
-import { getCurrentChampion, isDailyDouble, parseISODateString } from '../../utils.mjs';
+import { isDailyDouble } from '../../utils.mjs';
 
 const WEBSOCKET_CONNECTION_REFUSED_ERROR_MESSAGE = '`redux-websocket` error';
 
@@ -274,7 +274,7 @@ function handlePlayerLeftRoom(storeData, event) {
   return newStore;
 }
 
-function handlePlayerChangedNameAndEmail(storeData, event) {
+function handlePlayerChangedSettings(storeData, event) {
   const { playerID, name, email, preferredFontStyle, prevName } = event.payload;
   if (!storeData.players.hasOwnProperty(playerID)) {
     console.log(`Cannot change name of unknown player "${playerID}".`);
@@ -582,7 +582,7 @@ const eventHandlers = {
   [EventTypes.ROOM_HOST_REASSIGNED]: handleRoomHostReassigned,
   [EventTypes.PLAYER_JOINED_ROOM]: handlePlayerJoinedRoom,
   [EventTypes.PLAYER_LEFT_ROOM]: handlePlayerLeftRoom,
-  [EventTypes.PLAYER_CHANGED_NAME_AND_EMAIL]: handlePlayerChangedNameAndEmail,
+  [EventTypes.PLAYER_CHANGED_SETTINGS]: handlePlayerChangedSettings,
   [EventTypes.PLAYER_JOINED]: handlePlayerJoined,
   [EventTypes.PLAYER_SELECTED_CLUE]: handlePlayerSelectedClue,
   [EventTypes.PLAYER_BUZZED]: handlePlayerBuzzed,

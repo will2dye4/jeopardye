@@ -1,7 +1,7 @@
 import React from 'react';
 import { SimpleGrid } from '@chakra-ui/react';
+import { range } from '@dyesoft/alea-core';
 import { CATEGORIES_PER_ROUND } from '../../../../../constants.mjs';
-import { range } from '../../../../../utils.mjs';
 import CategoryHeading from './CategoryHeading';
 
 function CategoryHeadings(props) {

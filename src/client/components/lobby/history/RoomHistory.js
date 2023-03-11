@@ -24,17 +24,19 @@ import {
 } from '@chakra-ui/react';
 import { faCrown, faInfoCircle, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import {
+  comparePlayerNames,
+  formatDate,
+  formatScore,
+  getCurrentPlaces,
   MILLISECONDS_PER_HOUR,
   MILLISECONDS_PER_MINUTE,
-  SORT_ARROW_ASCENDING,
-  SORT_ARROW_DESCENDING,
-} from '../../../../constants.mjs';
-import {comparePlayerNames, formatDate, formatScore, getCurrentPlaces} from '../../../../utils.mjs';
+} from '@dyesoft/alea-core';
+import { SORT_ARROW_ASCENDING, SORT_ARROW_DESCENDING } from '../../../../constants.mjs';
 import { formatEpisodeTitle } from '../../../utils';
 import Bold from '../../common/Bold';
 import Card from '../../common/card/Card';
+import GridRow from '../../common/GridRow';
 import Icon from '../../common/Icon';
-import GridRow from "../../common/GridRow";
 
 function scrollToTop() {
   const closeButton = document.getElementById('room-history-close-button');

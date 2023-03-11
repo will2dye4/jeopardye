@@ -1,5 +1,5 @@
 import express from 'express';
-import { StatusCodes } from '../../constants.mjs';
+import { StatusCodes } from '@dyesoft/alea-core';
 import {
   getEpisodeCategories,
   getFullEpisodeByAirDate,

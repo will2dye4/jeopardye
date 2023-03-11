@@ -17,7 +17,7 @@ import {
   SECONDS_PER_MINUTE,
   SECONDS_PER_MONTH,
   SECONDS_PER_WEEK,
-} from '../../../../constants.mjs';
+} from '@dyesoft/alea-core';
 
 const DURATIONS = {
   '1 minute': SECONDS_PER_MINUTE,

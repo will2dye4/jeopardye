@@ -2,16 +2,19 @@ import mongodb from 'mongodb';
 const { MongoClient } = mongodb;
 
 import uuid from 'uuid';
+import {
+  randomChoice,
+  range,
+  ROOM_CODE_CHARACTERS,
+  ROOM_CODE_LENGTH,
+  RoomLinkRequestResolution,
+} from '@dyesoft/alea-core';
 import config from '../config.json' assert { type: 'json' };
 import {
   DEFAULT_ALLOW_UNREVEALED_CLUES,
   DEFAULT_HIGHEST_SEASON_NUMBER,
   MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH,
-  ROOM_CODE_CHARACTERS,
-  ROOM_CODE_LENGTH,
 } from '../constants.mjs';
-import { RoomLinkRequestResolution } from '../models/roomLinkRequest.mjs';
-import { randomChoice, range } from '../utils.mjs';
 
 export const PAGE_SIZE = 10;
 

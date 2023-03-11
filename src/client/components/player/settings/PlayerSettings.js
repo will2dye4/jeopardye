@@ -1,17 +1,14 @@
 import React from 'react';
 import { Button, Flex, Heading, Link, Text } from '@chakra-ui/react';
+import { MAX_EMAIL_LENGTH, MAX_PLAYER_NAME_LENGTH, validateEmail, validatePlayerName } from '@dyesoft/alea-core';
 import {
   DEFAULT_FONT_STYLE,
-  MAX_PLAYER_NAME_LENGTH,
   PLACEHOLDER_PLAYER_NAME,
   PlayerEditorModes,
   SOUND_EFFECTS_ENABLED_KEY,
   SPEAK_CLUES_ENABLED_KEY,
   SPEAK_ANSWERS_ENABLED_KEY,
-  MAX_EMAIL_LENGTH,
 } from '../../../../constants.mjs';
-import { validatePlayerName } from '../../../../models/player.mjs';
-import { validateEmail } from '../../../../utils.mjs';
 import { isLocalStorageSettingEnabled } from '../../../utils';
 import Card from '../../common/card/Card';
 import PlayerAudioPreferences from './PlayerAudioPreferences';

@@ -1,5 +1,6 @@
 import express from 'express';
 import log from 'log';
+import { MAX_EMAIL_LENGTH, StatusCodes, validateEmail, validatePlayerName, WebsocketEvent } from '@dyesoft/alea-core';
 import {
   addPlayerToRoom,
   createPlayer,
@@ -12,9 +13,8 @@ import {
   updatePlayerNameAndEmail,
 } from '../db.mjs';
 import { broadcast, playerNames } from '../websockets.mjs';
-import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes, MAX_EMAIL_LENGTH, StatusCodes } from '../../constants.mjs';
-import { Player, validatePlayerName } from '../../models/player.mjs';
-import { validateEmail, WebsocketEvent } from '../../utils.mjs';
+import { ALL_FONT_STYLES, DEFAULT_FONT_STYLE, EventTypes } from '../../constants.mjs';
+import { Player } from '../../models/player.mjs';
 import { sendPlayerEmailUpdatedMessage, sendPlayerRegistrationMessage, sendPlayerRetrievalMessage } from '../mail.mjs';
 
 const logger = log.get('api:player');
@@ -265,7 +265,7 @@ async function handleUpdatePlayer(req, res, next) {
     if ((email || '') !== (player.email || '')) {
       logger.info(`${name} changed email from "${player.email || ''}" to "${email || ''}".`);
     }
-    broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_NAME_AND_EMAIL, {playerID, name, email, preferredFontStyle, prevName: player.name, roomID: player.currentRoomID}));
+    broadcast(new WebsocketEvent(EventTypes.PLAYER_CHANGED_SETTINGS, {playerID, name, email, preferredFontStyle, prevName: player.name, roomID: player.currentRoomID}));
   }
   res.status(StatusCodes.NO_CONTENT).end();
 

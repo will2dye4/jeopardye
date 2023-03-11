@@ -10,8 +10,8 @@ import {
   PopoverTrigger,
 } from '@chakra-ui/react';
 import { faCrown, faUserTie } from '@fortawesome/free-solid-svg-icons';
-import { DEFAULT_FONT_STYLE, MAX_PLAYER_NAME_LENGTH } from '../../../../constants.mjs';
-import { formatScore } from '../../../../utils.mjs';
+import { formatScore, MAX_PLAYER_NAME_LENGTH } from '@dyesoft/alea-core';
+import { DEFAULT_FONT_STYLE } from '../../../../constants.mjs';
 import Icon from '../../common/Icon';
 import PodiumMenu from './PodiumMenu';
 

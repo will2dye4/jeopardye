@@ -1,7 +1,7 @@
 import React from 'react';
 import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons';
 import { Box, Flex } from '@chakra-ui/react';
-import { formatDate } from '../../../../../utils.mjs';
+import { formatDate } from '@dyesoft/alea-core';
 import { isSafari } from '../../../../utils';
 import Icon from '../../../common/Icon';
 

@@ -11,7 +11,7 @@ import {
   SimpleGrid,
   Text,
 } from '@chakra-ui/react';
-import { formatScore } from '../../../../utils.mjs';
+import { formatScore } from '@dyesoft/alea-core';
 import Bold from '../../common/Bold';
 
 function EpisodeScores(props) {

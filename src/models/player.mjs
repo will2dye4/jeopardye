@@ -1,5 +1,5 @@
-import uuid from 'uuid';
-import { DEFAULT_FONT_STYLE, MAX_PLAYER_NAME_LENGTH, MIN_PLAYER_NAME_LENGTH } from '../constants.mjs';
+import { Player as AleaPlayer } from '@dyesoft/alea-core';
+import { DEFAULT_FONT_STYLE } from '../constants.mjs';
 
 export const CLUES_ANSWERED_STAT = 'cluesAnswered';
 export const CLUES_ANSWERED_CORRECTLY_STAT = 'cluesAnsweredCorrectly';
@@ -13,10 +13,6 @@ export const FINAL_CLUES_ANSWERED_CORRECTLY_STAT = 'finalCluesAnsweredCorrectly'
 export const GAMES_PLAYED_STAT = 'gamesPlayed';
 export const GAMES_WON_STAT = 'gamesWon';
 export const OVERALL_SCORE_STAT = 'overallScore';
-
-export function validatePlayerName(name) {
-  return (!!name && name?.length >= MIN_PLAYER_NAME_LENGTH && name?.length <= MAX_PLAYER_NAME_LENGTH);
-}
 
 export class PlayerStatistics {
   constructor() {
@@ -33,17 +29,10 @@ export class PlayerStatistics {
   }
 }
 
-export class Player {
+export class Player extends AleaPlayer {
   constructor(name, preferredFontStyle, email, spectating) {
-    this.playerID = uuid.v4();
-    this.currentRoomID = null;
-    this.name = name;
+    super(name, email, spectating);
     this.preferredFontStyle = preferredFontStyle || DEFAULT_FONT_STYLE;
-    this.email = email || null;
-    this.spectating = spectating ?? false;
-    this.active = true;
-    this.createdTime = new Date();
-    this.lastConnectionTime = new Date();
     this.stats = new PlayerStatistics();
   }
 }

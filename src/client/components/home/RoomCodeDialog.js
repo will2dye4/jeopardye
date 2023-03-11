@@ -14,7 +14,8 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@chakra-ui/react';
-import { EventTypes, MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes } from '../../../constants.mjs';
+import { MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes } from '@dyesoft/alea-core';
+import { EventTypes } from '../../../constants.mjs';
 import Card from '../common/card/Card';
 import GridRow from '../common/GridRow';
 
@@ -106,10 +107,10 @@ class RoomCodeDialog extends React.Component {
               <Heading mb={5} textAlign="center">Join a Room</Heading>
               <FormControl id="room-code" isInvalid={this.state.roomCodeInvalid}>
                 <GridRow cols={3} my={2}>
-                  <GridItem my={1} d="flex" alignItems="center">
+                  <GridItem my={1} display="flex" alignItems="center">
                     <FormLabel fontSize="lg" fontWeight="bold">Room Code</FormLabel>
                   </GridItem>
-                  <GridItem colSpan={2} d="flex" alignItems="center">
+                  <GridItem colSpan={2} display="flex" alignItems="center">
                     <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.roomCode}
                            onChange={this.handleRoomCodeChanged} onKeyUp={this.handleKeyUp} autoFocus={true} aria-label="room-code" />
                  </GridItem>
@@ -121,7 +122,7 @@ class RoomCodeDialog extends React.Component {
                     <FormLabel fontSize="lg" fontWeight="bold" mb={0}>Password</FormLabel>
                     <FormHelperText fontStyle="italic" mt={0}>if provided</FormHelperText>
                   </GridItem>
-                  <GridItem colSpan={2} d="flex" alignItems="center">
+                  <GridItem colSpan={2} display="flex" alignItems="center">
                     <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.password}
                            onChange={this.handlePasswordChanged} onKeyUp={this.handleKeyUp} type="password" aria-label="room-password" />
                   </GridItem>

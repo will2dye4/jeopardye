@@ -1,7 +1,7 @@
 import React from 'react';
 import { SimpleGrid } from '@chakra-ui/react';
+import { range } from '@dyesoft/alea-core';
 import { CATEGORIES_PER_ROUND, CLUES_PER_CATEGORY } from '../../../../../constants.mjs';
-import { range } from '../../../../../utils.mjs';
 import Clue from './Clue';
 
 function ClueGrid(props) {

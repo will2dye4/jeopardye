@@ -1,8 +1,9 @@
 import React from 'react';
 import { Button, Flex, Radio, RadioGroup, Select, Stack, Text } from '@chakra-ui/react';
+import { MILLISECONDS_PER_DAY } from '@dyesoft/alea-core';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { EARLIEST_EPISODE_DATE, GameDateSelectionModes, MILLISECONDS_PER_DAY } from '../../../../constants.mjs';
+import { EARLIEST_EPISODE_DATE, GameDateSelectionModes } from '../../../../constants.mjs';
 import { isValidEpisodeDate } from '../../../../utils.mjs';
 import GameSetting from './GameSetting';
 

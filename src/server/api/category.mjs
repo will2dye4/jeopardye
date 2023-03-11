@@ -1,5 +1,6 @@
 import express from 'express';
-import { MIN_CATEGORY_SEARCH_TERM_LENGTH, StatusCodes } from '../../constants.mjs';
+import { StatusCodes } from '@dyesoft/alea-core';
+import { MIN_CATEGORY_SEARCH_TERM_LENGTH } from '../../constants.mjs';
 import { Clue } from '../../models/game.mjs';
 import {
   getCategoryByID,

@@ -1,3 +1,4 @@
+import { EventTypes as AleaEventTypes } from '@dyesoft/alea-core';
 import config from './config.json' assert { type: 'json' };
 
 export const ADMIN_PLAYER_IDS = new Set(config.admin.playerIDs);
@@ -142,12 +143,6 @@ export const DEFAULT_ALLOW_UNREVEALED_CLUES = true;
 
 export const MIN_REVEALED_CLUE_COUNT_FOR_CATEGORY_SEARCH = 3;
 
-export const MIN_PLAYER_NAME_LENGTH = 1;
-export const MAX_PLAYER_NAME_LENGTH = 10;
-
-export const MAX_EMAIL_LENGTH = 128;
-export const MAX_ROOM_REQUEST_NAME_LENGTH = 64;
-
 export const MIN_CLUE_READING_DELAY_SECONDS = 5;
 export const MAX_CLUE_READING_DELAY_SECONDS = 15;
 
@@ -159,30 +154,6 @@ export const DAILY_DOUBLE_COUNTDOWN_SECONDS = 25;
 export const WAGER_COUNTDOWN_SECONDS = 15;
 
 export const FINAL_ROUND_COUNTDOWN_SECONDS = 30;
-
-export const MAX_PASSWORD_LENGTH = 128;
-export const PASSWORD_SALT_ROUNDS = 10;
-
-export const ROOM_CODE_LENGTH = 4;
-export const ROOM_CODE_CHARACTERS = 'ABCDEFGHJKLMNPQRSTVWXYZ';
-
-export const SECONDS_PER_MINUTE = 60;
-export const MINUTES_PER_HOUR = 60;
-export const HOURS_PER_DAY = 24;
-export const DAYS_PER_WEEK = 7;
-export const DAYS_PER_MONTH = 30;
-
-export const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
-export const SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY;
-export const SECONDS_PER_WEEK = SECONDS_PER_DAY * DAYS_PER_WEEK;
-export const SECONDS_PER_MONTH = SECONDS_PER_DAY * DAYS_PER_MONTH;
-
-export const MILLISECONDS_PER_SECOND = 1000;
-export const MILLISECONDS_PER_MINUTE = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
-export const MILLISECONDS_PER_HOUR = MINUTES_PER_HOUR * MILLISECONDS_PER_MINUTE;
-export const MILLISECONDS_PER_DAY = HOURS_PER_DAY * MILLISECONDS_PER_HOUR;
-
-export const MAX_KICK_DURATION_SECONDS = SECONDS_PER_MONTH;
 
 export const MAX_GAME_HISTORY_LENGTH = 100;
 
@@ -216,33 +187,11 @@ export const SELECTED_TAB_STYLES = {
 };
 
 export const EventTypes = {
-  ERROR: 'error',
+  ...AleaEventTypes,
   /* game events */
-  GAME_CREATION_FAILED: 'game_creation_failed',
-  GAME_STARTING: 'game_starting',
-  GAME_STARTED: 'game_started',
-  GAME_SETTINGS_CHANGED: 'game_settings_changed',
-  GAME_ENDED: 'game_ended',
   ROUND_STARTED: 'round_started',
   ROUND_ENDED: 'round_ended',
-  /* room events */
-  REASSIGN_ROOM_HOST: 'reassign_room_host',
-  ROOM_HOST_REASSIGNED: 'room_host_reassigned',
   /* player events */
-  PLAYER_CHANGED_NAME_AND_EMAIL: 'player_changed_name_and_email',
-  JOIN_ROOM: 'join_room',
-  JOIN_ROOM_WITH_CODE: 'join_room_with_code',
-  PLAYER_JOINED_ROOM: 'player_joined_room',
-  LEAVE_ROOM: 'leave_room',
-  PLAYER_LEFT_ROOM: 'player_left_room',
-  JOIN_GAME: 'join_game',
-  PLAYER_JOINED: 'player_joined',
-  PLAYER_WENT_ACTIVE: 'player_went_active',
-  PLAYER_WENT_INACTIVE: 'player_went_inactive',
-  START_SPECTATING: 'start_spectating',
-  PLAYER_STARTED_SPECTATING: 'player_started_spectating',
-  STOP_SPECTATING: 'stop_spectating',
-  PLAYER_STOPPED_SPECTATING: 'player_stopped_spectating',
   MARK_READY_FOR_NEXT_ROUND: 'mark_ready_for_next_round',
   PLAYER_MARKED_READY_FOR_NEXT_ROUND: 'player_marked_ready_for_next_round',
   /* gameplay events */
@@ -260,11 +209,7 @@ export const EventTypes = {
   PLAYER_VOTED_TO_SKIP_CLUE: 'player_voted_to_skip_clue',
   PLAYER_IN_CONTROL_REASSIGNED: 'player_in_control_reassigned',
   FINAL_ROUND_ANSWER_REVEALED: 'final_round_answer_revealed',
-  /* host-only gameplay events */
-  ABANDON_GAME: 'abandon_game',
-  HOST_ABANDONED_GAME: 'host_abandoned_game',
-  KICK_PLAYER: 'kick_player',
-  HOST_KICKED_PLAYER: 'host_kicked_player',
+  /* host-only events */
   OVERRIDE_SERVER_DECISION: 'override_server_decision',
   HOST_OVERRODE_SERVER_DECISION: 'host_overrode_server_decision',
   ADVANCE_TO_NEXT_ROUND: 'advance_to_next_round',
@@ -274,8 +219,6 @@ export const EventTypes = {
   BUZZING_PERIOD_ENDED: 'buzzing_period_ended',
   RESPONSE_PERIOD_ENDED: 'response_period_ended',
   WAITING_PERIOD_ENDED: 'waiting_period_ended',
-  /* connection events */
-  CLIENT_CONNECT: 'client_connect',
 };
 
 export const GAME_HISTORY_EVENT_TYPES = new Set([
@@ -287,7 +230,7 @@ export const GAME_HISTORY_EVENT_TYPES = new Set([
   /* room events */
   EventTypes.ROOM_HOST_REASSIGNED,
   /* player events */
-  EventTypes.PLAYER_CHANGED_NAME_AND_EMAIL,
+  EventTypes.PLAYER_CHANGED_SETTINGS,
   EventTypes.PLAYER_LEFT_ROOM,
   EventTypes.PLAYER_JOINED,
   EventTypes.PLAYER_STARTED_SPECTATING,
@@ -353,17 +296,3 @@ export const EMOJI_NAME_TO_EMOJI = {
 
 export const SORT_ARROW_ASCENDING = '\u25B4';
 export const SORT_ARROW_DESCENDING = '\u25BE';
-
-export const StatusCodes = {
-  /* success codes */
-  NO_CONTENT: 204,
-  /* client error codes */
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  CONFLICT: 409,
-  /* server error codes */
-  INTERNAL_SERVER_ERROR: 500,
-  SERVICE_UNAVAILABLE: 503,
-};
