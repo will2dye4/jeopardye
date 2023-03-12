@@ -1831,7 +1831,7 @@
   resolved "https://registry.yarnpkg.com/@ctrl/tinycolor/-/tinycolor-3.5.0.tgz#6e52b3d1c38d13130101771821e09cdd414a16bc"
   integrity sha512-tlJpwF40DEQcfR/QF+wNMVyGMaO9FQp6Z1Wahj4Gk3CJQYHwA2xVG7iKDFdW6zuxZY9XWOpGcfNCTsX4McOsOg==
 
-"@dyesoft/alea-core@^0.2.2":
+"@dyesoft/alea-core@0.2.5":
   version "0.2.5"
   resolved "https://registry.yarnpkg.com/@dyesoft/alea-core/-/alea-core-0.2.5.tgz#286b4fa078e33a3bb745b4ed44e4ae7a51b757fb"
   integrity sha512-5VqFlVoohc0slG2Y5All5jyaNYHEck4ZGSaky7VyNa98v4J1mzrSaRjYbyXnjfjGmsX+VsrPD+p4T6HbFKAo9Q==
