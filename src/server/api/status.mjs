@@ -1,6 +1,6 @@
 import express from 'express';
 import log from 'log';
-import { StatusCodes } from '../../constants.mjs';
+import { StatusCodes } from '@dyesoft/alea-core';
 import packageJSON from '../../package.alias.json' assert { type: 'json' };
 import db from '../db.mjs';
 

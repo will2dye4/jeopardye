@@ -12,8 +12,8 @@ import {
   TabPanel,
   TabPanels,
 } from '@chakra-ui/react';
+import { RoomLinkRequestResolution } from '@dyesoft/alea-core';
 import { SELECTED_TAB_STYLES } from '../../../constants.mjs';
-import { RoomLinkRequestResolution } from '../../../models/roomLinkRequest.mjs';
 import Card from '../common/card/Card';
 import Players from './Players';
 import RoomLinkRequests from './RoomLinkRequests';

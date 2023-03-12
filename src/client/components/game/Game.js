@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Text } from '@chakra-ui/react';
+import { formatList } from '@dyesoft/alea-core';
 import {
   CATEGORIES_PER_ROUND,
   CLUES_PER_CATEGORY,
@@ -14,7 +15,6 @@ import {
 } from '../../../constants.mjs';
 import {
   EventContext,
-  formatList,
   getCountdownTimeInMillis,
   getUnplayedClues,
   getUnrevealedClues,

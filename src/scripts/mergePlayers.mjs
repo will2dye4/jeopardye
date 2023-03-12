@@ -1,7 +1,7 @@
 import yargs from 'yargs';
+import { formatDate } from '@dyesoft/alea-core';
 import { LeaderboardKeys } from '../constants.mjs';
 import db, { getPlayer, removePlayerFromRoom, updatePlayer } from '../server/db.mjs';
-import { formatDate } from '../utils.mjs';
 
 function die(error) {
   console.error(error);

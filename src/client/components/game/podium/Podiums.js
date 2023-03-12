@@ -1,7 +1,7 @@
 import React from 'react';
 import { Flex } from '@chakra-ui/react';
+import { comparePlayerNames } from '@dyesoft/alea-core';
 import { MAX_PLAYERS_PER_GAME } from '../../../../constants.mjs';
-import { comparePlayerNames } from '../../../../utils.mjs';
 import Podium from './Podium';
 import SpectatorsMenu from './SpectatorsMenu';
 

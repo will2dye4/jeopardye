@@ -1,6 +1,6 @@
 import React from 'react';
 import { List, ListItem } from '@chakra-ui/react';
-import { comparePlayerNames } from '../../../../utils.mjs';
+import { comparePlayerNames } from '@dyesoft/alea-core';
 import Card from '../card/Card';
 import CardHeader from '../card/CardHeader';
 import PlayerListItem from './PlayerListItem';

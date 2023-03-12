@@ -11,7 +11,8 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { EventContext, formatList, getNextRound } from '../../../../utils.mjs';
+import { formatList } from '@dyesoft/alea-core';
+import { EventContext, getNextRound } from '../../../../utils.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
 import Bold from '../../common/Bold';
 import Card from '../../common/card/Card';

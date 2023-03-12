@@ -14,8 +14,7 @@ import {
   ModalOverlay,
   Text,
 } from '@chakra-ui/react';
-import { MAX_EMAIL_LENGTH, MAX_ROOM_REQUEST_NAME_LENGTH } from '../../../constants.mjs';
-import { validateEmail } from '../../../utils.mjs';
+import { MAX_EMAIL_LENGTH, MAX_ROOM_REQUEST_NAME_LENGTH, validateEmail } from '@dyesoft/alea-core';
 import Card from '../common/card/Card';
 import GridRow from '../common/GridRow';
 
@@ -84,10 +83,10 @@ class RequestLinkDialog extends React.Component {
               </Text>
               <FormControl id="name" isInvalid={this.state.nameInvalid}>
                 <GridRow cols={3} my={2}>
-                  <GridItem my={1} d="flex" alignItems="center">
+                  <GridItem my={1} display="flex" alignItems="center">
                     <FormLabel fontSize="lg" fontWeight="bold">Your Name</FormLabel>
                   </GridItem>
-                  <GridItem colSpan={2} d="flex" alignItems="center">
+                  <GridItem colSpan={2} display="flex" alignItems="center">
                     <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.name}
                            onChange={this.handleNameChanged} onKeyUp={this.handleKeyUp} autoFocus={true} aria-label="name" />
                   </GridItem>
@@ -95,10 +94,10 @@ class RequestLinkDialog extends React.Component {
               </FormControl>
               <FormControl id="email" isInvalid={this.state.emailInvalid}>
                 <GridRow cols={3} my={2}>
-                  <GridItem my={1} d="flex" alignItems="center">
+                  <GridItem my={1} display="flex" alignItems="center">
                     <FormLabel fontSize="lg" fontWeight="bold" mb={0}>Email Address</FormLabel>
                   </GridItem>
-                  <GridItem colSpan={2} d="flex" alignItems="center">
+                  <GridItem colSpan={2} display="flex" alignItems="center">
                     <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.email}
                            onChange={this.handleEmailChanged} onKeyUp={this.handleKeyUp} type="email" aria-label="email" />
                   </GridItem>

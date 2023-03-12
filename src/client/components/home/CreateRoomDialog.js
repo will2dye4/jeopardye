@@ -14,8 +14,7 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@chakra-ui/react';
-import { MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes } from '../../../constants.mjs';
-import { validateRoomCode } from '../../../models/room.mjs';
+import { MAX_PASSWORD_LENGTH, ROOM_CODE_LENGTH, StatusCodes, validateRoomCode } from '@dyesoft/alea-core';
 import { ActionTypes } from '../../actions/action_creators';
 import Card from '../common/card/Card';
 import GridRow from '../common/GridRow';
@@ -110,7 +109,7 @@ class CreateRoomDialog extends React.Component {
                     <FormLabel fontSize="lg" fontWeight="bold" mb={0}>Room Code</FormLabel>
                     <FormHelperText fontStyle="italic" mt={0}>{ROOM_CODE_LENGTH} letters (leave blank for random)</FormHelperText>
                   </GridItem>
-                  <GridItem colSpan={2} d="flex" alignItems="center">
+                  <GridItem colSpan={2} display="flex" alignItems="center">
                     <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.roomCode}
                            onChange={this.handleRoomCodeChanged} onKeyUp={this.handleKeyUp} autoFocus={true} aria-label="room-code" />
                   </GridItem>
@@ -122,7 +121,7 @@ class CreateRoomDialog extends React.Component {
                     <FormLabel fontSize="lg" fontWeight="bold" mb={0}>Password</FormLabel>
                     <FormHelperText fontStyle="italic" mt={0}>optional</FormHelperText>
                   </GridItem>
-                  <GridItem colSpan={2} d="flex" alignItems="center">
+                  <GridItem colSpan={2} display="flex" alignItems="center">
                     <Input bg="white" focusBorderColor="jeopardyeBlue.500" size="lg" ml={2} w="75%" value={this.state.password}
                            onChange={this.handlePasswordChanged} onKeyUp={this.handleKeyUp} type="password" aria-label="room-password" />
                   </GridItem>

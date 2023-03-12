@@ -24,8 +24,9 @@ import {
   Tr,
 } from '@chakra-ui/react';
 import { faClipboardQuestion, faCrown, faEyeLowVision, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { MILLISECONDS_PER_DAY, SORT_ARROW_ASCENDING, SORT_ARROW_DESCENDING } from '../../../constants.mjs';
-import { formatDate, formatWeekday, getURLForContestant, range } from '../../../utils.mjs';
+import { formatDate, formatWeekday, MILLISECONDS_PER_DAY, range } from '@dyesoft/alea-core';
+import { SORT_ARROW_ASCENDING, SORT_ARROW_DESCENDING } from '../../../constants.mjs';
+import { getURLForContestant } from '../../../utils.mjs';
 import Bold from '../common/Bold';
 import Card from '../common/card/Card';
 import Icon from '../common/Icon';

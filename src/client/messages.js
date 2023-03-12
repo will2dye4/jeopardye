@@ -1,4 +1,4 @@
-import { randomChoice } from '../utils.mjs';
+import { randomChoice } from '@dyesoft/alea-core';
 
 const PLAYER_PLACEHOLDER = '{{PLAYER}}';
 

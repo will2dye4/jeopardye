@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { Game as AleaGame, randomChoice } from '@dyesoft/alea-core';
 import {
   CLUES_PER_CATEGORY,
   DAILY_DOUBLE_MULTIPLIERS,
@@ -14,7 +14,7 @@ import {
   Rounds,
   VALUE_INCREMENTS,
 } from '../constants.mjs';
-import { randomChoice, sanitizeQuestionText } from '../utils.mjs';
+import { sanitizeQuestionText } from '../utils.mjs';
 
 const DAILY_DOUBLE_CLUES_TO_SKIP = 2;
 
@@ -150,7 +150,7 @@ export class Round {
   }
 }
 
-export class Game {
+export class Game extends AleaGame {
   static fromEpisode(episode, roomID, playerIDs, playerInControl) {
     if (!episode.hasOwnProperty('metadata')) {
       episode.metadata = {};
@@ -170,11 +170,9 @@ export class Game {
   }
 
   constructor(roomID, rounds, playerIDs, playerInControl, playerAnswering, currentRound, activeClue, currentWager, episodeMetadata) {
-    this.gameID = uuid.v4();
-    this.roomID = roomID;
+    super(roomID, playerIDs);
     this.rounds = rounds;
     this.numRounds = Object.keys(rounds).length - (rounds.hasOwnProperty(Rounds.FINAL) ? 1 : 0);
-    this.playerIDs = playerIDs || [];
     this.playerInControl = playerInControl || null;
     this.playerAnswering = playerAnswering || null;
     this.currentRound = currentRound || Rounds.SINGLE;
@@ -182,15 +180,10 @@ export class Game {
     this.currentWager = currentWager || null;
     this.playersReadyForNextRound = [];
     this.roundSummary = null;
-    this.createdTime = new Date();
-    this.finishedTime = null;
 
     if (episodeMetadata) {
       this.episodeMetadata = episodeMetadata;
     }
-
-    this.scores = {};
-    this.playerIDs.forEach(playerID => this.scores[playerID] = 0);
 
     if (this.playerInControl === null && this.playerIDs.length) {
       /* Randomly pick a player to start in control of the game */

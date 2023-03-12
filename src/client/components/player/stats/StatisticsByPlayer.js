@@ -1,7 +1,8 @@
 import React from 'react';
 import { Flex, Select, StatGroup, Text } from '@chakra-ui/react';
+import { comparePlayerEntries, formatScore } from '@dyesoft/alea-core';
 import moment from 'moment';
-import { comparePlayerEntries, formatScore, getAugmentedPlayerStats } from '../../../../utils.mjs';
+import { getAugmentedPlayerStats } from '../../../../utils.mjs';
 import {
   ALL_TIME_SCORE,
   AVERAGE_SCORE,

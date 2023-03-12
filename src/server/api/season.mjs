@@ -1,7 +1,6 @@
 import express from 'express';
-import { getISODateString } from '../../utils.mjs';
+import { getISODateString, StatusCodes } from '@dyesoft/alea-core';
 import {getEpisodeSummariesBySeasonNumber, getHighestSeasonNumber, getSeasonSummaries} from '../db.mjs';
-import {StatusCodes} from "../../constants.mjs";
 
 async function handleGetSeasons(req, res, next) {
   const seasons = await getSeasonSummaries();

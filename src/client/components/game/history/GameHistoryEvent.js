@@ -2,8 +2,9 @@ import React from 'react';
 import moment from 'moment';
 import { Box, GridItem, HStack, ListItem, Text } from '@chakra-ui/react';
 import { faGavel } from '@fortawesome/free-solid-svg-icons';
+import { comparePlayerNames, formatScore } from '@dyesoft/alea-core';
 import { Emoji, EventTypes } from '../../../../constants.mjs';
-import { comparePlayerNames, formatScore, isDailyDouble } from '../../../../utils.mjs';
+import { isDailyDouble } from '../../../../utils.mjs';
 import { getPlayerName } from '../../../reducers/game_reducer';
 import { formatElementList } from '../../../utils';
 import ActionIcon from '../../common/ActionIcon';
@@ -99,7 +100,7 @@ function getEventDescription(props) {
         };
       }
       break;
-    case EventTypes.PLAYER_CHANGED_NAME_AND_EMAIL:
+    case EventTypes.PLAYER_CHANGED_SETTINGS:
       if (event.payload.name !== event.payload.prevName) {
         eventConfig = {
           description: <React.Fragment><PlayerName>{event.payload.prevName}</PlayerName> is now known as <PlayerName>{event.payload.name}</PlayerName>.</React.Fragment>,

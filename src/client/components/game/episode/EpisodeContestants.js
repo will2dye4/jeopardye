@@ -7,7 +7,8 @@ import {
   SimpleGrid,
   Text,
 } from '@chakra-ui/react';
-import { formatScore, getURLForContestant } from '../../../../utils.mjs';
+import { formatScore } from '@dyesoft/alea-core';
+import { getURLForContestant } from '../../../../utils.mjs';
 import Bold from '../../common/Bold';
 
 function EpisodeContestants(props) {

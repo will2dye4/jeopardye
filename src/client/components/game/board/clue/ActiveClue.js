@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Flex, Image, Text } from '@chakra-ui/react';
-import { formatDate } from '../../../../../utils.mjs';
+import { formatDate } from '@dyesoft/alea-core';
 import { getPlayerName } from '../../../../reducers/game_reducer';
 import ActiveClueButtons from './ActiveClueButtons';
 import ActiveClueLabel from './ActiveClueLabel';

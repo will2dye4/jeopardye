@@ -1,5 +1,5 @@
 import express from 'express';
-import { StatusCodes } from '../../constants.mjs';
+import { StatusCodes } from '@dyesoft/alea-core';
 import { getContestantByID } from '../db.mjs';
 
 async function handleGetContestantByID(req, res, next) {
