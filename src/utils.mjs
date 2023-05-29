@@ -32,8 +32,9 @@ const MIN_ANSWER_SIMILARITY_RATIO = 0.8;
 
 const INTERCHANGEABLE_TERMS = [
   new Set(['america', 'united states', 'united states of america', 'us', 'usa']),
+  new Set(['ben franklin', 'benjamin franklin']),
   new Set(['brother love', 'diddy', 'p diddy', 'puff daddy', 'puffy', 'sean combs', 'sean john combs', 'sean love combs']),
-  new Set(['chairman mao', 'chairman mao zedong', 'chairman mao tse-tung', 'mao zedong', 'mao tse-tung']),
+  new Set(['chairman mao', 'chairman mao zedong', 'chairman mao tse-tung', 'mao zedong', 'mao tse-tung', 'mao']),
   new Set(['cs lewis', 'c s lewis', 'lewis']),
   new Set(['ellen', 'ellen degeneres']),
   new Set(['eminem', 'marshall mathers', 'slim shady']),
@@ -57,6 +58,7 @@ const INTERCHANGEABLE_TERMS = [
   new Set(['rfk', 'robert f kennedy', 'robert francis kennedy', 'robert kennedy', 'bobby kennedy']),
   new Set(['rms', 'richard m stallman', 'richard matthew stallman', 'richard stallman']),
   new Set(['t rex', 'tyrannosaurus rex']),
+  new Set(['teddy roosevelt', 'theodore roosevelt']),
   new Set(['television', 'tv']),
   new Set(['theodore roosevelt', 'teddy roosevelt']),
   new Set(['uk', 'united kingdom']),
