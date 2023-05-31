@@ -1,6 +1,7 @@
 import yargs from 'yargs';
 import { Rounds } from '../constants.mjs';
 import { getGame, updateGame } from '../server/db.mjs';
+import { sortedRounds } from '../utils.mjs';
 
 function die(error) {
   console.error(error);
@@ -23,7 +24,7 @@ if (!game) {
   die('Game does not have enough rounds!');
 }
 
-const roundNames = Object.keys(game.rounds);
+const roundNames = sortedRounds(game);
 if (!roundNames.includes(Rounds.FINAL)) {
   die('Game does not have a final round!');
 }

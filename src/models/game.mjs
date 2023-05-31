@@ -14,7 +14,7 @@ import {
   Rounds,
   VALUE_INCREMENTS,
 } from '../constants.mjs';
-import { sanitizeQuestionText } from '../utils.mjs';
+import { sanitizeQuestionText, sortedRounds } from '../utils.mjs';
 
 const DAILY_DOUBLE_CLUES_TO_SKIP = 2;
 
@@ -165,7 +165,7 @@ export class Game extends AleaGame {
     if (episode.hasInvalidRounds) {
       episode.metadata.hasInvalidRounds = true;
     }
-    const currentRound = Object.keys(episode.rounds)[0];
+    const currentRound = sortedRounds(episode)[0];
     return new Game(roomID, episode.rounds, playerIDs, playerInControl, null, currentRound, null, null, episode.metadata);
   }
 

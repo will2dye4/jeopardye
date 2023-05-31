@@ -212,16 +212,25 @@ export function getCountdownTimeInMillis(dailyDouble = false) {
   return (dailyDouble ? DAILY_DOUBLE_COUNTDOWN_SECONDS : DEFAULT_COUNTDOWN_SECONDS) * 1000;
 }
 
+export function compareRounds(round1, round2) {
+  const orderedRounds = Object.values(Rounds);
+  return orderedRounds.indexOf(round1) - orderedRounds.indexOf(round2);
+}
+
+export function sortedRounds(game) {
+  return Object.keys(game.rounds).sort(compareRounds);
+}
+
 export function getNextRound(game) {
   if (!hasMoreRounds(game)) {
     return null;
   }
-  const roundNames = Object.keys(game.rounds);
+  const roundNames = sortedRounds(game);
   return roundNames[roundNames.indexOf(game.currentRound) + 1];
 }
 
 export function hasMoreRounds(game) {
-  const roundNames = Object.keys(game.rounds);
+  const roundNames = sortedRounds(game);
   return (game.currentRound !== roundNames[roundNames.length - 1]);
 }
 

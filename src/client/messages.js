@@ -1,4 +1,5 @@
 import { randomChoice } from '@dyesoft/alea-core';
+import { sortedRounds } from '../utils.mjs';
 
 const PLAYER_PLACEHOLDER = '{{PLAYER}}';
 
@@ -62,7 +63,7 @@ const TIME_ELAPSED_RESPONSES = {
 export function getStartOfRoundMessage(game, isNewRound, playerHasControl, playerInControlReassigned, playerName) {
   let response;
   if (isNewRound) {
-    if (game.currentRound === Object.keys(game.rounds)[0]) {
+    if (game.currentRound === sortedRounds(game)[0]) {
       response = `Game started. ${playerName} will be the first to select a clue.`;
     } else {
       response = `Let's play the ${game.currentRound} Jeopardye round! ${playerName} will choose first.`;
