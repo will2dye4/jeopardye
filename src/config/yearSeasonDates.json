@@ -37,5 +37,6 @@
   "2019": {"seasonEnd": "2019-07-26", "seasonStart": "2019-09-09"},
   "2020": {"seasonEnd": "2020-06-12", "seasonStart": "2020-09-14"},
   "2021": {"seasonEnd": "2021-08-13", "seasonStart": "2021-09-13"},
-  "2022": {"seasonEnd": "2022-07-29", "seasonStart": "2022-09-12"}
+  "2022": {"seasonEnd": "2022-07-29", "seasonStart": "2022-09-12"},
+  "2023": {"seasonEnd": "2023-07-28", "seasonStart": "2023-12-31"}
 }
