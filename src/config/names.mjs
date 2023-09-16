@@ -2719,6 +2719,7 @@ export const FIRST_NAMES = new Set([
   "patience",
   "patricia",
   "patrick",
+  "patty",
   "paul",
   "paula",
   "paulina",
