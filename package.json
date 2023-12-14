@@ -1,12 +1,12 @@
 {
   "name": "jeopardye",
-  "version": "2.1.7",
+  "version": "2.2.0",
   "private": true,
   "dependencies": {
     "@babel/plugin-syntax-import-assertions": "^7.20.0",
     "@chakra-ui/react": "^1.6.3",
     "@choc-ui/chakra-autocomplete": "^5.1.4",
-    "@dyesoft/alea-core": "0.2.5",
+    "@dyesoft/alea-core": "^0.3.0",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@fortawesome/fontawesome-free": "^5.15.3",
