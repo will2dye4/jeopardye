@@ -1,6 +1,6 @@
 {
   "name": "jeopardye",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "private": true,
   "dependencies": {
     "@babel/plugin-syntax-import-assertions": "^7.20.0",
